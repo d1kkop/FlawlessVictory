@@ -6,6 +6,7 @@ namespace fv
 {
     struct Vec3;
     struct Mat3;
+    struct Mat4;
 
     struct FV_DLL Quat
     {
@@ -20,11 +21,16 @@ namespace fv
         static Quat rotateY(float ang);
         static Quat rotateZ(float ang);
         static Quat rotate(const Vec3& axis, float ang);
+        static Quat lookAt(const Vec3& from, const Vec3& to);
+        static Quat angleAxis(const Vec3& axis, float ang) { return Quat::rotate(axis, ang); }
 
         Quat operator* (float f) const;
         Quat operator* (const Quat& q) const;
+        Vec3 operator* (const Vec3& v) const;
         Quat& operator*= (float f);
         Quat& operator*= (const Quat& q);
+        bool operator== (const Quat& q) const { return x==q.x && y==q.y && z==q.z && w==q.w; }
+        bool operator!= (const Quat& q) const { return !(*this==q); }
 
         float dot(const Quat& q) const;
         Quat  cross(const Quat& q) const;
@@ -36,14 +42,17 @@ namespace fv
         Vec3  axis() const;
         Quat  slerp(const Quat& q, float t) const;
         Vec3  transform(const Vec3& v) const;
+        bool  approx(const Quat& q, float eps=0.0001f) const;
 
         Quat& normalize();
         Quat& setRotateX(float ang);
         Quat& setRotateY(float ang);
         Quat& setRotateZ(float ang);
         Quat& setRotate(const Vec3& axis, float ang);
+        Quat& setLookAt(const Vec3& from, const Vec3& to);
 
         explicit operator Mat3 () const;
+        explicit operator Mat4 () const;
     };
 
 

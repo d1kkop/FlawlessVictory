@@ -50,6 +50,20 @@ namespace fv
         return m;
     }
 
+    Mat3 Mat3::lookAt(const Vec3& from, const Vec3& to)
+    {
+        Mat3 m;
+        m.setLookAt(from, to);
+        return m;
+    }
+
+    Mat3 Mat3::fromAxis(const Vec3& x, const Vec3& y, const Vec3& z)
+    {
+        Mat3 m;
+        m.setFromAxis(x,y,z);
+        return m;
+    }
+
     Vec3 Mat3::operator*(const Vec3& p) const
     {
         return transform(p);
@@ -58,6 +72,11 @@ namespace fv
     Mat3 Mat3::operator*(const Mat3& m) const
     {
         return multiply(m);
+    }
+
+    bool Mat3::operator==(const Mat3& o) const
+    {
+        return memcmp(this, &o, sizeof(*this))==0;
     }
 
     float Mat3::determinant() const
@@ -122,6 +141,21 @@ namespace fv
         };
     }
 
+    Vec3 Mat3::axisX() const
+    {
+        return { m11, m12, m13 };
+    }
+
+    Vec3 Mat3::axisY() const
+    {
+        return { m21, m22, m23 };
+    }
+
+    Vec3 Mat3::axisZ() const
+    {
+        return { m31, m32, m33 };
+    }
+
     Mat3& Mat3::setScale(const Vec3& s)
     {
         m11=s.x, m12=0, m13=0;
@@ -181,6 +215,39 @@ namespace fv
         m11=c, m12=s, m13=0;
         m21=-s, m22=c, m23=0;
         m31=0, m32=0, m33=1;
+        return *this;
+    }
+
+    Mat3& Mat3::setLookAt(const Vec3& from, const Vec3& to)
+    {
+        Vec3 forward = (to - from).normalized();
+        float fdot   = Vec3::forward() | forward;
+        if ( fabsf(fdot - (-1.0f)) < 0.0001f )
+        {
+            // Point in opposite directions
+            *this = Mat3::angleAxis(Vec3::up(), PI);
+        }
+        else if ( fabsf(fdot - (1.0f)) < 0.0001f )
+        {
+            // Point in same direction
+            *this = identity();
+        }
+        else
+        {
+            if ( fdot < -1.f ) fdot = -1.f;
+            if ( fdot > 1.f )  fdot = 1.f;
+            float ang = (float)acosf(fdot);
+            Vec3 ax   = !(Vec3::forward() ^ forward);
+            *this = Mat3::angleAxis(ax, ang);
+        }
+        return *this;
+    }
+
+    Mat3& Mat3::setFromAxis(const Vec3& x, const Vec3& y, const Vec3& z)
+    {
+        m11=x.x, m12=x.y, m13=x.z;
+        m21=y.x, m22=y.y, m23=y.z;
+        m31=z.x, m32=z.y, m33=z.z;
         return *this;
     }
 

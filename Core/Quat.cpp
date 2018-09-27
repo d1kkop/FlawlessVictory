@@ -38,6 +38,13 @@ namespace fv
         return q;
     }
 
+    Quat Quat::lookAt(const Vec3& forward, const Vec3& up)
+    {
+        Quat q;
+        q.setLookAt(forward, up);
+        return q;
+    }
+
     Quat Quat::operator*(float f) const
     {
         return { x*f, y*f, z*f, w*f };
@@ -58,6 +65,11 @@ namespace fv
     {
        *this = cross(q);
        return *this;
+    }
+
+    Vec3 Quat::operator*(const Vec3& v) const
+    {
+        return transform(v);
     }
 
     float Quat::dot(const Quat& q) const
@@ -151,6 +163,11 @@ namespace fv
         return v + w*t + fv::cross({ x,y,z }, t);
     }
 
+    bool Quat::approx(const Quat& q, float eps) const
+    {
+        return dot(q)<eps;
+    }
+
     Quat& Quat::normalize()
     {
         float m = 1.f/sqrt(dot(*this));
@@ -204,6 +221,31 @@ namespace fv
         return *this;
     }
 
+    Quat& Quat::setLookAt(const Vec3& from, const Vec3& to)
+    {
+        Vec3 forward = (to - from).normalized();
+        float fdot   = Vec3::forward() | forward;
+        if ( fabsf(fdot - (-1.0f)) < 0.0001f )
+        {
+            // Point in opposite directions
+            *this = Quat::angleAxis( Vec3::up(), PI );
+        }
+        else if ( fabsf(fdot - (1.0f)) < 0.0001f )
+        {
+            // Point in same direction
+            *this = identity();
+        }
+        else
+        {
+            if ( fdot < -1.f ) fdot = -1.f;
+            if ( fdot > 1.f )  fdot = 1.f;
+            float ang = (float)acosf(fdot);
+            Vec3 ax   = !(Vec3::forward() ^ forward);
+            *this = Quat::angleAxis(ax, ang);
+        }
+        return *this;
+    }
+
     Quat::operator Mat3() const
     {
         const float wx2 = w*x*2;
@@ -217,16 +259,29 @@ namespace fv
         const float xz2 = x*z*2;
         return
         {
-            1-yy2-zz2,
-            xy2+wz2,
-            xz2-wy2,
-            xy2-wz2,
-            1-xx2-zz2,
-            yz2+wx2,
-            xz2+wy2,
-            yz2-wx2,
-            1-xx2-yy2
+            1-yy2-zz2, xy2+wz2, xz2-wy2,
+            xy2-wz2, 1-xx2-zz2, yz2+wx2,
+            xz2+wy2, yz2-wx2, 1-xx2-yy2
         };
     }
 
+    Quat::operator Mat4() const
+    {
+        const float wx2 = w*x*2;
+        const float wy2 = w*y*2;
+        const float wz2 = w*z*2;
+        const float xy2 = x*y*2;
+        const float zz2 = z*z*2;
+        const float yz2 = y*z*2;
+        const float xx2 = x*x*2;
+        const float yy2 = y*y*2;
+        const float xz2 = x*z*2;
+        return
+        {
+            1-yy2-zz2, xy2+wz2, xz2-wy2, 0,
+            xy2-wz2, 1-xx2-zz2, yz2+wx2, 0,
+            xz2+wy2, yz2-wx2, 1-xx2-yy2, 0,
+            0, 0, 0, 1
+        };
+    }
 }

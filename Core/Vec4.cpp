@@ -23,6 +23,12 @@ namespace fv
         return *this;
     }
 
+    bool Vec4::approx(const Vec4& o, float eps) const
+    {
+        Vec4 d=*this-o;
+        return fabsf(d.x)<eps && fabsf(d.y)<eps && fabsf(d.z)<eps && fabsf(d.w)<eps;
+    }
+
     Vec4::operator Vec3() const
     {
         return { x, y, z };

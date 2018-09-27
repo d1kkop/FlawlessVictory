@@ -18,14 +18,44 @@ namespace fv
         };
     }
 
+    Mat4 Mat4::orthoLH(float left, float right, float bottom, float top, float znear, float zfar)
+    {
+        // TODO
+        assert(false && "NEEDS CHECK");
+        float tx = -(right+left)/(right-left);
+        float ty = -(top+bottom)/(top-bottom);
+        float tz = -(zfar+znear)/(zfar-znear);
+        return
+        {
+            2.f/(right-left), 0, 0, 0,
+            0, 2.f/(top-bottom), 0, 0,
+            0, 0, -2.f/(zfar-znear), 0,
+            tx, ty, tz
+        };
+    }
+
     Mat4 Mat4::orthoRH(float left, float right, float bottom, float top, float znear, float zfar)
+    {
+        float tx = -(right+left)/(right-left);
+        float ty = -(top+bottom)/(top-bottom);
+        float tz = -(zfar+znear)/(zfar-znear);
+        return
+        {
+            2.f/(right-left), 0, 0, 0,
+            0, 2.f/(top-bottom), 0, 0,
+            0, 0, -2.f/(zfar-znear), 0,
+            tx, ty, tz
+        };
+    }
+
+    Mat4 Mat4::frustumLH(float left, float right, float bottom, float top, float znear, float zfar)
     {
         return
         {
-            2.f/(right-left), 0, 0, -(right+left)/(right-left),
-            0, 2.f/(top-bottom), 0, -(top+bottom)/(top-bottom),
-            0, 0, -2.f/(zfar-znear), -(zfar+znear)/(zfar-znear),
-            0, 0, 0, 0
+            (2.f*znear)/(right-left), 0, (right+left)/(right-left), 0,
+            0, (2.f*znear)/(top-bottom), (top+bottom)/(top-bottom), 0,
+            0, 0, -(zfar+znear)/(zfar-znear), (2.f*zfar*znear)/(zfar-znear),
+            0, 0, 1, 0
         };
     }
 
@@ -40,19 +70,26 @@ namespace fv
         };
     }
 
+    Mat4 Mat4::perspectiveLH(float fov, float aspect, float znear, float zfar)
+    {
+        float x = tanf(fov*.5f)*znear;
+        float y = x/aspect;
+        return frustumLH(-x, x, -y, y, znear, zfar);
+    }
+
     Mat4 Mat4::perspectiveRH(float fov, float aspect, float znear, float zfar)
     {
-        float y = tanf(fov*.5f)*znear;
-        float x = y*aspect;
+        float x = tanf(fov*.5f)*znear;
+        float y = x/aspect;
         return frustumRH(-x, x, -y, y, znear, zfar);
     }
 
     Mat4 Mat4::compose(Vec3& p, Quat& q, Vec3& s)
     {
         Mat4 T = Mat4::translate(p);
-        Mat4 R = Mat4::rotate(q.axis(), q.angle());
+        Mat4 R = Mat4::rotate(q.axis().normalized(), q.angle());
         Mat4 S = Mat4::scale(s);
-        return (T*R*S);
+        return S*R*T;
     }
 
     Vec3 Mat4::operator*(const Vec3& p) const
@@ -68,6 +105,11 @@ namespace fv
     Mat4 Mat4::operator*(const Mat4& m) const
     {
         return multiply(m);
+    }
+
+    bool Mat4::operator==(const Mat4& o) const
+    {
+        return memcmp(&o, this, sizeof(*this))==0;
     }
 
     Mat4 Mat4::multiply(const Mat4& m) const
@@ -284,7 +326,6 @@ namespace fv
         m31=az*axis.x+ys;
         m32=az*axis.y-xs;
         m33=az*axis.z+c;
-        return *this;
         {
             m14=0, m24=0, m34=0;
             m41=0, m42=0, m43=0;

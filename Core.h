@@ -8,4 +8,3 @@
 #include "Core/SceneComponent.h"
 #include "Core/ObjectManager.h"
 #include "Core/ComponentManager.h"
-#include "Core/Vec3.h"

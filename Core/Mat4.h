@@ -23,8 +23,11 @@ namespace fv
         };
 
         static Mat4 identity();
+        static Mat4 orthoLH(float left, float right, float bottom, float top, float znear, float zfar);
         static Mat4 orthoRH(float left, float right, float bottom, float top, float znear, float zfar);
+        static Mat4 frustumLH(float left, float right, float bottom, float top, float znear, float zfar);
         static Mat4 frustumRH(float left, float right, float bottom, float top, float znear, float zfar);
+        static Mat4 perspectiveLH(float fov, float aspect, float znear, float zfar);
         static Mat4 perspectiveRH(float fov, float aspect, float znear, float zfar);
         static Mat4 scale(const Vec3& s);
         static Mat4 translate(const Vec3& t);
@@ -37,6 +40,8 @@ namespace fv
         Vec3 operator* (const Vec3& p) const;
         Vec4 operator* (const Vec4& p) const;
         Mat4 operator* (const Mat4& m) const;
+        bool operator== (const Mat4& o) const;
+        bool operator!= (const Mat4& o) const { return !(*this==o); }
 
         Mat4 multiply(const Mat4& m) const;
         Mat4 inverse() const;
