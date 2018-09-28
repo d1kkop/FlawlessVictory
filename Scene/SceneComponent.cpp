@@ -1,6 +1,6 @@
 #include "SceneComponent.h"
-#include "Algorithm.h"
-#include "Math.h"
+#include "../Core/Algorithm.h"
+#include "../Core/Math.h"
 
 namespace fv
 {

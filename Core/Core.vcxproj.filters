@@ -30,9 +30,6 @@
     <ClCompile Include="ObjectManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="System.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -60,6 +57,9 @@
     <ClCompile Include="SceneComponent.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Component.h">
@@ -72,9 +72,6 @@
       <Filter>Managers</Filter>
     </ClInclude>
     <ClInclude Include="..\Core.h" />
-    <ClInclude Include="Object.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="System.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -114,8 +111,8 @@
     <ClInclude Include="SceneComponent.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Scene.h">
-      <Filter>Scene</Filter>
+    <ClInclude Include="GameObject.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

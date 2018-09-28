@@ -6,7 +6,7 @@
 
 namespace fv
 {
-    class Object
+    class GameObject
     {
     public:
         template <class T> T*   addOrGetComponent();
@@ -20,7 +20,7 @@ namespace fv
 
 
     template <typename T>
-    T* Object::addOrGetComponent()
+    T* GameObject::addOrGetComponent()
     {
         auto cIt = m_Components.find(T::type());
         if ( cIt == m_Components.end() )
@@ -33,13 +33,13 @@ namespace fv
     }
 
     template <class T>
-    bool Object::hasComponent()
+    bool GameObject::hasComponent()
     {
         return m_Components.count(T::type()) != 0;
     }
 
     template <class T>
-    bool Object::removeComponent()
+    bool GameObject::removeComponent()
     {
         auto cIt = m_Components.find(T::type());
         if ( cIt != m_Components.end() )

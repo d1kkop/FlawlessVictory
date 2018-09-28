@@ -1,5 +1,5 @@
 #pragma once
-#include "ComponentManager.h"
+#include "ObjectManager.h"
 
 namespace fn
 {
@@ -11,7 +11,9 @@ namespace fn
 
     class Scene
     {
-        SceneComponent
+    public:
+        
+
 
     private:
         SceneType m_type = Game;

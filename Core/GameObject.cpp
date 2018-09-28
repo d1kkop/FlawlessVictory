@@ -1,8 +1,8 @@
-#include "Object.h"
+#include "GameObject.h"
 
 namespace fv
 {
-    u32 Object::numComponents()
+    u32 GameObject::numComponents()
     {
         return (u32)m_Components.size();
     }

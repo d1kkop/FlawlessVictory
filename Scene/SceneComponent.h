@@ -1,7 +1,7 @@
 #pragma once
-#include "Component.h"
-#include "TypeManager.h"
-#include "Math.h"
+#include "../Core/Component.h"
+#include "../Core/TypeManager.h"
+#include "../Core/Math.h"
 
 namespace fv
 {

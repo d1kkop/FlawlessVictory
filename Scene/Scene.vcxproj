@@ -20,19 +20,19 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{324374C0-4E44-49D9-91C7-8803B8C111C0}</ProjectGuid>
-    <RootNamespace>Core</RootNamespace>
+    <ProjectGuid>{906BA074-21F0-4AAA-AF59-6DE1E9ABCA02}</ProjectGuid>
+    <RootNamespace>Scene</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -70,23 +70,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>
-      </AdditionalOptions>
-      <PreprocessorDefinitions>FV_EXPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FV_IMPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,9 +109,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>
-      </AdditionalOptions>
-      <PreprocessorDefinitions>FV_EXPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FV_IMPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -121,39 +117,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Component.cpp" />
-    <ClCompile Include="ComponentManager.cpp" />
-    <ClCompile Include="Mat3.cpp" />
-    <ClCompile Include="Mat4.cpp" />
-    <ClCompile Include="Math.cpp" />
-    <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="ObjectManager.cpp" />
-    <ClCompile Include="Quat.cpp" />
-    <ClCompile Include="SceneComponent.cpp" />
-    <ClCompile Include="System.cpp" />
-    <ClCompile Include="TypeManager.cpp" />
-    <ClCompile Include="Vec3.cpp" />
-    <ClCompile Include="Vec4.cpp" />
+    <ClInclude Include="..\Scene.h" />
+    <ClInclude Include="SceneComponent.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Core.h" />
-    <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Component.h" />
-    <ClInclude Include="ComponentManager.h" />
-    <ClInclude Include="Mat3.h" />
-    <ClInclude Include="Mat4.h" />
-    <ClInclude Include="Math.h" />
-    <ClInclude Include="GameObject.h" />
-    <ClInclude Include="ObjectManager.h" />
-    <ClInclude Include="Platform.h" />
-    <ClInclude Include="Quat.h" />
-    <ClInclude Include="Reflection.h" />
-    <ClInclude Include="SceneComponent.h" />
-    <ClInclude Include="System.h" />
-    <ClInclude Include="TypeManager.h" />
-    <ClInclude Include="Vec3.h" />
-    <ClInclude Include="Vec4.h" />
+    <ClCompile Include="SceneComponent.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
