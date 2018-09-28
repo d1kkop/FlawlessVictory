@@ -5,7 +5,8 @@ using namespace fv;
 
 int main(int argc, char** arv)
 {
-    fv::startup();
+    fv::core_start();
+    fv::scene_start();
 
     GameObject* o = gameObjectManager()->newObject();
     o->addOrGetComponent<SceneComponent>();
@@ -18,6 +19,7 @@ int main(int argc, char** arv)
     o->removeComponent<SceneComponent>();
     printf("Num %d\n", o->numComponents() );
     
-    fv::shutdown();
+    fv::scene_close();
+    fv::core_close();
     return 0;
 }

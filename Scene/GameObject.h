@@ -1,8 +1,7 @@
 #pragma once
-#include "Platform.h"
-#include "Component.h"
-#include "System.h"
-#include "ComponentManager.h"
+#include "../Core/Platform.h"
+#include "../Core/Component.h"
+#include "../Core/ComponentManager.h"
 
 namespace fv
 {

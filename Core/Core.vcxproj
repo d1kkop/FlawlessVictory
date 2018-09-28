@@ -121,16 +121,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentManager.cpp" />
+    <ClCompile Include="CoreManagers.cpp" />
     <ClCompile Include="Mat3.cpp" />
     <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="ObjectManager.cpp" />
     <ClCompile Include="Quat.cpp" />
-    <ClCompile Include="SceneComponent.cpp" />
-    <ClCompile Include="System.cpp" />
     <ClCompile Include="TypeManager.cpp" />
     <ClCompile Include="Vec3.cpp" />
     <ClCompile Include="Vec4.cpp" />
@@ -141,6 +138,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="ComponentManager.h" />
+    <ClInclude Include="CoreManagers.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mat4.h" />
     <ClInclude Include="Math.h" />
@@ -149,8 +147,6 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Quat.h" />
     <ClInclude Include="Reflection.h" />
-    <ClInclude Include="SceneComponent.h" />
-    <ClInclude Include="System.h" />
     <ClInclude Include="TypeManager.h" />
     <ClInclude Include="Vec3.h" />
     <ClInclude Include="Vec4.h" />

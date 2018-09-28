@@ -1,6 +1,6 @@
 #pragma once
+#include "CoreManagers.h"
 #include "TypeManager.h"
-#include "System.h"
 
 #define FV_TYPE(name) \
 public:\

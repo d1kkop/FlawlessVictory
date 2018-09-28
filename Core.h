@@ -3,7 +3,11 @@
 #include "Core/Platform.h"
 #include "Core/Common.h"
 #include "Core/Math.h"
-#include "Core/GameObject.h"
 #include "Core/Component.h"
-#include "Core/ObjectManager.h"
-#include "Core/ComponentManager.h"
+#include "Core/CoreManagers.h"
+
+namespace fv
+{
+    FV_DLL void core_start();
+    FV_DLL void core_close();
+}
