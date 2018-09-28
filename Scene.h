@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Core/Platform.h"
 #include "Scene/SceneComponent.h"
 #include "Scene/GameObject.h"
 #include "Scene/SceneManagers.h"

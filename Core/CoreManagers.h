@@ -1,7 +1,8 @@
 #pragma once
+#include "Platform.h"
 
 namespace fv
 {
-    class TypeManager* typeManager();
-    class ComponentManager* componentManager();
+    FV_DLL class TypeManager* typeManager();
+    FV_DLL class ComponentManager* componentManager();
 }

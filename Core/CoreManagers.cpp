@@ -7,13 +7,13 @@ namespace fv
     TypeManager* g_TypeManager {};
     ComponentManager* g_ComponentManager {};
 
-    void core_start()
+    FV_DLL void core_start()
     {
         g_TypeManager = new TypeManager();
         g_ComponentManager = new ComponentManager();
     }
 
-    void core_close()
+    FV_DLL void core_close()
     {
         deleteAndNull(g_ComponentManager);
         deleteAndNull(g_TypeManager);

@@ -9,12 +9,11 @@ int main(int argc, char** arv)
     fv::scene_start();
 
     GameObject* o = gameObjectManager()->newObject();
-    o->addOrGetComponent<SceneComponent>();
+    o->addComponent<SceneComponent>();
     bool bHas = o->hasComponent<SceneComponent>();
     bHas = o->hasComponent<SceneComponent>();
     o->removeComponent<SceneComponent>();
 
-    
     printf("Num %d\n", o->numComponents() );
     o->removeComponent<SceneComponent>();
     printf("Num %d\n", o->numComponents() );

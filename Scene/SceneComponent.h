@@ -10,20 +10,20 @@ namespace fv
         FV_TYPE(SceneComponent)
 
     public:
-        void move(const Vec3& translate);
-        void setPosition(const Vec3& position);
-        const Vec3& position() const;
-        void rotate(const Quat& rotate);
-        void setRotation(const Quat& rotation);
-        const Quat& rotation() const;
-        void scale(const Vec3& scale);
-        void setScale(const Vec3& scale);
-        const Vec3& scale() const;
+        FV_DLL void move(const Vec3& translate);
+        FV_DLL void setPosition(const Vec3& position);
+        FV_DLL const Vec3& position() const;
+        FV_DLL void rotate(const Quat& rotate);
+        FV_DLL void setRotation(const Quat& rotation);
+        FV_DLL const Quat& rotation() const;
+        FV_DLL void scale(const Vec3& scale);
+        FV_DLL void setScale(const Vec3& scale);
+        FV_DLL const Vec3& scale() const;
 
-        void attach(SceneComponent* other);
-        void detachSelf();
-        void detachParent();
-        void detachChildren();
+        FV_DLL void attach(SceneComponent* other);
+        FV_DLL void detachSelf();
+        FV_DLL void detachParent();
+        FV_DLL void detachChildren();
         
 
     private:

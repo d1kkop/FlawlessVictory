@@ -4,7 +4,7 @@
 
 #define FV_TYPE(name) \
 public:\
-static u32 type() \
+static FV_DLL u32 type() \
 { \
     return fv::typeManager()->nameToType(#name); \
 }

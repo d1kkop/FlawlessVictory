@@ -4,13 +4,16 @@ namespace fv
 {
     ObjectManager<GameObject>* g_GameObjectManager {};
 
-    void scene_start()
+    FV_DLL void scene_start()
     {
         g_GameObjectManager = new ObjectManager<GameObject>();
     }
 
-    void scene_close()
+    FV_DLL void scene_close()
     {
         deleteAndNull( g_GameObjectManager );
     }
+
+
+    ObjectManager<fv::GameObject>* gameObjectManager() { return g_GameObjectManager; }
 }

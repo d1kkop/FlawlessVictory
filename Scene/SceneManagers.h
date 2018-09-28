@@ -4,5 +4,5 @@
 
 namespace fv
 {
-    ObjectManager<GameObject>* gameObjectManager();
+    FV_DLL ObjectManager<GameObject>* gameObjectManager();
 }
