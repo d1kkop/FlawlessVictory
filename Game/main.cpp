@@ -8,8 +8,10 @@ int main(int argc, char** arv)
     fv::core_start();
     fv::scene_start();
 
+    SceneWorld* scene = sceneWorldManager()->newObject();
     GameObject* o = gameObjectManager()->newObject();
-    o->addComponent<SceneComponent>();
+
+    o->addComponent<SceneComponent>(scene);
     bool bHas = o->hasComponent<SceneComponent>();
     bHas = o->hasComponent<SceneComponent>();
     o->removeComponent<SceneComponent>();

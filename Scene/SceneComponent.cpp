@@ -1,9 +1,23 @@
 #include "SceneComponent.h"
+#include "SceneWorld.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Math.h"
+#include <cassert>
 
 namespace fv
 {
+    SceneComponent::SceneComponent(SceneWorld* sceneWorld):
+        m_SceneWorld(sceneWorld)
+    {
+        assert(m_SceneWorld);
+        m_SceneWorld->addSceneComponent( this );
+    }
+
+    FV_DLL SceneComponent::~SceneComponent()
+    {
+        if ( m_SceneWorld ) m_SceneWorld->removeSceneComponent( this );
+    }
+
     void SceneComponent::move(const Vec3& translate)
     {
         m_MatrixDirty = true;

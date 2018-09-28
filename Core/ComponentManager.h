@@ -9,7 +9,8 @@ namespace fv
         const u32 ComponentBufferSize = 32;
 
     public:
-        ComponentManager();
+        ComponentManager() = default;
+        ~ComponentManager();
 
         template <class T> T* newComponent();
         template <class T> void freeComponent(Component* comp);

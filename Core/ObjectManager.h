@@ -11,6 +11,8 @@ namespace fv
     public:
         ObjectManager(u32 objBufferSize=128):
             m_ObjectBufferSize(objBufferSize) { }
+        ~ObjectManager();
+
         T* newObject();
 
     private:
@@ -20,6 +22,13 @@ namespace fv
         Array<T*> m_FreeObjects;
     };
 
+
+    template <class T>
+    ObjectManager<T>::~ObjectManager()
+    {
+        for ( auto* o : m_ActiveObjects ) delete o;
+        for ( auto* o : m_FreeObjects ) delete o;
+    }
 
     template <class T>
     T* ObjectManager<T>::newObject()

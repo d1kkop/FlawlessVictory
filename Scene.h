@@ -3,6 +3,7 @@
 #include "Scene/SceneComponent.h"
 #include "Scene/GameObject.h"
 #include "Scene/SceneManagers.h"
+#include "Scene/SceneWorld.h"
 
 namespace fv
 {

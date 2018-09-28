@@ -2,8 +2,12 @@
 
 namespace fv
 {
-    ComponentManager::ComponentManager()
+    ComponentManager::~ComponentManager()
     {
-
+        for ( auto& kvp : m_ActiveComponents )
+            for ( auto* c : kvp.second ) delete c;
+        for ( auto& kvp : m_FreeComponents )
+            for ( auto* c : kvp.second ) delete c;
     }
+
 }

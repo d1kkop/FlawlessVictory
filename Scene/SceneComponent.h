@@ -5,11 +5,17 @@
 
 namespace fv
 {
+    class SceneWorld;
+
     class SceneComponent: public Component
     {
         FV_TYPE(SceneComponent)
 
     public:
+        FV_DLL SceneComponent() = default;
+        FV_DLL SceneComponent(SceneWorld* sceneWorld);
+        FV_DLL ~SceneComponent();
+
         FV_DLL void move(const Vec3& translate);
         FV_DLL void setPosition(const Vec3& position);
         FV_DLL const Vec3& position() const;
@@ -40,5 +46,6 @@ namespace fv
         Mat4 m_WorldToLocal = Mat4::identity();
         bool m_MatrixDirty{};
         bool m_WorldToLocalDirty{};
+        SceneWorld* m_SceneWorld{};
     };
 }
