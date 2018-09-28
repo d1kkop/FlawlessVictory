@@ -1,9 +1,7 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <iostream>
-using namespace std;
+#include "../Core.h"
+using namespace fv;
 
 
 namespace UnitTest
@@ -13,11 +11,11 @@ namespace UnitTest
     public:
         UnitTestBase(const char* name): m_Name(name) { }
         virtual bool run() = 0;
-        string name() { return m_Name; }
-        string m_Name;
+        String name() { return m_Name; }
+        String m_Name;
     };
 
-    vector<UnitTestBase*> g_UnitTests;
+    Array<UnitTestBase*> g_UnitTests;
     UnitTestBase* addUTest(UnitTestBase* ut) { g_UnitTests.push_back(ut); return ut; }
 }
 

@@ -13,12 +13,15 @@
     <Filter Include="Math">
       <UniqueIdentifier>{795393c1-7757-4574-87bd-6b6c69dda6d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{88c00811-af62-4b3d-bc07-19a8adc9f8c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{945f6284-b962-4340-b804-368333fcb1d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Component.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="ComponentManager.cpp">
@@ -54,12 +57,12 @@
     <ClCompile Include="Vec4.cpp">
       <Filter>Math</Filter>
     </ClCompile>
+    <ClCompile Include="SceneComponent.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Component.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="ComponentManager.h">
@@ -107,6 +110,12 @@
     </ClInclude>
     <ClInclude Include="Vec4.h">
       <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneComponent.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

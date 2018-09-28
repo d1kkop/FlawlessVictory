@@ -2,6 +2,8 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <string>
+#include <memory>
 
 namespace fv
 {
@@ -14,7 +16,7 @@ namespace fv
     using u64  = unsigned long long;
 
     template <class T> using Array = std::vector<T>;
-    template <class T> using Set = std::set<T>;
+    template <class T> using Set   = std::set<T>;
     template <class Key, class Value> using Map = std::map<Key, Value>;
     using String = std::string;
 
@@ -26,4 +28,13 @@ namespace fv
     inline T scc (F&& f) { return static_cast<T>(const_cast<T>(f)); }
     template <class T>
     void deleteAndNull(T*& ptr) { delete ptr; ptr = nullptr; }
+
+    // Managed ptr
+    template <class T> using M = std::shared_ptr<T>;
+
+    // Only a single refcounted ptr
+    template <class T> using U = std::unique_ptr<T>;
+
+    // Can become null if owning shared ptr loses its reference
+    template <class T> using W = std::weak_ptr<T>;
 }

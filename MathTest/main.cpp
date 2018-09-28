@@ -1,5 +1,8 @@
 #include "UnitTest.h"
+#include "MemoryTests.h"
 #include "MathTests.h"
+#include <iostream>
+using namespace std;
 using namespace UnitTest;
 
 int main(int argc, char** arv)
