@@ -1,7 +1,11 @@
 #include "Mat3.h"
 #include "Quat.h"
+#include "Vec3.h"
+#include "Mat4.h"
+#include "Math.h"
 #include <cassert>
 #include <cmath>
+#include <string>
 
 namespace fv
 {
@@ -106,7 +110,7 @@ namespace fv
     Mat3 Mat3::inverse() const
     {
         float det = 1.f/determinant();
-        // TODO check nan
+        
         return
         {
             (m22*m33 - m23*m32) * det,

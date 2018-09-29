@@ -1,5 +1,5 @@
 #pragma once
-#include "CoreManagers.h"
+#include "CoreMain.h"
 #include "TypeManager.h"
 
 #define FV_TYPE(name) \

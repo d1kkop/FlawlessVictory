@@ -1,6 +1,6 @@
 #pragma once
 #include "Platform.h"
-#include "Math.h"
+#include <cmath>
 
 namespace fv
 {
@@ -74,7 +74,7 @@ namespace fv
     // Global cross
     inline Vec3 cross(const Vec3& a, const Vec3& b) { return a^b; }
 
-    // Oposite scalar operations
+    // Opposite scalar operations
     inline Vec3 operator+ (float f, const Vec3& v) { return v+f; }
     inline Vec3 operator* (float f, const Vec3& v) { return v*f; }
 }

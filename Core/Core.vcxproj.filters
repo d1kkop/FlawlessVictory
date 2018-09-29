@@ -39,8 +39,14 @@
     <ClCompile Include="Vec4.cpp">
       <Filter>Math</Filter>
     </ClCompile>
-    <ClCompile Include="CoreManagers.cpp">
+    <ClCompile Include="CoreMain.cpp">
       <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="LogManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -87,7 +93,10 @@
     <ClInclude Include="Vec4.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="CoreManagers.h">
+    <ClInclude Include="CoreMain.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="LogManager.h">
       <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>

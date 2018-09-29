@@ -3,6 +3,7 @@
 #include "Mat3.h"
 #include "Vec3.h"
 #include "Vec4.h"
+#include "Math.h"
 #include <cassert>
 
 namespace fv
@@ -154,7 +155,7 @@ namespace fv
         float c5 = m33*m44-m34*m43;
 
         float det = 1.f / (s0*c5 - s1*c4 + s2*c3 + s3*c2 - s4*c1 + s5*c0);
-        // TODO check nan
+        assert( checkFloat(det) && checkMatrix(*this) );
 
         return
         {

@@ -1,5 +1,6 @@
 #include "../Core.h"
 #include "../Scene.h"
+#include "../Render.h"
 using namespace fv;
 
 
@@ -8,17 +9,14 @@ int main(int argc, char** arv)
     fv::core_start();
     fv::scene_start();
 
-    SceneWorld* scene = sceneWorldManager()->newObject();
     GameObject* o = gameObjectManager()->newObject();
+    o->addComponent<SceneComponent>();
+    
+    GameObject* o2 = gameObjectManager()->newObject();
+    o->addComponent<SceneComponent>();
 
-    o->addComponent<SceneComponent>(scene);
-    bool bHas = o->hasComponent<SceneComponent>();
-    bHas = o->hasComponent<SceneComponent>();
-    o->removeComponent<SceneComponent>();
-
-    printf("Num %d\n", o->numComponents() );
-    o->removeComponent<SceneComponent>();
-    printf("Num %d\n", o->numComponents() );
+    GameObject* cam = gameObjectManager()->newObject();
+    cam->addComponent<Camera>();
     
     fv::scene_close();
     fv::core_close();

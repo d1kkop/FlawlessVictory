@@ -1,4 +1,6 @@
 #include "Vec3.h"
+#include "Math.h"
+#include <cassert>
 
 namespace fv
 {
@@ -38,7 +40,7 @@ namespace fv
     {
         float l=1.f/length();
         *this *= l;
-        // TODO check nan
+        assert( checkVector(*this) );
         return *this;
     }
 

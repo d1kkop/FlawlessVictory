@@ -1,6 +1,5 @@
 #pragma once
 #include "Platform.h"
-#include "Math.h"
 
 namespace fv
 {

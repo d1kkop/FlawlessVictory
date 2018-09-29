@@ -1,9 +1,11 @@
 #pragma once
+#include "Platform.h"
 #include <vector>
 #include <map>
 #include <set>
 #include <string>
 #include <memory>
+#include <mutex>
 
 namespace fv
 {
@@ -20,14 +22,17 @@ namespace fv
     template <class Key, class Value> using Map = std::map<Key, Value>;
     using String = std::string;
 
+    using Mutex         = std::mutex;
+    using RMutex        = std::recursive_mutex;
+    using scoped_lock   = std::lock_guard<Mutex>;
+    using rscoped_lock  = std::lock_guard<RMutex>;
+
     template <class T, class F>
     inline T rc (F&& f) { return reinterpret_cast<T>(f); }
     template <class T, class F>
     inline T sc (F&& f) { return static_cast<T>(f); }
     template <class T, class F>
     inline T scc (F&& f) { return static_cast<T>(const_cast<T>(f)); }
-    template <class T>
-    void deleteAndNull(T*& ptr) { delete ptr; ptr = nullptr; }
 
     // Managed ptr
     template <class T> using M = std::shared_ptr<T>;
@@ -37,4 +42,13 @@ namespace fv
 
     // Can become null if owning shared ptr loses its reference
     template <class T> using W = std::weak_ptr<T>;
+
+
+    // ------------- Functions -----------------------------------------
+
+    // Returns local time as string.
+    String localTime();
+    String format(const char* msg, ...);
+    template <class T> 
+    void deleteAndNull(T*& ptr) { delete ptr; ptr = nullptr; }
 }

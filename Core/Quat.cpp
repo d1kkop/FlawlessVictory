@@ -1,6 +1,8 @@
 #include "Quat.h"
 #include "Vec3.h"
 #include "Mat3.h"
+#include "Mat4.h"
+#include "Math.h"
 #include <cassert>
 
 namespace fv
@@ -175,7 +177,7 @@ namespace fv
         y *= m;
         z *= m;
         w *= m;
-        // TODO check nan
+        assert( checkQuat(*this) );
         return *this;
     }
 

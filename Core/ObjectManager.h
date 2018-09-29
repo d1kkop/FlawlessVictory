@@ -26,7 +26,7 @@ namespace fv
     template <class T>
     ObjectManager<T>::~ObjectManager()
     {
-        for ( auto* o : m_ActiveObjects ) delete o;
+        for ( auto* o : m_ActiveObjects ) 
         for ( auto* o : m_FreeObjects ) delete o;
     }
 

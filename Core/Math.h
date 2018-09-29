@@ -5,6 +5,7 @@
 #include "Quat.h"
 #include "Mat3.h"
 #include "Mat4.h"
+#include <cmath>
 
 namespace fv
 {
@@ -13,4 +14,10 @@ namespace fv
     constexpr float R2D = 180.f/PI;
 
     FV_DLL u32 Hash32(const char* key, u32 len);
+    inline bool checkFloat(float f)                         { return std::isnormal(f)||f==0.f; }
+    inline bool checkQuat(const Quat& q)                    { return checkFloat(q.x)||checkFloat(q.y)||checkFloat(q.z)||checkFloat(q.w); }
+    inline bool checkVector(const Vec3& v)                  { return checkFloat(v.x)||checkFloat(v.y)||checkFloat(v.z); }
+    inline bool checkVector(const Vec4& v)                  { return checkFloat(v.x)||checkFloat(v.y)||checkFloat(v.z)||checkFloat(v.w); }
+    inline bool checkMatrix(const Mat3& m)                  { return checkVector(m.axisX())||checkVector(m.axisY())||checkVector(m.axisZ()); }
+    inline bool checkMatrix(const Mat4& m)                  { return checkVector(m.axisX())||checkVector(m.axisY())||checkVector(m.axisZ())||checkVector(m.translation()); }
 }
