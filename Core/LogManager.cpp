@@ -51,6 +51,13 @@ namespace fv
         logToIde(finalStr.c_str());
     }
 
+    void LogManager::setOptions(bool logFile, bool logIde, bool logFileAndLine)
+    {
+        m_LogToFile = logFile;
+        m_LogToIde = logIde;
+        m_LogLineAndFile = logFileAndLine;
+    }
+
     void LogManager::logToFile(const char* msg)
     {
         if ( !m_LogToFile ) return;

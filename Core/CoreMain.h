@@ -1,6 +1,7 @@
 #pragma once
 #include "Platform.h"
 #include "LogManager.h"
+#include <cassert>
 
 #define FV_CHECK_ST() \
 {\

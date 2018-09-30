@@ -17,14 +17,8 @@ namespace fv
     class LogManager
     {
     public:
-        // Thread safe
         FV_DLL void log( LogType type, const char* functionName, u64 line, const char* msg, ... );
-        FV_DLL void setOptions( bool logFile, bool logIde, bool logFileAndLine )
-        {
-            m_LogToFile = logFile;
-            m_LogToIde = logIde;
-            m_LogLineAndFile = logFileAndLine;
-        }
+        FV_DLL void setOptions( bool logFile, bool logIde, bool logFileAndLine );
 
     private:
         void logToFile(const char* msg);
