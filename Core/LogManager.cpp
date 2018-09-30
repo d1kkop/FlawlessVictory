@@ -1,4 +1,5 @@
 #include "LogManager.h"
+#include "Functions.h"
 #include <cstdlib>
 #include <cstdarg>
 

@@ -45,7 +45,13 @@
     <ClCompile Include="LogManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="Common.cpp">
+    <ClCompile Include="Thread.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Functions.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp">
       <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,6 +104,15 @@
     </ClInclude>
     <ClInclude Include="LogManager.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Functions.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

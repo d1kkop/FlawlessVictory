@@ -4,6 +4,9 @@
 
 namespace fv
 {
+    /*  The ComponentManager serves two purposes.
+        1. All components are supposed to exist at all time. Freed components are recycled.
+        2. Operations can be performed on a sequential array of memory (roughly) in a ordered fashion. This is very cache friendly. */
     class ComponentManager
     {
         const u32 ComponentBufferSize = 32;
@@ -15,8 +18,12 @@ namespace fv
         template <class T> T* newComponent();
         template <class T> void freeComponent(Component* comp);
         template <class T> void growComponents();
+        Map<u32, Array<Component*>>& activeComponents() { return m_ActiveComponents; }
+        bool executingSingleThreaded() const { return m_ExecutingSingleThreaded; }
+        void setExecutingSingleThreaded(bool executingSt) { m_ExecutingSingleThreaded = executingSt; }
 
     private:
+        bool m_ExecutingSingleThreaded = false;
         Map<u32, Array<Component*>> m_ActiveComponents;
         Map<u32, Array<Component*>> m_FreeComponents;
     };

@@ -9,5 +9,4 @@ namespace fv
         for ( auto& kvp : m_FreeComponents )
             for ( auto* c : kvp.second ) delete c;
     }
-
 }

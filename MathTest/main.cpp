@@ -1,6 +1,7 @@
 #include "UnitTest.h"
 #include "MemoryTests.h"
 #include "MathTests.h"
+#include "TimeTests.h"
 #include <iostream>
 using namespace std;
 using namespace UnitTest;

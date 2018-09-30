@@ -5,7 +5,7 @@ namespace fv
 {
     class Camera: public SceneComponent
     {
-        FV_TYPE(Camera)
+        FV_TYPE(Camera, FV_CAMERA_PRIORITY, false)
 
     public:
         void setFov(float degrees);

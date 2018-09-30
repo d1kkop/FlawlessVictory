@@ -1,5 +1,7 @@
 #pragma once
 
+#define FV_ST /* A function that cannot be called from updateMT! */
+
 #ifdef FV_EXPORTING
     #define FV_DLL __declspec(dllexport)
 #elif FV_IMPORTING

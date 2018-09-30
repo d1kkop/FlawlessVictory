@@ -58,6 +58,7 @@ namespace fv
 
     void SceneComponent::attach(SceneComponent* other)
     {
+        FV_CHECK_ST();
         detachSelf();
         if ( other )
         {
@@ -75,33 +76,37 @@ namespace fv
 
     void SceneComponent::detachSelf()
     {
+        FV_CHECK_ST();
         detachParent();
         detachChildren();
     }
 
     void SceneComponent::detachParent()
     {
+        FV_CHECK_ST();
         if ( m_Parent )
         {
             Remove_if(m_Parent->m_Children, [this](auto* c) { return c==this; });
             m_Parent = nullptr;
             computeLocalToWorld();
-            computeTRSFromLocalToWorld();
+            computeTRSWorldToLocal();
         }
     }
 
     void SceneComponent::detachChildren()
     {
+        FV_CHECK_ST();
         for ( auto* c : m_Children )
         {
             c->computeLocalToWorld();
-            c->computeTRSFromLocalToWorld();
+            c->computeTRSWorldToLocal();
             c->m_Parent = nullptr;
         }
     }
 
     bool SceneComponent::computeLocalToWorld()
     {
+        FV_CHECK_ST();
         if ( m_MatrixDirty || (m_Parent && m_Parent->m_MatrixDirty) )
         {
             Mat4 TRS = Mat4::compose(m_Position, m_Rotation, m_Scale);
@@ -122,14 +127,17 @@ namespace fv
 
     void SceneComponent::computeWorldToLocal()
     {
+        FV_CHECK_ST();
         if ( computeLocalToWorld() ) // Update if localToWorld was dirty
         {
             m_WorldToLocal = m_LocalToWorld.inverse();
         }
     }
 
-    void SceneComponent::computeTRSFromLocalToWorld()
+    void SceneComponent::computeTRSWorldToLocal()
     {
+        FV_CHECK_ST();
+        computeWorldToLocal();
         m_WorldToLocal.decompose(m_Position, m_Rotation, m_Scale);
     }
 

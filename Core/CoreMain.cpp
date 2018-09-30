@@ -1,4 +1,5 @@
 #include "CoreMain.h"
+#include "Functions.h"
 #include "TypeManager.h"
 #include "ComponentManager.h"
 #include "LogManager.h"

@@ -7,7 +7,7 @@ namespace fv
     {
         if ( degrees < 0.1f )
         {
-            LOGW( "Camera FOV smaller than 0.1 degrees." );
+            LOGW("Camera FOV smaller than 0.1 degrees.");
         }
         m_Fov = degrees;
         m_IsDirty = true;
@@ -75,11 +75,11 @@ namespace fv
         {
             if ( m_IsPerspective )
             {
-                m_ProjectionMatrix = Mat4::perspectiveLH( D2R*m_Fov, m_Aspect, m_Near, m_Far );
+                m_ProjectionMatrix = Mat4::perspectiveLH(D2R*m_Fov, m_Aspect, m_Near, m_Far);
             }
             else
             {
-                m_ProjectionMatrix = Mat4::orthoLH( -m_Width*.5f, m_Width*.5f, -m_Height*.5f, m_Height*.5f, m_Near, m_Far );
+                m_ProjectionMatrix = Mat4::orthoLH(-m_Width*.5f, m_Width*.5f, -m_Height*.5f, m_Height*.5f, m_Near, m_Far);
             }
             m_IsDirty = false;
         }

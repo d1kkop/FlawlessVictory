@@ -3,7 +3,7 @@
 
 #define LOG( msg, ... )  logManager()->log( LogType::Message, FV_FUNCTION, FV_LINE, msg, __VA_ARGS__ )
 #define LOGW( msg, ... ) logManager()->log( LogType::Warning, FV_FUNCTION, FV_LINE, msg, __VA_ARGS__ )
-#define LOGC( msg, ... ) logManager()->log( LogType::Critical, FV_FUNCTION, FV_LINE, msg, __VA_ARGS__ )
+#define LOGC( msg, ... ) logManager()->log( LogType::Error, FV_FUNCTION, FV_LINE, msg, __VA_ARGS__ )
 
 namespace fv
 {

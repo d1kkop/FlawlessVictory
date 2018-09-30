@@ -1,18 +1,23 @@
-#include "Common.h"
+#include "Functions.h"
 #include <ctime>
 #include <cstdlib>
 #include <cstdarg>
 #include <string>
+#include <chrono>
+using namespace std;
+using namespace chrono;
 
 namespace fv
 {
+    double s_StartTime = epochTime();
+
     String localTime()
     {
         static Mutex timeMutex;
         scoped_lock lk(timeMutex);
         time_t rawtime;
         struct tm timeinfo;
-        time (&rawtime);
+        ::time (&rawtime);
         localtime_s(&timeinfo, &rawtime);
         char asciitime[256];
         asctime_s(asciitime, 256, &timeinfo);
@@ -39,4 +44,15 @@ namespace fv
         va_end(myargs);
         return buff;
     }
+
+    double epochTime()
+    {
+        return duration_cast<duration<double>>(high_resolution_clock::now().time_since_epoch()).count();
+    }
+
+    float time()
+    {
+        return (float)(epochTime()-s_StartTime);
+    }
+
 }

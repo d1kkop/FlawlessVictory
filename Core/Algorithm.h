@@ -4,6 +4,12 @@
 namespace fv
 {
     template <class Container, class Pred>
+    void Sort(Container& c, Pred pred)
+    {
+        std::sort(c.begin(), c.end(), pred);
+    }
+
+    template <class Container, class Pred>
     auto Find_if(Container& c, Pred pred)
     {
         return std::find_if( c.begin(), c.end(), pred );

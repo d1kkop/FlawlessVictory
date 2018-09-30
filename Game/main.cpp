@@ -17,6 +17,8 @@ int main(int argc, char** arv)
 
     GameObject* cam = gameObjectManager()->newObject();
     cam->addComponent<Camera>();
+
+    float s = time();
     
     fv::scene_close();
     fv::core_close();

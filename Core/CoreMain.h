@@ -1,5 +1,15 @@
 #pragma once
 #include "Platform.h"
+#include "LogManager.h"
+
+#define FV_CHECK_ST() \
+{\
+    if ( !componentManager()->executingSingleThreaded()) \
+    { \
+        LOGC("Executing single threaded function from parallel. Function call ignored."); \
+        assert(false && "Executing single threaded function from parallel. Function call ignored."); \
+    }\
+}
 
 namespace fv
 {

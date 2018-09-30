@@ -42,13 +42,4 @@ namespace fv
 
     // Can become null if owning shared ptr loses its reference
     template <class T> using W = std::weak_ptr<T>;
-
-
-    // ------------- Functions -----------------------------------------
-
-    // Returns local time as string.
-    String localTime();
-    String format(const char* msg, ...);
-    template <class T> 
-    void deleteAndNull(T*& ptr) { delete ptr; ptr = nullptr; }
 }

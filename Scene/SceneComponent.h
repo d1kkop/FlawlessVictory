@@ -2,6 +2,7 @@
 #include "../Core/Component.h"
 #include "../Core/TypeManager.h"
 #include "../Core/Math.h"
+#include "SceneMain.h"
 
 namespace fv
 {
@@ -9,7 +10,7 @@ namespace fv
 
     class SceneComponent: public Component
     {
-        FV_TYPE(SceneComponent)
+        FV_TYPE(SceneComponent, FV_SCENECOMPONENT_PRIORITY, false)
 
     public:
         FV_DLL void move(const Vec3& translate);
@@ -22,15 +23,15 @@ namespace fv
         FV_DLL void setScale(const Vec3& scale);
         FV_DLL const Vec3& scale() const;
 
-        FV_DLL void attach(SceneComponent* other);
-        FV_DLL void detachSelf();
-        FV_DLL void detachParent();
-        FV_DLL void detachChildren();
+        FV_ST FV_DLL void attach(SceneComponent* other);
+        FV_ST FV_DLL void detachSelf();
+        FV_ST FV_DLL void detachParent();
+        FV_ST FV_DLL void detachChildren();
 
     private:
-        bool computeLocalToWorld();
-        void computeWorldToLocal();
-        void computeTRSFromLocalToWorld();
+        FV_ST bool computeLocalToWorld();
+        FV_ST void computeWorldToLocal();
+        FV_ST void computeTRSWorldToLocal();
 
         Vec3 m_Position{};
         Quat m_Rotation = Quat::identity();

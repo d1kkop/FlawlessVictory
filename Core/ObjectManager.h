@@ -5,6 +5,9 @@
 
 namespace fv
 {
+    /*  The ObjectManager serves two purposes.
+        1. All objects are supposed to exist at all time. Freed objects are recycled.
+        2. Operations can be performed on a sequential array of memory (roughly) in a ordered fashion. This is very cache friendly. */
     template <class T>
     class ObjectManager
     {

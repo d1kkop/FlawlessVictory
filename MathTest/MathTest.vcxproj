@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="MathTests.h" />
     <ClInclude Include="MemoryTests.h" />
+    <ClInclude Include="TimeTests.h" />
     <ClInclude Include="UnitTest.h" />
   </ItemGroup>
   <ItemGroup>
