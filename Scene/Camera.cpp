@@ -25,23 +25,23 @@ namespace fv
         m_IsDirty = true;
     }
 
-    void Camera::setNear(float near)
+    void Camera::setNear(float nearr)
     {
-        if ( near < 0.01f )
+        if ( nearr < 0.01f )
         {
             LOGW("Camera NEAR smaller than 0.01.");
         }
-        m_Near = near;
+        m_Near = nearr;
         m_IsDirty = true;
     }
 
-    void Camera::setFar(float far)
+    void Camera::setFar(float farr)
     {
-        if ( far > 10000.f )
+        if ( farr > 10000.f )
         {
             LOGW("Camera FAR bigger than 10.000.");
         }
-        m_Far = far;
+        m_Far = farr;
         m_IsDirty = true;
     }
 

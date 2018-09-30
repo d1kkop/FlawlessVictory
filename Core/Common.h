@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <mutex>
+#include <filesystem>
 
 namespace fv
 {
@@ -21,6 +22,7 @@ namespace fv
     template <class T> using Set   = std::set<T>;
     template <class Key, class Value> using Map = std::map<Key, Value>;
     using String = std::string;
+    using Path = std::experimental::filesystem::path;
 
     using Mutex         = std::mutex;
     using RMutex        = std::recursive_mutex;

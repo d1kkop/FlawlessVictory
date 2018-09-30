@@ -32,13 +32,14 @@ namespace fv
     bool OSLoadLibrary(const char* path)
     {
     #if FV_INCLUDE_WINHDR
-        HMODULE hModule = ::GetModuleHandle(nullptr);
+        HMODULE hModule = ::LoadLibrary(path);
         if ( !hModule )
         {
             LOGC( "Cannot load module %s, error code %d.", path, ::GetLastError() );
             return false;
         }
-    #endif
         return true;
+    #endif
+        return false;
     }
 }

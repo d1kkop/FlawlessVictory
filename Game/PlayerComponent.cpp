@@ -2,6 +2,8 @@
 
 namespace game
 {
+    FV_TYPE_IMPL(PlayerComponent)
+
     void PlayerComponent::updateMT(float t)
     {
 

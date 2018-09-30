@@ -25,7 +25,7 @@ namespace fv
         THREADNAME_INFO info;
         info.dwType = 0x1000;
         info.szName = name.c_str();
-        info.dwThreadID = dwThreadID;
+        info.dwThreadID = ::GetCurrentThreadId();
         info.dwFlags = 0;
 
         #pragma warning(push)  

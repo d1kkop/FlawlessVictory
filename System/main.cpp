@@ -3,8 +3,8 @@
 #include "../Core/TypeManager.h"
 #include "../Core/LogManager.h"
 #include "../Scene/GameObject.h"
-using namespace fv;
 
+using namespace fv;
 
 void shutdown()
 {
@@ -23,8 +23,11 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    Path dllPath = Path(argv[0]);
+    dllPath.remove_filename().append(argv[1]);
+
     SystemParams params;
-    params.moduleName = argv[1];
+    params.moduleName = dllPath.string();
 
     if ( systemManager()->initialize( params ) )
     {
