@@ -5,6 +5,7 @@ namespace fv
 {
     class Camera: public SceneComponent
     {
+    public:
         FV_TYPE(Camera, FV_CAMERA_PRIORITY, false)
 
     public:

@@ -13,7 +13,6 @@ namespace fv
     constexpr float D2R = PI/180.f;
     constexpr float R2D = 180.f/PI;
 
-    FV_DLL u32 Hash32(const char* key, u32 len);
     inline bool checkFloat(float f)                         { return std::isnormal(f)||f==0.f; }
     inline bool checkQuat(const Quat& q)                    { return checkFloat(q.x)||checkFloat(q.y)||checkFloat(q.z)||checkFloat(q.w); }
     inline bool checkVector(const Vec3& v)                  { return checkFloat(v.x)||checkFloat(v.y)||checkFloat(v.z); }

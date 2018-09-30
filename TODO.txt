@@ -1,3 +1,4 @@
 
 - Placement new for recycled gameobject (Reset object)
 - Placement new for recycled component (Reset object)
+- SingleTHread specifications for ComponentManager

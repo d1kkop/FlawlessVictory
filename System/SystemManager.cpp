@@ -2,7 +2,6 @@
 #include "../Core/Algorithm.h"
 #include "../Core/Time.h"
 #include "../Core/ComponentManager.h"
-#include "../Core/Vec3.h"
 
 namespace fv
 {
@@ -20,12 +19,12 @@ namespace fv
         while ( !m_Done )
         {
             // Sort components by priority
-            Map<u32, Array<Component*>>& componentsList = componentManager()->activeComponents();
+            Map<u32, Array<Component*>>& componentsList = componentManager()->components();
             Array<Array<Component*>*> sortedList;
             sortedList.reserve(componentsList.size());
             for ( auto& kvp : componentsList )
                 sortedList.emplace_back( &kvp.second );
-            Sort(sortedList, [](const Array<Component*>* a, const Array<Component*>* b)
+            sort(sortedList, [](const Array<Component*>* a, const Array<Component*>* b)
             {
                 if ( a->size() && b->size() )
                 {
@@ -35,7 +34,7 @@ namespace fv
             });
 
             // MT updates first
-            componentManager()->setExecutingSingleThreaded(false);
+            setExecutingParallel( true );
 
             // Check to see if can update network
             if ( Time::elapsed() - lastNetworkUpdate )
@@ -43,7 +42,7 @@ namespace fv
                 lastNetworkUpdate = Time::elapsed();
                 for ( auto& components : sortedList )
                     for ( Component* c : *components )
-                        if ( c->m_DoNetworkUpdate ) c->networkUpdateMT( Time::networkDt() );
+                        if ( !c->isInFreeList() && c->m_DoNetworkUpdate ) c->networkUpdateMT( Time::networkDt() );
             }
 
             // Check to see if can update physics
@@ -52,20 +51,20 @@ namespace fv
                 lastPhysicsUpdate = Time::elapsed();
                 for ( auto& components : sortedList )
                     for ( Component* c : *components )
-                        if ( c->m_DoPhysicsUpdate ) c->physicsUpdateMT( Time::networkDt() );
+                        if ( !c->isInFreeList() && c->m_DoPhysicsUpdate ) c->physicsUpdateMT( Time::networkDt() );
             }
 
             // Call MT update on components
             for ( auto& components : sortedList )
                 for ( Component* c : *components )
-                    if ( c->m_DoUpdate ) c->updateMT( Time::dt() );
+                    if ( !c->isInFreeList() && c->m_DoUpdate ) c->updateMT( Time::dt() );
 
-            componentManager()->setExecutingSingleThreaded(true);
+            setExecutingParallel( false );
 
             // Call ST update on components
             for ( auto& components : sortedList )
                 for ( Component* c : *components )
-                    if ( c->m_DoUpdate ) c->updateST( Time::dt() );
+                    if ( !c->isInFreeList() && c->m_DoUpdate ) c->updateST( Time::dt() );
 
             // Update timings
             Time::update();

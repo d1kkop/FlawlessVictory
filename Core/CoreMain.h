@@ -5,7 +5,7 @@
 
 #define FV_CHECK_ST() \
 {\
-    if ( !componentManager()->executingSingleThreaded()) \
+    if ( fv::isExecutingParallel()) \
     { \
         LOGC("Executing single threaded function from parallel. Function call ignored."); \
         assert(false && "Executing single threaded function from parallel. Function call ignored."); \
@@ -16,6 +16,9 @@ namespace fv
 {
     FV_DLL void core_start();
     FV_DLL void core_close();
+
+    FV_DLL bool isExecutingParallel();
+    FV_DLL void setExecutingParallel(bool isParallel);
 
     FV_DLL class TypeManager* typeManager();
     FV_DLL class ComponentManager* componentManager();

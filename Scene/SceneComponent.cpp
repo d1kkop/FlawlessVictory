@@ -5,6 +5,8 @@
 
 namespace fv
 {
+    FV_TYPE_IMPL(SceneComponent)
+
     void SceneComponent::move(const Vec3& translate)
     {
         m_MatrixDirty = true;
@@ -86,7 +88,7 @@ namespace fv
         FV_CHECK_ST();
         if ( m_Parent )
         {
-            Remove_if(m_Parent->m_Children, [this](auto* c) { return c==this; });
+            remove_if(m_Parent->m_Children, [this](auto* c) { return c==this; });
             m_Parent = nullptr;
             computeLocalToWorld();
             computeTRSWorldToLocal();

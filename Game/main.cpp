@@ -10,7 +10,7 @@ int main(int argc, char** arv)
     fv::scene_start();
 
     GameObject* o = gameObjectManager()->newObject();
-    o->addComponent<SceneComponent>();
+    SceneComponent* sc = o->addComponent<SceneComponent>();
     
     GameObject* o2 = gameObjectManager()->newObject();
     o->addComponent<SceneComponent>();

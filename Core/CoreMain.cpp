@@ -6,16 +6,14 @@
 
 namespace fv
 {
+    bool g_ExecutingParallel = false;
+
     TypeManager* g_TypeManager {};
     ComponentManager* g_ComponentManager {};
     LogManager* g_LogManager {};
 
     FV_DLL void core_start()
     {
-        if ( g_TypeManager ) return; // Assert only once started
-        g_LogManager = new LogManager();
-        g_TypeManager = new TypeManager();
-        g_ComponentManager = new ComponentManager();
     }
 
     FV_DLL void core_close()
@@ -25,7 +23,11 @@ namespace fv
         deleteAndNull(g_LogManager);
     }
 
-    TypeManager* typeManager() { return g_TypeManager; }
-    ComponentManager* componentManager() { return g_ComponentManager; }
-    LogManager* logManager() { return g_LogManager; }
+    FV_DLL bool isExecutingParallel() { return g_ExecutingParallel; }
+    FV_DLL void setExecutingParallel(bool isParallel) { g_ExecutingParallel=isParallel; }
+
+    // Type and LogManager are already needed at static initialization.
+    TypeManager* typeManager() { return createOnce(g_TypeManager); }
+    LogManager* logManager() { return createOnce(g_LogManager); }
+    ComponentManager* componentManager() { return createOnce(g_ComponentManager); }
 }

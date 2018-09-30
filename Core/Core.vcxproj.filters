@@ -21,9 +21,6 @@
     <ClCompile Include="TypeManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="Math.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="Quat.cpp">
       <Filter>Math</Filter>
     </ClCompile>

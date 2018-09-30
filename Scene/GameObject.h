@@ -10,8 +10,13 @@ namespace fv
     public:
         FV_DLL GameObject();
 
-        template <class T, class... Args>
-        FV_ST T* addComponent(Args... args);
+        FV_ST Component* addComponent(u32 type);
+        FV_ST bool hasComponent(u32 type);
+        FV_ST Component* getComponent(u32 type);
+        FV_ST bool removeComponent(u32 type);
+
+        template <class T>
+        FV_ST T* addComponent();
 
         template <class T>
         FV_ST T* getComponent();
@@ -30,8 +35,8 @@ namespace fv
     };
 
 
-    template <class T, class... Args>
-    T* GameObject::addComponent(Args... args)
+    template <class T>
+    T* GameObject::addComponent()
     {
         FV_CHECK_ST();
         auto cIt = m_Components.find(T::type());
@@ -40,7 +45,6 @@ namespace fv
         {
             pComponent = componentManager()->newComponent<T>();
             m_Components[T::type()] = pComponent;
-            new (pComponent)T(args...); // Reinvoke the constructor
         }
         else pComponent = cIt->second;
         return sc<T*>(pComponent);

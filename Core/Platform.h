@@ -2,6 +2,10 @@
 
 #define FV_ST /* A function that cannot be called from updateMT! */
 
+#if _DEBUG
+#define FV_DEBUG 1
+#endif
+
 #ifdef FV_EXPORTING
     #define FV_DLL __declspec(dllexport)
 #elif FV_IMPORTING

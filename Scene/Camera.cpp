@@ -3,6 +3,8 @@
 
 namespace fv
 {
+    FV_TYPE_IMPL(Camera)
+
     void Camera::setFov(float degrees)
     {
         if ( degrees < 0.1f )

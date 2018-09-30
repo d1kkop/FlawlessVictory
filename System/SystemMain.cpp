@@ -10,7 +10,6 @@ namespace fv
 
     FV_DLL void system_start()
     {
-        g_SystemManager = new SystemManager();
         core_start();
         scene_start();
         render_start();
@@ -24,6 +23,6 @@ namespace fv
         deleteAndNull( g_SystemManager );
     }
 
-    class SystemManager* systemManager() { return g_SystemManager; }
+    class SystemManager* systemManager() { return createOnce(g_SystemManager); }
 
 }

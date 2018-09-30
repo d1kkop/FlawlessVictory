@@ -9,52 +9,30 @@ namespace fv
         2. Operations can be performed on a sequential array of memory (roughly) in a ordered fashion. This is very cache friendly. */
     class ComponentManager
     {
-        const u32 ComponentBufferSize = 32;
+        const u32 ComponentBufferSize = 64;
 
     public:
         ComponentManager() = default;
         ~ComponentManager();
 
+        FV_DLL Component* newComponent(u32 type);
+        FV_DLL void growComponents(u32 type);
+        FV_DLL Map<u32, Array<Component*>>& components();
+        FV_DLL void freeComponent(Component* c);
+
         template <class T> T* newComponent();
-        template <class T> void freeComponent(Component* comp);
-        template <class T> void growComponents();
-        Map<u32, Array<Component*>>& activeComponents() { return m_ActiveComponents; }
-        bool executingSingleThreaded() const { return m_ExecutingSingleThreaded; }
-        void setExecutingSingleThreaded(bool executingSt) { m_ExecutingSingleThreaded = executingSt; }
 
     private:
-        bool m_ExecutingSingleThreaded = false;
-        Map<u32, Array<Component*>> m_ActiveComponents;
+        bool validType(u32 type);
+
+        Map<u32, Array<Component*>> m_Components;
         Map<u32, Array<Component*>> m_FreeComponents;
     };
-
 
     template <class T>
     T* ComponentManager::newComponent()
     {
-        growComponents<T>();
-        auto& comps  = m_FreeComponents[T::type()];
-        Component* c = comps.back();
-        comps.pop_back();
-        return sc<T*>(c);
-    }
-
-    template <class T>
-    void ComponentManager::freeComponent(Component* comp)
-    {
-        m_FreeComponents[T::type()].emplace_back(comp);
-    }
-
-    template <class T>
-    void ComponentManager::growComponents()
-    {
-        auto& comps = m_FreeComponents[T::type()];
-        if ( comps.size() ) return;
-        T* newComps = new T[ComponentBufferSize];
-        comps.reserve(ComponentBufferSize);
-        for ( u32 i=0; i<ComponentBufferSize; ++i )
-        {
-            comps.emplace_back(newComps + i);
-        }
+        T* t = sc<T*>(newComponent(T::type()));
+        return t;
     }
 }
