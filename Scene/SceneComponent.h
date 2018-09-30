@@ -2,7 +2,7 @@
 #include "../Core/Component.h"
 #include "../Core/TypeManager.h"
 #include "../Core/Math.h"
-#include "SceneMain.h"
+#define FV_SCENECOMPONENT_PRIORITY (-1000)
 
 namespace fv
 {

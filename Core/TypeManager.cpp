@@ -1,6 +1,7 @@
 #include "TypeManager.h"
 #include "Functions.h"
-#include "CoreMain.h"
+#include "LogManager.h"
+#include <cassert>
 
 namespace fv
 {
@@ -58,4 +59,7 @@ namespace fv
         return InvalidType;
     }
 
+
+    TypeManager* g_TypeManager{};
+    TypeManager* typeManager() { return createOnce(g_TypeManager); }
 }

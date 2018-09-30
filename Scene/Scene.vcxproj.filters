@@ -7,9 +7,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Scene.h" />
-    <ClInclude Include="SceneMain.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="SceneComponent.h">
       <Filter>Scene</Filter>
     </ClInclude>
@@ -21,9 +18,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SceneMain.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="GameObject.cpp">
       <Filter>Scene</Filter>
     </ClCompile>

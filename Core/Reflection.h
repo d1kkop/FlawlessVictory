@@ -1,5 +1,4 @@
 #pragma once
-#include "CoreMain.h"
 #include "TypeManager.h"
 
 #define FV_TYPE(name, upd_priority, exec_in_parallel) \

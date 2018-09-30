@@ -4,6 +4,9 @@
 #include <cstdarg>
 #include <string>
 #include <chrono>
+#if FV_SDL
+#include "../3rdParty/SDL/include/SDL.h"
+#endif
 using namespace std;
 using namespace chrono;
 
@@ -99,4 +102,5 @@ namespace fv
         seed ^= seed >> 16;
         return seed;
     }
+
 }

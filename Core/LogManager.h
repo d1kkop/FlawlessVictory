@@ -29,4 +29,6 @@ namespace fv
         bool m_LogToIde  = true;
         bool m_LogLineAndFile = true;
     };
+
+    FV_ST FV_DLL class LogManager* logManager();
 }

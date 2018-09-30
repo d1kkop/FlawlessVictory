@@ -35,4 +35,6 @@ namespace fv
         T* t = sc<T*>(newComponent(T::type()));
         return t;
     }
+
+    FV_ST FV_DLL ComponentManager* componentManager();
 }

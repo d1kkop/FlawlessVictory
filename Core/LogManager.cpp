@@ -85,4 +85,7 @@ namespace fv
         ::OutputDebugString(msg);
     #endif
     }
+
+    LogManager* g_LogManager {};
+    LogManager* logManager() { return createOnce(g_LogManager); }
 }

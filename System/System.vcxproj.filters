@@ -7,17 +7,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SystemMain.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
     <ClCompile Include="SystemManager.cpp">
       <Filter>System</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SystemMain.h">
-      <Filter>System</Filter>
-    </ClInclude>
     <ClInclude Include="SystemManager.h">
       <Filter>System</Filter>
     </ClInclude>

@@ -1,5 +1,7 @@
 #include "ComponentManager.h"
 #include "Algorithm.h"
+#include "Functions.h"
+#include <cassert>
 
 namespace fv
 {
@@ -51,4 +53,7 @@ namespace fv
         return m_Components;
     }
 
+
+    ComponentManager* g_ComponentManager{};
+    ComponentManager* componentManager() { return createOnce(g_ComponentManager); }
 }

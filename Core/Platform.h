@@ -21,3 +21,5 @@
 #define FV_NO_IMPLEMENTATION_ERR (-9999)
 #define FV_INVALID_IDX (-1)
 #define FV_EDITOR 1
+
+#define FV_SDL 1

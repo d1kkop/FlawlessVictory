@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include "../Core/Functions.h"
 
 namespace fv
 {
@@ -57,4 +58,7 @@ namespace fv
         FV_CHECK_ST();
         return (u32)m_Components.size();
     }
+
+    ObjectManager<GameObject>* g_GameObjectManager {};
+    ObjectManager<GameObject>* gameObjectManager() { return createOnce(g_GameObjectManager); }
 }

@@ -2,12 +2,22 @@
 #include "../Core/Algorithm.h"
 #include "../Core/Time.h"
 #include "../Core/ComponentManager.h"
+#include "../Core/Thread.h"
+#include "../Core/OSLayer.h"
 
 namespace fv
 {
-    void SystemManager::initialize()
+    bool SystemManager::initialize(const SystemParams& params)
     {
-
+        if ( !OSInitialize() )
+        {
+            return false;
+        }
+        if ( !OSLoadLibrary( params.moduleName.c_str() ) )
+        {
+            return false;
+        }
+        return true;
     }
 
     void SystemManager::mainloop()
@@ -64,11 +74,14 @@ namespace fv
             // Call ST update on components
             for ( auto& components : sortedList )
                 for ( Component* c : *components )
-                    if ( !c->isInFreeList() && c->m_DoUpdate ) c->updateST( Time::dt() );
+                    if ( !c->isInFreeList() && c->m_DoUpdate ) c->update( Time::dt() );
 
             // Update timings
             Time::update();
         }
     }
 
+
+    SystemManager* g_SystemManager {};
+    SystemManager* systemManager() { return createOnce(g_SystemManager); }
 }

@@ -13,6 +13,9 @@
     <Filter Include="Math">
       <UniqueIdentifier>{795393c1-7757-4574-87bd-6b6c69dda6d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="OSLayer">
+      <UniqueIdentifier>{c89601b7-31cd-4d89-979f-3fd1960f0302}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ComponentManager.cpp">
@@ -36,9 +39,6 @@
     <ClCompile Include="Vec4.cpp">
       <Filter>Math</Filter>
     </ClCompile>
-    <ClCompile Include="CoreMain.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
     <ClCompile Include="LogManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
@@ -50,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="Time.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="OSLayer.cpp">
+      <Filter>OSLayer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -96,9 +99,6 @@
     <ClInclude Include="Vec4.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="CoreMain.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
     <ClInclude Include="LogManager.h">
       <Filter>Managers</Filter>
     </ClInclude>
@@ -110,6 +110,9 @@
     </ClInclude>
     <ClInclude Include="Time.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="OSLayer.h">
+      <Filter>OSLayer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

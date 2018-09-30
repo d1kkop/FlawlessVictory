@@ -7,9 +7,9 @@ namespace fv
     class Component
     {
     public:
-
+        FV_ST virtual void begin(float dt) { }
+        FV_ST virtual void update(float dt) { }
         virtual void updateMT(float dt) { }
-        virtual void updateST(float dt) { }
         virtual void physicsUpdateMT(float dt) { }
         virtual void networkUpdateMT(float dt) { }
         virtual u32 updatePriority() const { return 0; }

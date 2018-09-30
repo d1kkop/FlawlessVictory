@@ -1,6 +1,7 @@
 #include "SceneComponent.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Math.h"
+#include "../Core/Thread.h"
 #include <cassert>
 
 namespace fv

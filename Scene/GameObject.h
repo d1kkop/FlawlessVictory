@@ -2,6 +2,8 @@
 #include "../Core/Platform.h"
 #include "../Core/Component.h"
 #include "../Core/ComponentManager.h"
+#include "../Core/ObjectManager.h"
+#include "../Core/Thread.h"
 
 namespace fv
 {
@@ -82,4 +84,7 @@ namespace fv
         }
         return false;
     }
+
+
+    FV_DLL ObjectManager<GameObject>* gameObjectManager();
 }

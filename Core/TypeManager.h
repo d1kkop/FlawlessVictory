@@ -28,4 +28,6 @@ namespace fv
         Map<String, TypeInfo> m_NameToType;
         Map<u32, TypeInfo*> m_HashToType;
     };
+
+    FV_ST FV_DLL TypeManager* typeManager();
 }
