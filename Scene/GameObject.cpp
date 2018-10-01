@@ -1,5 +1,6 @@
 #include "GameObject.h"
 #include "../Core/Functions.h"
+#include "../Core/Reflection.h"
 
 namespace fv
 {
@@ -60,5 +61,5 @@ namespace fv
     }
 
     ObjectManager<GameObject>* g_GameObjectManager {};
-    ObjectManager<GameObject>* gameObjectManager() { return createOnce(g_GameObjectManager); }
+    ObjectManager<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
 }

@@ -1,8 +1,8 @@
 #pragma once
+#include "Component.h"
+#include "ComponentManager.h"
+#include "ObjectManager.h"
 #include "../Core/Platform.h"
-#include "../Core/Component.h"
-#include "../Core/ComponentManager.h"
-#include "../Core/ObjectManager.h"
 #include "../Core/Thread.h"
 
 namespace fv
@@ -12,10 +12,10 @@ namespace fv
     public:
         FV_DLL GameObject();
 
-        FV_ST Component* addComponent(u32 type);
-        FV_ST bool hasComponent(u32 type);
-        FV_ST Component* getComponent(u32 type);
-        FV_ST bool removeComponent(u32 type);
+        FV_ST FV_DLL Component* addComponent(u32 type);
+        FV_ST FV_DLL bool hasComponent(u32 type);
+        FV_ST FV_DLL Component* getComponent(u32 type);
+        FV_ST FV_DLL bool removeComponent(u32 type);
 
         template <class T>
         FV_ST T* addComponent();
@@ -46,6 +46,7 @@ namespace fv
         if ( cIt == m_Components.end() )
         {
             pComponent = componentManager()->newComponent<T>();
+            pComponent->m_GameObject = this;
             m_Components[T::type()] = pComponent;
         }
         else pComponent = cIt->second;

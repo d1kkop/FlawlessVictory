@@ -1,6 +1,7 @@
 #pragma once
-#include "../Core/Component.h"
+#include "Component.h"
 #include "../Core/Math.h"
+#include "../Core/Reflection.h"
 #define FV_CAMERA_PRIORITY (-990)
 
 namespace fv

@@ -1,7 +1,8 @@
 #pragma once
-#include "../Core/Component.h"
+#include "Component.h"
 #include "../Core/TypeManager.h"
 #include "../Core/Math.h"
+#include "../Core/Reflection.h"
 #define FV_SCENECOMPONENT_PRIORITY (-1000)
 
 namespace fv
@@ -43,4 +44,5 @@ namespace fv
         bool m_MatrixDirty{};
         bool m_WorldToLocalDirty{};
     };
+
 }

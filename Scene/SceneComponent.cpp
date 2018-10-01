@@ -1,7 +1,9 @@
 #include "SceneComponent.h"
+#include "GameObject.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Math.h"
 #include "../Core/Thread.h"
+#include "../Core/Reflection.h"
 #include <cassert>
 
 namespace fv
@@ -89,7 +91,7 @@ namespace fv
         FV_CHECK_ST();
         if ( m_Parent )
         {
-            remove_if(m_Parent->m_Children, [this](auto* c) { return c==this; });
+            Remove(m_Parent->m_Children, this);
             m_Parent = nullptr;
             computeLocalToWorld();
             computeTRSWorldToLocal();

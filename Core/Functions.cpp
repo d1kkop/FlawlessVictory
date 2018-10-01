@@ -12,9 +12,9 @@ using namespace chrono;
 
 namespace fv
 {
-    double s_StartTime = epochTime();
+    double s_StartTime = EpochTime();
 
-    String localTime()
+    String LocalTime()
     {
         static Mutex timeMutex;
         scoped_lock lk(timeMutex);
@@ -34,7 +34,7 @@ namespace fv
         return "";
     }
 
-    String format(const char* fmt, ...)
+    String Format(const char* fmt, ...)
     {
         char buff[8192];
         va_list myargs;
@@ -48,17 +48,17 @@ namespace fv
         return buff;
     }
 
-    double epochTime()
+    double EpochTime()
     {
         return duration_cast<duration<double>>(high_resolution_clock::now().time_since_epoch()).count();
     }
 
-    float time()
+    float RunTime()
     {
-        return (float)(epochTime()-s_StartTime);
+        return (float)(EpochTime()-s_StartTime);
     }
 
-    u32 hash32(const char* key, u32 len)
+    u32 Hash32(const char* key, u32 len)
     {
         uint32_t seed = 88123;
         if ( len > 3 )

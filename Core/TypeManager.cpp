@@ -15,11 +15,11 @@ namespace fv
             String sName = name;
 
             // While Name does not resolve to an existing ID, keep adding dummy characters until unique ID is found.
-            u32 hash = hash32(sName.c_str(), (u32)sName.size());
+            u32 hash = Hash32(sName.c_str(), (u32)sName.size());
             while ( m_HashToType.count(hash) != 0 )
             {
                 sName += "a"; // Add dummy character so that it will resolve to different ID.
-                hash = hash32(sName.c_str(), (u32)sName.size());
+                hash = Hash32(sName.c_str(), (u32)sName.size());
             }
 
             // Use original name to obtain chosen hash ID
@@ -61,5 +61,5 @@ namespace fv
 
 
     TypeManager* g_TypeManager{};
-    TypeManager* typeManager() { return createOnce(g_TypeManager); }
+    TypeManager* typeManager() { return CreateOnce(g_TypeManager); }
 }

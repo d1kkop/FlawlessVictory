@@ -1,9 +1,9 @@
 #include "SystemManager.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Time.h"
-#include "../Core/ComponentManager.h"
 #include "../Core/Thread.h"
 #include "../Core/OSLayer.h"
+#include "../Scene/ComponentManager.h"
 
 namespace fv
 {
@@ -29,12 +29,12 @@ namespace fv
         while ( !m_Done )
         {
             // Sort components by priority
-            Map<u32, Array<Component*>>& componentsList = componentManager()->components();
+            Map<u32, Array<Component*>>& componentsList = componentManager()->updatableComponents();
             Array<Array<Component*>*> sortedList;
             sortedList.reserve(componentsList.size());
             for ( auto& kvp : componentsList )
                 sortedList.emplace_back( &kvp.second );
-            sort(sortedList, [](const Array<Component*>* a, const Array<Component*>* b)
+            Sort(sortedList, [](const Array<Component*>* a, const Array<Component*>* b)
             {
                 if ( a->size() && b->size() )
                 {
@@ -52,7 +52,7 @@ namespace fv
                 lastNetworkUpdate = Time::elapsed();
                 for ( auto& components : sortedList )
                     for ( Component* c : *components )
-                        if ( !c->isInFreeList() && c->m_DoNetworkUpdate ) c->networkUpdateMT( Time::networkDt() );
+                        c->networkUpdateMT( Time::networkDt() );
             }
 
             // Check to see if can update physics
@@ -61,20 +61,20 @@ namespace fv
                 lastPhysicsUpdate = Time::elapsed();
                 for ( auto& components : sortedList )
                     for ( Component* c : *components )
-                        if ( !c->isInFreeList() && c->m_DoPhysicsUpdate ) c->physicsUpdateMT( Time::networkDt() );
+                        c->physicsUpdateMT( Time::networkDt() );
             }
 
             // Call MT update on components
             for ( auto& components : sortedList )
                 for ( Component* c : *components )
-                    if ( !c->isInFreeList() && c->m_DoUpdate ) c->updateMT( Time::dt() );
+                    c->updateMT( Time::dt() );
 
             setExecutingParallel( false );
 
             // Call ST update on components
             for ( auto& components : sortedList )
                 for ( Component* c : *components )
-                    if ( !c->isInFreeList() && c->m_DoUpdate ) c->update( Time::dt() );
+                    c->update( Time::dt() );
 
             // Update timings
             Time::update();
@@ -83,5 +83,5 @@ namespace fv
 
 
     SystemManager* g_SystemManager {};
-    SystemManager* systemManager() { return createOnce(g_SystemManager); }
+    SystemManager* systemManager() { return CreateOnce(g_SystemManager); }
 }

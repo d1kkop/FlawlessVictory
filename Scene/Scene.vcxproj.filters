@@ -16,6 +16,15 @@
     <ClInclude Include="GameObject.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentManager.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectManager.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameObject.cpp">
@@ -25,6 +34,12 @@
       <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentManager.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Component.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>

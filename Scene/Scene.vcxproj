@@ -126,11 +126,16 @@
   <ItemGroup>
     <ClInclude Include="..\Scene.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Component.h" />
+    <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="SceneComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Component.cpp" />
+    <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
   </ItemGroup>

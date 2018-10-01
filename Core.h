@@ -5,4 +5,3 @@
 #include "Core/Functions.h"
 #include "Core/Time.h"
 #include "Core/Math.h"
-#include "Core/Component.h"

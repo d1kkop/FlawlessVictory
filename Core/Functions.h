@@ -4,20 +4,20 @@
 namespace fv
 {
     // Returns local time as string.
-    FV_DLL String localTime();
+    FV_DLL String LocalTime();
 
     // Format to string, accepts identical params as printf.
-    FV_DLL String format(const char* msg, ...);
+    FV_DLL String Format(const char* msg, ...);
 
     // Time since epoch in seconds.
-    FV_DLL double epochTime();
+    FV_DLL double EpochTime();
 
     // Time since start of application in seconds.
-    FV_DLL float time();
+    FV_DLL float RunTime();
 
     // Returns 32 bits murmur hash of key.
-    FV_DLL u32 hash32(const char* key, u32 len);
+    FV_DLL u32 Hash32(const char* key, u32 len);
 
     template <class T> 
-    T* createOnce(T*& pType) { if (!pType) pType=new T; return pType; }
+    T* CreateOnce(T*& pType) { if (!pType) pType=new T; return pType; }
 }

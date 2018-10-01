@@ -6,12 +6,15 @@ namespace game
 
     void PlayerComponent::updateMT(float t)
     {
-
+ 
     }
 
     void PlayerComponent::update(float t)
     {
-
+        // Update this component or other components in the owning game object.
+        for ( PlayerComponent* player : Itr<PlayerComponent>() )
+        {
+        }
     }
 
 }

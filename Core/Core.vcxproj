@@ -128,7 +128,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="Mat3.cpp" />
@@ -145,14 +144,11 @@
     <ClInclude Include="..\Core.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Common.h" />
-    <ClInclude Include="Component.h" />
-    <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mat4.h" />
     <ClInclude Include="Math.h" />
-    <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="OSLayer.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Quat.h" />

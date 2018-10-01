@@ -1,6 +1,6 @@
 #pragma once
-#include "Platform.h"
-#include "Common.h"
+#include "../Core/Common.h"
+#include "../Core/Thread.h"
 
 
 namespace fv
@@ -12,19 +12,24 @@ namespace fv
     class ObjectManager
     {
     public:
-        ObjectManager(u32 objBufferSize=128):
-            m_ObjectBufferSize(objBufferSize) { }
+        ObjectManager(u32 objBufferSize=128);
         ~ObjectManager();
 
-        T* newObject();
-
     private:
+        FV_ST T* newObject();
         void growObjects();
         u32 m_ObjectBufferSize;
         Set<T*> m_ActiveObjects;
         Array<T*> m_FreeObjects;
     };
 
+
+    template <class T>
+    ObjectManager<T>::ObjectManager(u32 objBufferSize):
+        m_ObjectBufferSize(objBufferSize)
+    {
+
+    }
 
     template <class T>
     ObjectManager<T>::~ObjectManager()
@@ -36,6 +41,7 @@ namespace fv
     template <class T>
     T* ObjectManager<T>::newObject()
     {
+        FV_CHECK_ST();
         growObjects();
         T* o = m_FreeObjects.back();
         m_FreeObjects.pop_back();

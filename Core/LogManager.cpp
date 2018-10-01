@@ -15,7 +15,7 @@ namespace fv
         vsprintf_s(buff, 8190, msg, myargs);
         va_end(myargs);
 
-        String finalStr = localTime();
+        String finalStr = LocalTime();
         if ( type != LogType::Message )
         {
             String warnStr;
@@ -62,7 +62,7 @@ namespace fv
     {
         if ( !m_LogToFile ) return;
 
-        static const char* fileName = format("fv_log_%s.txt", localTime()).c_str();
+        static const char* fileName = Format("fv_log_%s.txt", LocalTime()).c_str();
         
         // (Re)open file
         FILE* f;
@@ -87,5 +87,5 @@ namespace fv
     }
 
     LogManager* g_LogManager {};
-    LogManager* logManager() { return createOnce(g_LogManager); }
+    LogManager* logManager() { return CreateOnce(g_LogManager); }
 }
