@@ -14,6 +14,9 @@
     <ClCompile Include="JobSystem.cpp">
       <Filter>System</Filter>
     </ClCompile>
+    <ClCompile Include="JobManager.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SystemManager.h">
@@ -21,6 +24,9 @@
     </ClInclude>
     <ClInclude Include="..\System.h" />
     <ClInclude Include="JobSystem.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="JobManager.h">
       <Filter>System</Filter>
     </ClInclude>
   </ItemGroup>

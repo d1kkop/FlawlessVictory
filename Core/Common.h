@@ -8,6 +8,8 @@
 #include <string>
 #include <memory>
 #include <mutex>
+#include <atomic>
+#include <thread>
 #include <functional>
 #include <filesystem>
 #include <condition_variable>
@@ -33,6 +35,9 @@ namespace fv
     using Path          = std::experimental::filesystem::path;
     using CondVar       = std::condition_variable;
 
+    template <class T>
+    using Atomic        = std::atomic<T>;
+    using Thread        = std::thread;
     using Mutex         = std::mutex;
     using RMutex        = std::recursive_mutex;
     using scoped_lock   = std::lock_guard<Mutex>;

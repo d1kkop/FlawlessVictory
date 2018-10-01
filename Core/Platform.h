@@ -1,7 +1,7 @@
 #pragma once
 
 #define FV_ST /* A function that cannot be called from updateMT! */
-#define FV_MT 1
+#define FV_TS /* A thread safe function. */
 #define FV_TRACEJOBSYSTEM 0
 
 #if _DEBUG

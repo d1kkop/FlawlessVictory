@@ -1,10 +1,36 @@
 #pragma once
 #include "../Core/Common.h"
 #include "../Core/Thread.h"
+#include "../Scene/ObjectManager.h"
 
 
 namespace fv
 {
+    enum JobState
+    {
+        Scheduled,
+        InProgress,
+        Cancelled,
+        Done
+    };
+
+    class Job
+    {
+    public:
+        Job(const Function<void ()>& cb);
+        void wait();
+
+    private:
+        void finishWith(JobState state);
+
+        Function<void (Job*)> m_Cb;
+        Atomic<JobState> m_State;
+        Mutex m_StateMutex;
+        CondVar m_StateSignal;
+
+        friend class JobSystem;
+    };
+
 	class WorkerThread
 	{
 	public:
@@ -22,13 +48,13 @@ namespace fv
 	};
 
 
-	class JobSystem
+	class JobSystem: public ObjectManager<Job>
 	{
 	public:
 		JobSystem();
 		~JobSystem();
 
-		void addJob( const Function<void ()>& cb );
+		Job* addJob( const Function<void ()>& cb );
 		void stop();
 		bool isClosing() const volatile { return m_Closing; }
 
@@ -37,11 +63,10 @@ namespace fv
         Mutex& getMutex() { return m_JobsMutex; }
         void suspend(std::unique_lock<Mutex>& ul);
 
-	private:
 		volatile bool m_Closing;
 		Mutex m_JobsMutex;
 		u32 m_NumSuspendedThreads;
-		Queue<Function<void ()>> m_GlobalQueue;
+		Queue<Job*> m_GlobalQueue;
 		CondVar m_QueueCv;
 		Array<U<WorkerThread>> m_WorkerThreads;
 

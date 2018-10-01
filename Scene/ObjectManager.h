@@ -1,7 +1,7 @@
 #pragma once
 #include "../Core/Common.h"
 #include "../Core/Thread.h"
-
+#include "../Core/Algorithm.h"
 
 namespace fv
 {
@@ -15,8 +15,10 @@ namespace fv
         ObjectManager(u32 objBufferSize=128);
         ~ObjectManager();
 
-    private:
         FV_ST T* newObject();
+        FV_ST void freeObject(T* object);
+
+    private:
         void growObjects();
         u32 m_ObjectBufferSize;
         Set<T*> m_ActiveObjects;
@@ -28,7 +30,6 @@ namespace fv
     ObjectManager<T>::ObjectManager(u32 objBufferSize):
         m_ObjectBufferSize(objBufferSize)
     {
-
     }
 
     template <class T>
@@ -50,8 +51,18 @@ namespace fv
     }
 
     template <class T>
+    void ObjectManager<T>::freeObject(T* object)
+    {
+        FV_CHECK_ST();
+        assert( !Contains(m_FreeObjects, object) );
+        m_FreeObjects.push_back( object );
+        m_ActiveObjects.erase(object);
+    }
+
+    template <class T>
     void ObjectManager<T>::growObjects()
     {
+        FV_CHECK_ST();
         if ( m_FreeObjects.size() ) return;
         T* objs = new T[m_ObjectBufferSize];
         m_FreeObjects.reserve(m_ObjectBufferSize);

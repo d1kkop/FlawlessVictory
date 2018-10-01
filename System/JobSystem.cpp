@@ -6,7 +6,23 @@ using namespace std;
 
 namespace fv
 {
-	// ------------ WorkerThread --------------------------------------------------------------------------------
+    // ------------ Job --------------------------------------------------------------------------------
+
+    Job::Job(const Function<void ()>& cb):
+        m_Cb(cb)
+    {
+    }
+
+    void Job::wait()
+    {
+        std::unique_lock lk(m_StateMutex);
+        while ( !(m_State == JobState::Cancelled || m_State == JobState::Done ) )
+        {
+            m_StateSignal.wait( m_StateMutex );
+        }
+    }
+
+    // ------------ WorkerThread --------------------------------------------------------------------------------
 
 	WorkerThread::WorkerThread(JobSystem& js):
 		m_Js(js),
@@ -49,14 +65,14 @@ namespace fv
             {
                 break;
             }
-            Function<void ()> job;
+            Job job;
             if ( m_Js.extractJob(job) )
             {
                 lk.unlock();
             #if FV_TRACEJOBSYSTEM
                 LOG("Thread %s starts to execute job.", m_Thread.name().c_str());
             #endif
-                job();
+                job.m_Cb();
             }
             else
             {
@@ -84,16 +100,18 @@ namespace fv
 		stop();
 	}
 
-	void JobSystem::addJob(const Function<void()>& cb)
+	Job* JobSystem::addJob(const Function<void(Job*)>& cb)
 	{
 		#if !FV_MT
 			cb();
-			return;
+			return nullptr;
 		#endif
 
 		#if FV_TRACEJOBSYSTEM
 			LOG( "Thread %s locks.", m_Thread.name().c_str() );
 		#endif
+
+        newObject();
 
 		m_JobsMutex.lock();
 		m_GlobalQueue.push ( { cb } );
@@ -109,7 +127,7 @@ namespace fv
 		#endif
 	}
 
-	bool JobSystem::extractJob(Function<void ()>& job)
+	bool JobSystem::extractJob(Job& job)
 	{
 		if ( !m_GlobalQueue.empty() )
 		{
@@ -129,7 +147,17 @@ namespace fv
 		m_QueueCv.wait( ul );
 	}
 
-	void JobSystem::stop()
+    void JobSystem::growJobs()
+    {
+
+    }
+
+    Job* JobSystem::getNewJob()
+    {
+
+    }
+
+    void JobSystem::stop()
 	{
 		m_JobsMutex.lock();
 		m_Closing = true;

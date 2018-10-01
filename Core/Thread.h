@@ -1,19 +1,21 @@
 #pragma once
 #include "Common.h"
 #include "LogManager.h"
-#include <thread>
 #include <cassert>
 
-#define FV_CHECK_ST() \
-if ( fv::isExecutingParallel() ) \
-{ \
-    LOGC( "Executing singlethreaded function in parallel. Undefined behaviour!" ); \
-    assert( false && "Executing singlethreaded function in parallel. Undefined behaviour!" ); \
-}
+#if FV_DEBUG
+    #define FV_CHECK_ST() \
+    if ( fv::isExecutingParallel() ) \
+    { \
+        LOGC( "Executing singlethreaded function in parallel. Undefined behaviour!" ); \
+        assert( false && "Executing singlethreaded function in parallel. Undefined behaviour!" ); \
+    }
+#else
+#define FV_CHECK_ST()
+#endif
 
 namespace fv
 {
-    using Thread = std::thread;
     FV_DLL bool isExecutingParallel();
     FV_DLL void setExecutingParallel(bool isParallel);
 }
