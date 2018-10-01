@@ -1,12 +1,16 @@
 #pragma once
 #include "Platform.h"
 #include <vector>
+#include <queue>
+#include <deque>
 #include <map>
 #include <set>
 #include <string>
 #include <memory>
 #include <mutex>
+#include <functional>
 #include <filesystem>
+#include <condition_variable>
 
 namespace fv
 {
@@ -19,10 +23,15 @@ namespace fv
     using u64  = unsigned long long;
 
     template <class T> using Array = std::vector<T>;
+    template <class T> using Queue = std::queue<T>;
+    template <class T> using Deck  = std::deque<T>;
     template <class T> using Set   = std::set<T>;
+    template <class T> using Function = std::function<T>;
     template <class Key, class Value> using Map = std::map<Key, Value>;
-    using String = std::string;
-    using Path = std::experimental::filesystem::path;
+
+    using String        = std::string;
+    using Path          = std::experimental::filesystem::path;
+    using CondVar       = std::condition_variable;
 
     using Mutex         = std::mutex;
     using RMutex        = std::recursive_mutex;

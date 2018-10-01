@@ -1,5 +1,6 @@
 #pragma once
 #include "../Core/Common.h"
+#include "../Core/Thread.h"
 
 namespace fv
 {
@@ -18,6 +19,7 @@ namespace fv
     private:
         bool m_Done = false;
         SystemParams m_Params;
+        Array<Thread> m_Threads;
     };
 
     class SystemManager* systemManager();
