@@ -68,7 +68,7 @@ namespace fv
 		u32 m_NumSuspendedThreads;
 		Queue<Job*> m_GlobalQueue;
 		CondVar m_QueueCv;
-		Array<U<WorkerThread>> m_WorkerThreads;
+		Vector<U<WorkerThread>> m_WorkerThreads;
 
 		friend class WorkerThread;
 	};

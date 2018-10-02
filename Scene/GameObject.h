@@ -1,13 +1,13 @@
 #pragma once
 #include "Component.h"
 #include "ComponentManager.h"
-#include "ObjectManager.h"
+#include "../Core/ObjectManager.h"
 #include "../Core/Platform.h"
 #include "../Core/Thread.h"
 
 namespace fv
 {
-    class GameObject
+    class GameObject: public Object
     {
     public:
         FV_DLL GameObject();
@@ -88,4 +88,6 @@ namespace fv
 
 
     FV_DLL ObjectManager<GameObject>* gameObjectManager();
+    FV_DLL void deleteGameObjectManager();
+
 }

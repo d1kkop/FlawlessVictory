@@ -30,5 +30,6 @@ namespace fv
         bool m_LogLineAndFile = true;
     };
 
-    FV_ST FV_DLL class LogManager* logManager();
+    FV_DLL class LogManager* logManager();
+    FV_DLL void deleteLogManager();
 }

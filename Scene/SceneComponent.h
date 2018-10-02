@@ -38,7 +38,7 @@ namespace fv
         Quat m_Rotation = Quat::identity();
         Vec3 m_Scale{ 1,1,1 };
         SceneComponent* m_Parent{};
-        Array<SceneComponent*> m_Children;
+        Vector<SceneComponent*> m_Children;
         Mat4 m_LocalToWorld = Mat4::identity();
         Mat4 m_WorldToLocal = Mat4::identity();
         bool m_MatrixDirty{};

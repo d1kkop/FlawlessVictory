@@ -120,7 +120,7 @@ namespace fv
         unique_lock<Mutex> lk(m_QueueMutex);
         if ( job->m_State == JobState::Scheduled )
         {
-            Remove_if( m_GlobalQueue, [job](Job* j) { return job==j; });
+            Remove( m_GlobalQueue, job );
             lk.unlock();
             job->finishWith( JobState::Cancelled );
             return true;
@@ -168,5 +168,10 @@ namespace fv
         job->m_Cb(job);
         job->finishWith(JobState::Done);
     }
+
+
+    JobManager* g_JobManager = nullptr;
+    JobManager* jobManager() { return CreateOnce(g_JobManager); }
+    void deleteJobManager() { delete g_JobManager; g_JobManager=nullptr; }
 
 }

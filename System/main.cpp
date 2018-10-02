@@ -3,15 +3,17 @@
 #include "../Core/TypeManager.h"
 #include "../Core/LogManager.h"
 #include "../Scene/GameObject.h"
+#include "JobManager.h"
 
 using namespace fv;
 
 void shutdown()
 {
-    delete gameObjectManager();
-    delete systemManager();
-    delete typeManager();
-    delete logManager();
+    deleteJobManager();
+    deleteGameObjectManager();
+    deleteSystemManager();
+    deleteTypeManager();
+    deleteLogManager();
 }
 
 

@@ -6,11 +6,11 @@ namespace fv
 {
     //class SubMesh
     //{
-    //    Array<Vec3> m_Vertices;
+    //    Vector<Vec3> m_Vertices;
     //};
 
     //class Mesh
     //{
-    //    Array<SubMesh> m_Submeshes;
+    //    Vector<SubMesh> m_Submeshes;
     //};
 }

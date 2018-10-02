@@ -3,7 +3,7 @@
 #pragma once
 #include "../Core/Common.h"
 #include "../Core/Thread.h"
-#include "../Scene/ObjectManager.h"
+#include "../Core/ObjectManager.h"
 
 namespace fv
 {
@@ -16,7 +16,7 @@ namespace fv
         Done
     };
 
-    class Job
+    class Job: public Object
     {
     public:
         FV_TS JobState state() const;
@@ -43,6 +43,7 @@ namespace fv
         u32 m_NumWaiters = 0;
 
         friend class JobManager;
+        friend class ObjectManager<Job>;
     };
 
     class JobManager: public ObjectManager<Job>
@@ -62,10 +63,14 @@ namespace fv
         Mutex m_ObjectManagerMutex;
         Mutex m_QueueMutex;
         Deck<Job*> m_GlobalQueue;
-        Array<Thread> m_Threads;
+        Vector<Thread> m_Threads;
         CondVar m_ThreadSuspendSignal;
         u32 m_NumThreadsSuspended = 0;
 
         friend class Job;
     };
+
+
+    FV_DLL JobManager* jobManager();
+    void deleteJobManager();
 }

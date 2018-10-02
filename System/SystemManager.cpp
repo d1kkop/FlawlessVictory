@@ -28,19 +28,27 @@ namespace fv
 
         while ( !m_Done )
         {
-            // Sort components by priority
-            Map<u32, Array<Component*>>& componentsList = componentManager()->updatableComponents();
-            Array<Array<Component*>*> sortedList;
-            sortedList.reserve(componentsList.size());
-            for ( auto& kvp : componentsList )
-                sortedList.emplace_back( &kvp.second );
-            Sort(sortedList, [](const Array<Component*>* a, const Array<Component*>* b)
+            // Deform all components by type into a single array of array<of components>
+            Map<u32, Vector<ComponentArray>>& allComponents = componentManager()->components();
+            Vector<ComponentArray> sortedListOfComponentArrays;
+            sortedListOfComponentArrays.reserve(allComponents.size());
+            for ( auto& kvp : allComponents )
             {
-                if ( a->size() && b->size() )
+                Vector<ComponentArray>& compArrayList = kvp.second;
+                for ( auto& compArray : compArrayList )
                 {
-                    return (*a)[0]->updatePriority() < (*b)[0]->updatePriority();
+                    if ( compArray.size > 0 && compArray.elements[0].updatable() )
+                    {
+                        sortedListOfComponentArrays.emplace_back( compArray );
+                    }
                 }
-                return false;
+            }
+
+            // Sort update by priority
+            Sort(sortedListOfComponentArrays, [](const ComponentArray& a, const ComponentArray& b)
+            {
+                assert( a.size && b.size );
+                return a.elements[0].updatePriority() < b.elements[0].updatePriority();
             });
 
             // MT updates first
@@ -50,31 +58,47 @@ namespace fv
             if ( Time::elapsed() - lastNetworkUpdate )
             {
                 lastNetworkUpdate = Time::elapsed();
-                for ( auto& components : sortedList )
-                    for ( Component* c : *components )
-                        c->networkUpdateMT( Time::networkDt() );
+                for ( auto& components : sortedListOfComponentArrays )
+                    for ( u32 i=0; i<components.size; ++i )
+                    {
+                        Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                        if ( c->m_Active )
+                            c->networkUpdateMT( Time::networkDt() );
+                    }
             }
 
             // Check to see if can update physics
             if ( Time::elapsed() - lastPhysicsUpdate )
             {
                 lastPhysicsUpdate = Time::elapsed();
-                for ( auto& components : sortedList )
-                    for ( Component* c : *components )
-                        c->physicsUpdateMT( Time::networkDt() );
+                for ( auto& components : sortedListOfComponentArrays )
+                    for ( u32 i=0; i<components.size; ++i )
+                    {
+                        Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                        if ( c->m_Active )
+                            c->physicsUpdateMT(Time::networkDt());
+                    }
             }
 
             // Call MT update on components
-            for ( auto& components : sortedList )
-                for ( Component* c : *components )
-                    c->updateMT( Time::dt() );
+            for ( auto& components : sortedListOfComponentArrays )
+                for ( u32 i=0; i<components.size; ++i )
+                {
+                    Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                    if ( c->m_Active )
+                        c->updateMT(Time::networkDt());
+                }
 
             setExecutingParallel( false );
 
             // Call ST update on components
-            for ( auto& components : sortedList )
-                for ( Component* c : *components )
-                    c->update( Time::dt() );
+            for ( auto& components : sortedListOfComponentArrays )
+                for ( u32 i=0; i<components.size; ++i )
+                {
+                    Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                    if ( c->m_Active )
+                        c->updateMT(Time::networkDt());
+                }
 
             // Update timings
             Time::update();
@@ -84,4 +108,5 @@ namespace fv
 
     SystemManager* g_SystemManager {};
     SystemManager* systemManager() { return CreateOnce(g_SystemManager); }
+    void deleteSystemManager() { delete g_SystemManager; g_SystemManager=nullptr; }
 }

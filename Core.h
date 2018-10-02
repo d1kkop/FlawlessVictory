@@ -2,6 +2,7 @@
 
 //#include "Core/Platform.h"
 #include "Core/Common.h"
+#include "Core/Reflection.h"
 #include "Core/Functions.h"
 #include "Core/Time.h"
 #include "Core/Math.h"

@@ -2,6 +2,7 @@
 #include "MemoryTests.h"
 #include "MathTests.h"
 #include "TimeTests.h"
+#include "Bechmarks.h"
 #include <iostream>
 using namespace std;
 using namespace UnitTest;

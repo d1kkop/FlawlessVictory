@@ -9,74 +9,100 @@ namespace fv
 {
     ComponentManager::~ComponentManager()
     {
-        for ( auto& kvp : m_Components )
-            for ( auto* c : kvp.second ) delete c;
-        for ( auto& kvp : m_FreeComponents )
-            for ( auto* c : kvp.second ) delete c;
+        for ( auto& kvp : m_Components ) 
+        {
+            Vector<ComponentArray>& comps = kvp.second;
+            for ( auto& ar : comps )
+                delete [] ar.elements;
+        }
     }
 
     Component* ComponentManager::newComponent(u32 type)
     {
         FV_CHECK_ST();
-        growComponents(type);
-        auto& freeComps  = m_FreeComponents[type];
-        Component* c = freeComps.back();
-        freeComps.pop_back();
-        TypeInfo& ti = typeManager()->typeInfo(type);
-        ti.resetFunc(c);
+        const TypeInfo& ti = typeManager()->typeInfo(type);
+        auto& freeComps = m_FreeComponents[type];
+        if ( freeComps.empty() )
+        {
+            auto& freeComps = m_FreeComponents[type];
+            Component* newComps = ti.createFunc( ComponentBufferSize ); // Allocates contiguous array
+            assert( freeComps.size() == 0 );
+            for ( u32 i=0; i<ComponentBufferSize; ++i )
+            {
+                Component* c = (Component*)((char*)newComps + i*ti.size);
+                freeComps.insert( c );
+            }
+            auto& comps = m_Components[type];
+            ComponentArray ca = { newComps, ComponentBufferSize, ti.size };
+            comps.emplace_back( ca ); 
+        }
+        Component* c = *freeComps.begin();
+        freeComps.erase(freeComps.begin());
+        if ( c->m_Freed ) 
+        {
+            ti.resetFunc( c ); // Only call placement new when object is recycled.
+        }
         c->m_Type = ti.hash;
-        if ( c->updatable() )
-            m_UpdatableComponents[type].emplace_back( c );
-        else 
-            m_Components[type].emplace_back( c );
+        c->m_Active = true;
+        m_NumComponents++;
         return c;
     }
 
     void ComponentManager::freeComponent(Component* c)
     {
         FV_CHECK_ST();
-        if ( c->updatable() )
-        {
-            assert( Contains(m_UpdatableComponents[c->type()], c) );
-            Remove( m_UpdatableComponents[c->type()], c );
-        }
-        else
-        {
-            assert( Contains(m_Components[c->type()], c) );
-            Remove( m_Components[c->type()], c );
-        }
+        assert( !c->m_Freed && c->m_Active );
         auto& freeComps = m_FreeComponents[c->type()];
-        assert( !Contains(freeComps, c) );
-        freeComps.emplace_back( c );
+        assert( freeComps.count(c)==0 );
+        c->m_Freed  = true; // NOTE: Do not remove from components list to avoid fragmentation.
+        c->m_Active = false;
+        freeComps.insert( c );
+        m_NumComponents--;
     }
 
-    void ComponentManager::growComponents(u32 type)
+    void ComponentManager::freeAllOfType(u32 type)
     {
         FV_CHECK_ST();
-        auto& freeComps = m_FreeComponents[type];
-        if ( freeComps.size() ) return;
-        TypeInfo& ti = typeManager()->typeInfo(type);
-        Component* newComps = ti.createFunc(ComponentBufferSize);
-        freeComps.reserve(ComponentBufferSize);
-        for ( u32 i=0; i<ComponentBufferSize; ++i )
+        auto& compVector = m_Components[type];
+        for ( auto& compArray : compVector )
         {
-            freeComps.emplace_back(newComps + i);
+            for ( u32 i = 0; i < compArray.size; i++ )
+            {
+                Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
+                if ( !c->m_Freed && c->m_Active )
+                {
+                    freeComponent(c);
+                }
+            }
         }
     }
 
-    Map<u32, Array<Component*>>& ComponentManager::components()
+    u32 ComponentManager::numComponents() const
+    {
+        FV_CHECK_ST();
+        return m_NumComponents;
+    }
+
+    u32 ComponentManager::numComponents(u32 type)
+    {
+        FV_CHECK_ST();
+        const auto& compsVector = m_Components[type];
+        u32 k=0;
+        for ( const auto& compArray : compsVector )
+        {
+            k += compArray.size;
+        }
+        return k;
+    }
+
+    Map<u32, Vector<ComponentArray>>& ComponentManager::components()
     {
         FV_CHECK_ST();
         return m_Components;
     }
 
-
-    Map<u32, Array<Component*>>& ComponentManager::updatableComponents()
-    {
-        FV_CHECK_ST();
-        return m_UpdatableComponents;
-    }
-
     ComponentManager* g_ComponentManager {};
     ComponentManager* componentManager() { return CreateOnce(g_ComponentManager); }
+    void deleteComponentManager() { delete g_ComponentManager; g_ComponentManager=nullptr; }
+
 }

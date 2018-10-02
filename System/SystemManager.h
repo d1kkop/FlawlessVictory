@@ -19,8 +19,9 @@ namespace fv
     private:
         bool m_Done = false;
         SystemParams m_Params;
-        Array<Thread> m_Threads;
+        Vector<Thread> m_Threads;
     };
 
     class SystemManager* systemManager();
+    void deleteSystemManager();
 }

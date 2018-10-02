@@ -88,4 +88,5 @@ namespace fv
 
     LogManager* g_LogManager {};
     LogManager* logManager() { return CreateOnce(g_LogManager); }
+    void deleteLogManager() { delete g_LogManager; g_LogManager=nullptr; }
 }

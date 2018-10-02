@@ -12,8 +12,17 @@ namespace game
     void PlayerComponent::update(float t)
     {
         // Update this component or other components in the owning game object.
-        for ( PlayerComponent* player : Itr<PlayerComponent>() )
+  /*      for ( PlayerComponent* player : Itr<PlayerComponent>() )
         {
+
+        }*/
+
+        ComponentIter<PlayerComponent> it = Itr<PlayerComponent>();
+        auto bg = it.begin();
+        auto eg = it.end();
+        for ( ; bg != eg; ++bg )
+        {
+
         }
     }
 

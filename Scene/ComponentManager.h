@@ -4,12 +4,65 @@
 
 namespace fv
 {
-    /*  The ComponentManager serves two purposes.
-        1. All components are supposed to exist at all time. Freed components are recycled.
-        2. Operations can be performed on a sequential array of memory (roughly) in a ordered fashion. This is very cache friendly. */
+    struct ComponentArray
+    {
+        Component* elements;
+        u32 size;
+        u32 compSize;
+    };
+
+
+    template <class T>
+    struct ComponentIter
+    {
+        ComponentIter(Vector<ComponentArray>& components):
+            m_Components(components) { }
+
+        template <class T>
+        struct iterator
+        {
+            ComponentIter<T>* ptr;
+
+            iterator (ComponentIter<T>* p = nullptr): 
+                ptr(p)
+            {
+                if ( ptr && ptr->m_Components.size() ) m_ElemArray = &ptr->m_Components[0];
+                else ptr = nullptr;
+            }
+            T& operator*() const { return *(((T*)m_ElemArray->elements) + m_Cur); }
+            iterator operator++ (int) { iterator tmp = *this; ++*this; return tmp; }
+            bool operator== (const iterator& other) const { return ptr == other.ptr; }
+            bool operator!= (const iterator& other) const { return ptr != other.ptr; }
+
+            void operator++ () 
+            {
+                while ( true )
+                {
+                    if ( ++m_Cur == m_ElemArray->size )
+                    {
+                        if ( ++m_VecCur == (u32)ptr->m_Components.size() ) { ptr = nullptr; return; } 
+                        else { m_Cur = 0; m_ElemArray = &ptr->m_Components[m_VecCur]; }
+                    }
+                    if ( (((T*)m_ElemArray->elements) + m_Cur)->m_Active ) return;
+                }
+            }
+
+            const ComponentArray* m_ElemArray = nullptr;
+            u32 m_Cur = 0;
+            u32 m_VecCur = 0;
+        };
+
+        iterator<T> begin() { return iterator<T>(this); }
+        iterator<T>& end() { static iterator<T> et; return et; }
+
+    private:
+        const Vector<ComponentArray>& m_Components;
+    };
+
+
     class ComponentManager
     {
-        const u32 ComponentBufferSize = 64;
+        const u32 ComponentBufferSize = 128;
 
     public:
         ComponentManager() = default;
@@ -17,16 +70,22 @@ namespace fv
 
         FV_ST FV_DLL Component* newComponent(u32 type);
         FV_ST FV_DLL void growComponents(u32 type);
-        FV_ST FV_DLL Map<u32, Array<Component*>>& components();
-        FV_ST FV_DLL Map<u32, Array<Component*>>& updatableComponents();
+        FV_ST FV_DLL Map<u32, Vector<ComponentArray>>& components();
         FV_ST FV_DLL void freeComponent(Component* c);
+        FV_ST FV_DLL void freeAllOfType(u32 type);
+        FV_ST FV_DLL u32 numComponents() const;
+        FV_ST FV_DLL u32 numComponents(u32 type);
+
         FV_ST template <class T> T* newComponent();
+        FV_ST template <class T> void freeAllOfType();
+        FV_ST template <class T> u32 numComponents();
 
     private:
-        Map<u32, Array<Component*>> m_Components;
-        Map<u32, Array<Component*>> m_UpdatableComponents;
-        Map<u32, Array<Component*>> m_FreeComponents;
+        Map<u32, Vector<ComponentArray>> m_Components;
+        Map<u32, Set<Component*>> m_FreeComponents;
+        u32 m_NumComponents = 0;
     };
+
 
     template <class T>
     T* ComponentManager::newComponent()
@@ -35,17 +94,25 @@ namespace fv
         return t;
     }
 
-    FV_ST FV_DLL ComponentManager* componentManager();
+    template <class T>
+    void ComponentManager::freeAllOfType()
+    {
+        freeAllOfType(T::type());
+    }
 
     template <class T>
-    Array<T*>& Itr()
+    u32 ComponentManager::numComponents()
     {
-        auto& components = componentManager()->components()[T::type()];
-        if ( components.empty() )
-        {
-            // Try updatables
-            components = componentManager()->updatableComponents()[T::type()];
-        }
-        return  *(Array<T*>*) (&components);
+        return numComponents(T::type());
+    }
+
+    FV_ST FV_DLL ComponentManager* componentManager();
+    FV_ST FV_DLL void deleteComponentManager();
+
+    template <class T>
+    ComponentIter<T> Itr()
+    {
+        Vector<ComponentArray>& components = componentManager()->components()[T::type()];
+        return ComponentIter<T>(components);
     }
 }

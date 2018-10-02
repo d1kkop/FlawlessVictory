@@ -1,25 +1,28 @@
 #pragma once
 #include "../Core/Common.h"
+#include "../Core/ObjectManager.h"
 
 namespace fv
 {
-    class Component
+    class FV_DLL Component: public Object
     {
     public:
+        virtual ~Component()= default;
         virtual u32 updatePriority() const { return 0; }
         virtual bool updatable() const { return false; }
         u32 type() const { return m_Type; }
 
-        FV_DLL Component* addComponent(u32 type);
-        FV_DLL Component* getComponent(u32 type);
-        FV_DLL bool hasComponent(u32 type);
-        FV_DLL bool removeComponent(u32 type);
+        Component* addComponent(u32 type);
+        Component* getComponent(u32 type);
+        bool hasComponent(u32 type);
+        bool removeComponent(u32 type);
         template <class T> T* addComponent();
         template <class T> T* getComponent();
         template <class T> bool hasComponent();
         template <class T> bool removeComponent();
 
     private:
+    public: // TODO remove
         FV_ST virtual void begin() { }
         FV_ST virtual void update(float dt) { }
         virtual void updateMT(float dt) { }

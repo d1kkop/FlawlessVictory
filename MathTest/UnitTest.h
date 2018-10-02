@@ -15,7 +15,7 @@ namespace UnitTest
         String m_Name;
     };
 
-    Array<UnitTestBase*> g_UnitTests;
+    Vector<UnitTestBase*> g_UnitTests;
     UnitTestBase* addUTest(UnitTestBase* ut) { g_UnitTests.push_back(ut); return ut; }
 }
 

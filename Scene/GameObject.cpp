@@ -62,4 +62,5 @@ namespace fv
 
     ObjectManager<GameObject>* g_GameObjectManager {};
     ObjectManager<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
+    void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
 }

@@ -93,7 +93,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>
       </AdditionalOptions>
-      <PreprocessorDefinitions>FV_EXPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FV_EXPORTING;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -120,7 +120,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>
       </AdditionalOptions>
-      <PreprocessorDefinitions>FV_EXPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FV_EXPORTING;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -149,6 +149,7 @@
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mat4.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="OSLayer.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Quat.h" />

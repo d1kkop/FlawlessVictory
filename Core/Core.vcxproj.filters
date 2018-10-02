@@ -102,5 +102,8 @@
     <ClInclude Include="OSLayer.h">
       <Filter>OSLayer</Filter>
     </ClInclude>
+    <ClInclude Include="ObjectManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

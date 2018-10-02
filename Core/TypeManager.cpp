@@ -5,9 +5,9 @@
 
 namespace fv
 {
-    TypeInfo InvalidType = { (u32)-1, nullptr, nullptr, nullptr };
+    TypeInfo InvalidType = { (u32)-1, (u32)-1, nullptr, nullptr, nullptr };
 
-    u32 TypeManager::registerType(const char* name, CreateFunc cfunc, ResetFunc rfunc)
+    u32 TypeManager::registerType(const char* name, u32 size, CreateFunc cfunc, ResetFunc rfunc)
     {
         auto nIt = m_NameToType.find(name);
         if ( nIt == m_NameToType.end() )
@@ -23,7 +23,7 @@ namespace fv
             }
 
             // Use original name to obtain chosen hash ID
-            TypeInfo ti = { hash, cfunc, rfunc, nullptr };
+            TypeInfo ti = { hash, size, cfunc, rfunc, nullptr };
             m_NameToType[name] = ti;
             m_HashToType[hash] = &m_NameToType[name];
             auto tIt = m_NameToType.find(name);
@@ -37,7 +37,7 @@ namespace fv
         return typeInfo(name).hash;
     }
 
-    TypeInfo& TypeManager::typeInfo(const char* name)
+    const TypeInfo& TypeManager::typeInfo(const char* name)
     {
         auto nIt = m_NameToType.find(name);
         if ( nIt != m_NameToType.end() )
@@ -48,7 +48,7 @@ namespace fv
         return InvalidType;
     }
 
-    FV_DLL TypeInfo& TypeManager::typeInfo(u32 hash)
+    const TypeInfo& TypeManager::typeInfo(u32 hash)
     {
         auto nIt = m_HashToType.find(hash);
         if ( nIt != m_HashToType.end() )
@@ -62,4 +62,5 @@ namespace fv
 
     TypeManager* g_TypeManager{};
     TypeManager* typeManager() { return CreateOnce(g_TypeManager); }
+    void deleteTypeManager() { delete g_TypeManager; g_TypeManager=nullptr; }
 }
