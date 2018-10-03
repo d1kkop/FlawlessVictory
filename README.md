@@ -1,0 +1,4 @@
+# FlawlessVictory
+
+[TODO]
+- Implement ResourceManager
