@@ -19,18 +19,18 @@ namespace fv
     class Job: public Object
     {
     public:
-        FV_TS JobState state() const;
-        FV_TS void wait();
-        FV_TS void free();
-        FV_TS void waitAndFree();
+        FV_TS FV_DLL JobState state() const;
+        FV_TS FV_DLL void wait();
+        FV_TS FV_DLL void free();
+        FV_TS FV_DLL void waitAndFree();
 
         // Will only work if job was not yet started. This will attempt to remove it from the job queue.
         // Returns true if was actually removed from queue. False otherwise.
         // The job is not yet freed after this. 'free()' must still be called.
-        FV_TS bool cancel();
+        FV_TS FV_DLL bool cancel();
 
         // See above for cancel. Calls free automatically afterwards.
-        FV_TS bool cancelAndFree();
+        FV_TS FV_DLL bool cancelAndFree();
 
     private:
         FV_TS void finishWith(JobState newState);
@@ -49,7 +49,7 @@ namespace fv
     class JobManager: public ObjectManager<Job>
     {
     public:
-        JobManager();
+        FV_DLL JobManager();
         FV_TS FV_DLL Job* addJob( const Function<void (Job*)>& cb );
 
     private:
@@ -72,5 +72,5 @@ namespace fv
 
 
     FV_DLL JobManager* jobManager();
-    void deleteJobManager();
+    FV_DLL void deleteJobManager();
 }

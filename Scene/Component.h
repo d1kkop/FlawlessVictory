@@ -23,13 +23,14 @@ namespace fv
 
     private:
     public: // TODO remove
-        FV_ST virtual void begin() { }
-        FV_ST virtual void update(float dt) { }
+        FV_MO virtual void begin() { }
+        FV_MO virtual void update(float dt) { }
         virtual void updateMT(float dt) { }
         virtual void physicsUpdateMT(float dt) { }
         virtual void networkUpdateMT(float dt) { }
 
-        u32 m_Type = -1;
+        u32  m_Type = -1;
+        bool m_HasBegun = false;
         class GameObject* m_GameObject{};
 
         friend class SystemManager;

@@ -10,9 +10,9 @@ namespace fv
         m_Components.clear();
     }
 
-    FV_ST Component* GameObject::addComponent(u32 type)
+    FV_MO Component* GameObject::addComponent(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         Component* c = getComponent(type);
         if ( c ) 
         {
@@ -24,9 +24,9 @@ namespace fv
         return c;
     }
 
-    FV_ST Component* GameObject::getComponent(u32 type)
+    FV_MO Component* GameObject::getComponent(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         auto cIt = m_Components.find( type );
         if ( cIt != m_Components.end() )
         {
@@ -35,15 +35,15 @@ namespace fv
         return nullptr;
     }
 
-    FV_ST bool GameObject::hasComponent(u32 type)
+    FV_MO bool GameObject::hasComponent(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         return m_Components.count(type)!=0;
     }
 
-    FV_ST bool GameObject::removeComponent(u32 type)
+    FV_MO bool GameObject::removeComponent(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         auto cIt = m_Components.find(type);
         if ( cIt != m_Components.end() )
         {
@@ -56,7 +56,7 @@ namespace fv
 
     u32 GameObject::numComponents()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         return (u32)m_Components.size();
     }
 

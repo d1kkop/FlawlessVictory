@@ -1,6 +1,7 @@
 #pragma once
 #include "UnitTest.h"
 #include "../Core.h"
+#include "../System/JobManager.h"
 #include "../Scene/ComponentManager.h"
 #include <cassert>
 using namespace fv;
@@ -118,3 +119,31 @@ UTESTBEGIN(IterTest)
     assert( componentManager()->numComponents<TestUpdComponent>() == 0 );
 }
 UNITTESTEND(IterTest)
+
+
+UTESTBEGIN(JobManagerTest)
+{
+    Function<void (Job*)> f1, f2;
+    //
+    //f1 = [=](Job*)
+    //{
+    //    jobManager()->addJob( f2 )->waitAndFree();
+    //};
+
+    //f2 = [=](Job*)
+    //{
+    //    jobManager()->addJob( f1 )->waitAndFree();
+    //};
+
+    //auto lamdaAddJob = [=](Job* j)
+    //{
+    //    jobManager()->addJob( f1 )->waitAndFree();        
+    //};
+
+    jobManager()->addJob( [](Job*)
+    {
+
+    })->waitAndFree();
+    return true;
+}
+UNITTESTEND(JobManagerTest)

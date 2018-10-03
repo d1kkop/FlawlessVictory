@@ -51,6 +51,18 @@ namespace fv
                 return a.elements[0].updatePriority() < b.elements[0].updatePriority();
             });
 
+            // Call begin (ST)
+            for ( auto& components : sortedListOfComponentArrays )
+                for ( u32 i=0; i<components.size; ++i )
+                {
+                    Component* c = (Component*)((char*)components.elements + i*components.compSize);
+                    if ( c->m_Active && !c->m_HasBegun )
+                    {
+                        c->m_HasBegun = true;
+                        c->begin();
+                    }
+                }
+
             // MT updates first
             setExecutingParallel( true );
 

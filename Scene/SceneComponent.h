@@ -24,15 +24,15 @@ namespace fv
         FV_DLL void setScale(const Vec3& scale);
         FV_DLL const Vec3& scale() const;
 
-        FV_ST FV_DLL void attach(SceneComponent* other);
-        FV_ST FV_DLL void detachSelf();
-        FV_ST FV_DLL void detachParent();
-        FV_ST FV_DLL void detachChildren();
+        FV_MO FV_DLL void attach(SceneComponent* other);
+        FV_MO FV_DLL void detachSelf();
+        FV_MO FV_DLL void detachParent();
+        FV_MO FV_DLL void detachChildren();
 
     private:
-        FV_ST bool computeLocalToWorld();
-        FV_ST void computeWorldToLocal();
-        FV_ST void computeTRSWorldToLocal();
+        FV_MO bool computeLocalToWorld();
+        FV_MO void computeWorldToLocal();
+        FV_MO void computeTRSWorldToLocal();
 
         Vec3 m_Position{};
         Quat m_Rotation = Quat::identity();

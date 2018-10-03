@@ -33,7 +33,7 @@ UTESTBEGIN(BenchLoopOverComponents)
         {
             BenchComponent* comp = new BenchComponent;
             delete [] garbage; 
-            garbage = new char[1024];
+            garbage = new volatile char[1024];
             benchComps.emplace_back( comp );
         }
         float s, s2;

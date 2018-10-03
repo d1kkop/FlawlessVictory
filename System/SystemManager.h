@@ -12,8 +12,8 @@ namespace fv
     class SystemManager
     {
     public:
-        bool initialize( const SystemParams& params );
-        void mainloop();
+        FV_DLL bool initialize( const SystemParams& params );
+        FV_DLL void mainloop();
         const SystemParams& startParams() const { return m_Params; }
 
     private:
@@ -22,6 +22,6 @@ namespace fv
         Vector<Thread> m_Threads;
     };
 
-    class SystemManager* systemManager();
-    void deleteSystemManager();
+    FV_DLL class SystemManager* systemManager();
+    FV_DLL void deleteSystemManager();
 }

@@ -12,24 +12,24 @@ namespace fv
     public:
         FV_DLL GameObject();
 
-        FV_ST FV_DLL Component* addComponent(u32 type);
-        FV_ST FV_DLL bool hasComponent(u32 type);
-        FV_ST FV_DLL Component* getComponent(u32 type);
-        FV_ST FV_DLL bool removeComponent(u32 type);
+        FV_MO FV_DLL Component* addComponent(u32 type);
+        FV_MO FV_DLL bool hasComponent(u32 type);
+        FV_MO FV_DLL Component* getComponent(u32 type);
+        FV_MO FV_DLL bool removeComponent(u32 type);
 
         template <class T>
-        FV_ST T* addComponent();
+        FV_MO T* addComponent();
 
         template <class T>
-        FV_ST T* getComponent();
+        FV_MO T* getComponent();
 
         template <class T>
-        FV_ST bool hasComponent();
+        FV_MO bool hasComponent();
 
         template <class T>
-        FV_ST bool removeComponent();
+        FV_MO bool removeComponent();
 
-        FV_ST FV_DLL u32 numComponents();
+        FV_MO FV_DLL u32 numComponents();
 
     private:
         u32 m_Id = -1;
@@ -40,7 +40,7 @@ namespace fv
     template <class T>
     T* GameObject::addComponent()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         auto cIt = m_Components.find(T::type());
         Component* pComponent;
         if ( cIt == m_Components.end() )
@@ -56,7 +56,7 @@ namespace fv
     template <class T>
     T* GameObject::getComponent()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         auto cIt = m_Components.find(T::type());
         if ( cIt != m_Components.end() )
         {
@@ -68,14 +68,14 @@ namespace fv
     template <class T>
     bool GameObject::hasComponent()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         return m_Components.count(T::type()) != 0;
     }
 
     template <class T>
     bool GameObject::removeComponent()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         auto cIt = m_Components.find(T::type());
         if ( cIt != m_Components.end() )
         {

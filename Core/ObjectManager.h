@@ -25,9 +25,9 @@ namespace fv
         ObjectManager(u32 objBufferSize=128);
         ~ObjectManager();
 
-        FV_ST T* newObject();
-        FV_ST void freeObject(T* object);
-        FV_ST u32 numObjects() const;
+        FV_MO T* newObject();
+        FV_MO void freeObject(T* object);
+        FV_MO u32 numObjects() const;
 
     private:
         void growObjects();
@@ -54,7 +54,7 @@ namespace fv
     template <class T>
     T* ObjectManager<T>::newObject()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         if ( m_FreeObjects.empty() )
         {
             T* objs = new T[m_ObjectBufferSize];
@@ -76,7 +76,7 @@ namespace fv
     template <class T>
     void ObjectManager<T>::freeObject(T* object)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         assert( !object->m_Freed && object->m_Active );
         assert( m_FreeObjects.count(object) == 0 );
         object->m_Freed  = true; // Do not remove from objectList to avoid fragmentation.

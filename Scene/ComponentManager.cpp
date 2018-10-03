@@ -19,7 +19,7 @@ namespace fv
 
     Component* ComponentManager::newComponent(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         const TypeInfo& ti = typeManager()->typeInfo(type);
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
@@ -50,7 +50,7 @@ namespace fv
 
     void ComponentManager::freeComponent(Component* c)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         assert( !c->m_Freed && c->m_Active );
         auto& freeComps = m_FreeComponents[c->type()];
         assert( freeComps.count(c)==0 );
@@ -62,7 +62,7 @@ namespace fv
 
     void ComponentManager::freeAllOfType(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         auto& compVector = m_Components[type];
         for ( auto& compArray : compVector )
         {
@@ -79,13 +79,13 @@ namespace fv
 
     u32 ComponentManager::numComponents() const
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         return m_NumComponents;
     }
 
     u32 ComponentManager::numComponents(u32 type)
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         const auto& compsVector = m_Components[type];
         u32 k=0;
         for ( const auto& compArray : compsVector )
@@ -97,7 +97,7 @@ namespace fv
 
     Map<u32, Vector<ComponentArray>>& ComponentManager::components()
     {
-        FV_CHECK_ST();
+        FV_CHECK_MO();
         return m_Components;
     }
 
