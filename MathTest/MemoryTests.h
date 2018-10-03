@@ -171,7 +171,10 @@ void addJob1()
         });
 
         Suspend(0.0001);
-        if ( jChild->cancelAndFree() ) printf("Job %d cancelled\n", v);
+        if ( Random() % 2 == 0 )
+            if ( jChild->cancelAndFree() ) printf("Job %d cancelled\n", v);
+        else
+            if ( jChild->cancel() ) printf("Job %d cancelled\n", v);
     }
 }
 void addJob2()

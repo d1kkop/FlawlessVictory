@@ -18,9 +18,9 @@ void shutdown()
 
 int main(int argc, char** argv)
 {
-    LOGC("--- New Session ---");
-    LOGC("--- %s ---", LocalTime().c_str());
-    LOGC("-------------------");
+    LOG("--- New Session ---");
+    LOG("--- %s ---", LocalTime().c_str());
+    LOG("-------------------");
 
     if ( argc < 2 )
     {
