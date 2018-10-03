@@ -1,12 +1,6 @@
 #include "OSLayer.h"
 #include "Platform.h"
 #include "LogManager.h"
-#if FV_SDL
-#include "../3rdParty/SDL/include/SDL.h"
-#if _MSC_VER
-#pragma comment(lib, "../3rdParty/SDL/lib/x64/SDL2.lib")
-#endif
-#endif
 
 namespace fv
 {
@@ -78,6 +72,29 @@ namespace fv
     #pragma warning(pop)  
 
     #endif
+    }
+
+    void* OSCreateWindow(const char* name, u32 posX, u32 posY, u32 width, u32 height, bool fullscreen)
+    {
+    #if FV_SDL
+        u32 flags = 0;
+        flags |= fullscreen? SDL_WINDOW_FULLSCREEN : 0;
+  //      flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+        flags |= SDL_WINDOW_VULKAN;
+        return SDL_CreateWindow( name, posX, posY, width, height, flags );
+    #endif
+        return nullptr;
+    }
+
+    void OSDestroyWindow(void* pWindow)
+    {
+    #if FV_SDL
+        SDL_DestroyWindow( (SDL_Window*) pWindow );
+    #endif
+    }
+
+    void OSSwapWindow(void* pWindow)
+    {
     }
 
 }

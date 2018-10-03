@@ -2,13 +2,15 @@
 #include "../Scene.h"
 #include "../Render.h"
 #include "../System.h"
+#include "../Core/InputManager.h"
 using namespace fv;
 
-#define FV_LOAD_TEST_MODULE 1
+#define FV_LOAD_TEST_MODULE 0
 
 void shutdown()
 {
     deleteJobManager();
+    deleteInputManager();
     deleteGameObjectManager();
     deleteSystemManager();
     deleteTypeManager();
@@ -36,8 +38,11 @@ int main(int argc, char** argv)
     dllPath.remove_filename().append("Tests");
 #endif
 
-    SystemParams params;
+    SystemParams params{};
     params.moduleName = dllPath.string();
+    params.windowWidth  = 1600;
+    params.windowHeight = 900;
+    params.fullscreen   = false;
 
     if ( systemManager()->initialize( params ) )
     {

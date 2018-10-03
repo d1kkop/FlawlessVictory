@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Components">
-      <UniqueIdentifier>{21ed8c67-c7b1-4e49-bfdf-117a22b9464d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Managers">
       <UniqueIdentifier>{0dc97b8b-0438-4ea5-8075-1697f0b5a22b}</UniqueIdentifier>
     </Filter>
@@ -15,6 +12,9 @@
     </Filter>
     <Filter Include="OSLayer">
       <UniqueIdentifier>{c89601b7-31cd-4d89-979f-3fd1960f0302}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input">
+      <UniqueIdentifier>{40fbc9f4-dac5-438d-bb8f-58927ff0142e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +53,12 @@
     </ClCompile>
     <ClCompile Include="Directories.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="InputManager.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +116,12 @@
     </ClInclude>
     <ClInclude Include="Directories.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="InputManager.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Input</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@
 #include "../Core/Time.h"
 #include "../Core/Thread.h"
 #include "../Core/OSLayer.h"
+#include "../Core/InputManager.h"
 #include "../Scene/ComponentManager.h"
 
 namespace fv
@@ -17,6 +18,10 @@ namespace fv
         {
             return false;
         }
+        if ( !(m_Window = OSCreateWindow( params.moduleName.c_str(), 100, 100, params.windowWidth, params.windowHeight, params.fullscreen )) )
+        {
+            return false;
+        }
         return true;
     }
 
@@ -28,6 +33,8 @@ namespace fv
 
         while ( !m_Done )
         {
+            inputManager()->update();
+
             // Deform all components by type into a single array of array<of components>
             Map<u32, Vector<ComponentArray>>& allComponents = componentManager()->components();
             Vector<ComponentArray> sortedListOfComponentArrays;
@@ -112,9 +119,16 @@ namespace fv
                         c->updateMT(Time::networkDt());
                 }
 
+            if ( m_Window )
+            {
+                OSSwapWindow( m_Window );
+            }
+
             // Update timings
             Time::update();
         }
+
+        OSDestroyWindow( m_Window );
     }
 
 

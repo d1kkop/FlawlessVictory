@@ -81,6 +81,8 @@
   <ItemGroup>
     <ClCompile Include="Directories.cpp" />
     <ClCompile Include="Functions.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="Mat3.cpp" />
     <ClCompile Include="Mat4.cpp" />
@@ -98,6 +100,8 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="InputManager.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mat4.h" />
