@@ -1,11 +1,19 @@
 #include "LogManager.h"
 #include "Functions.h"
+#include "Directories.h"
 #include <cstdlib>
 #include <cstdarg>
 
 namespace fv
 {
-    void LogManager::log( LogType type, const char* functionName, u64 line, const char* msg, ... )
+
+    LogManager::LogManager()
+    {
+        Path filename = Format( "FVLOG_%ld.txt", (u64)(EpochTime()*1000) );
+        m_Filename = ( Directories::log() / filename ).string();
+    }
+
+    void LogManager::log(LogType type, const char* functionName, u64 line, const char* msg, ...)
     {
         rscoped_lock lk(m_LogMutex);
 
@@ -15,7 +23,7 @@ namespace fv
         vsprintf_s(buff, 8190, msg, myargs);
         va_end(myargs);
 
-        String finalStr = LocalTime();
+        String finalStr; // Do not add time to every line to avoid verbosity = LocalTime();
         if ( type != LogType::Message )
         {
             String warnStr;
@@ -38,15 +46,6 @@ namespace fv
 
         finalStr += " " + String(buff) + "\n";
 
-        // On first open attach new session in front.
-        static bool isFirstOpen = true;
-        if ( isFirstOpen )
-        {
-            isFirstOpen = false;
-            log(LogType::Message, FV_FUNCTION, FV_LINE, "------- New Session --------");
-            log(LogType::Message, FV_FUNCTION, FV_LINE, "----------------------------");
-        }
-
         logToFile(finalStr.c_str());
         logToIde(finalStr.c_str());
     }
@@ -62,14 +61,12 @@ namespace fv
     {
         if ( !m_LogToFile ) return;
 
-        static const char* fileName = Format("fv_log_%s.txt", LocalTime()).c_str();
-        
         // (Re)open file
         FILE* f;
     #if FV_SECURE_CRT
-        fopen_s(&f, fileName, "a");
+        fopen_s(&f, m_Filename.c_str(), "a");
     #else
-        f = fopen(fileName, "a");
+        f = fopen(m_Filename.c_str(), "a");
     #endif
 
         if ( !f ) return;

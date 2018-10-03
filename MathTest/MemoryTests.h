@@ -120,30 +120,72 @@ UTESTBEGIN(IterTest)
 }
 UNITTESTEND(IterTest)
 
-
-UTESTBEGIN(JobManagerTest)
+Atomic<u32> g_JobRecursion = 0;
+void addJob2AndWait();
+void addJob1AndWait()
 {
-    Function<void (Job*)> f1, f2;
-    //
-    //f1 = [=](Job*)
-    //{
-    //    jobManager()->addJob( f2 )->waitAndFree();
-    //};
+    g_JobRecursion++;
+    if ( g_JobRecursion > 300 /* Watch out for stack overflow*/ )
+        return;
 
-    //f2 = [=](Job*)
-    //{
-    //    jobManager()->addJob( f1 )->waitAndFree();
-    //};
+    u32 v = g_JobRecursion;
+    printf("Job %d executed \n", v);
 
-    //auto lamdaAddJob = [=](Job* j)
-    //{
-    //    jobManager()->addJob( f1 )->waitAndFree();        
-    //};
+    jobManager()->addJob( addJob2AndWait )->waitAndFree();
+}
+void addJob2AndWait()
+{
+    addJob1AndWait();
+}
 
-    jobManager()->addJob( [](Job*)
+UTESTBEGIN(JobManagerRecursionTest)
+{
+    for ( u32 i=0; i<10; i++ )
     {
-
-    })->waitAndFree();
+        g_JobRecursion = 0;
+        jobManager()->addJob( addJob1AndWait )->waitAndFree();
+    }
     return true;
 }
-UNITTESTEND(JobManagerTest)
+UNITTESTEND(JobManagerRecursionTest)
+
+
+void addJob2();
+void addJob1()
+{
+    u32 v = g_JobRecursion++;
+    if ( v > 300 /*Watch out for stack overflow*/ )
+        return;
+
+    // Do random, wait/cancel
+    if ( Random() % 200 == 0 )
+        jobManager()->addJob([v]() {
+            printf("Job %d executed \n", v);        
+            addJob2(); 
+    })->waitAndFree();
+    else
+    {
+        Job* jChild = jobManager()->addJob([v]() {
+            printf("Job %d executed \n", v);
+            addJob2();
+        });
+
+        Suspend(0.0001);
+        if ( jChild->cancelAndFree() ) printf("Job %d cancelled\n", v);
+    }
+}
+void addJob2()
+{
+    addJob1();
+}
+
+UTESTBEGIN(JobManagerNonRecursionTest)
+{
+    for ( u32 i=0; i<10; i++ )
+    {
+        g_JobRecursion = 0;
+        jobManager()->addJob(addJob1)->waitAndFree();
+    }
+    return true;
+}
+UNITTESTEND(JobManagerNonRecursionTest)

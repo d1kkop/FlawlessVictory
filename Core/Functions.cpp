@@ -19,11 +19,16 @@ namespace fv
         static Mutex timeMutex;
         scoped_lock lk(timeMutex);
         time_t rawtime;
-        struct tm timeinfo;
         ::time (&rawtime);
-        localtime_s(&timeinfo, &rawtime);
         char asciitime[256];
+    #if FV_SECURE_CRT
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &rawtime);
         asctime_s(asciitime, 256, &timeinfo);
+    #else
+        auto* tm = localtime(&rawtime);
+        strcpy(asciitime, asctime(tm));
+    #endif
         // For some reason it attaches a new line..
         char* p = strstr(asciitime, "\n");
         if ( p )
@@ -101,6 +106,17 @@ namespace fv
         seed *= 0xc2b2ae35;
         seed ^= seed >> 16;
         return seed;
+    }
+
+    u32 Random()
+    {
+        // TODO change for better random
+        return ::rand();
+    }
+
+    void Suspend(double seconds)
+    {
+        std::this_thread::sleep_for( duration<double>(seconds) );
     }
 
 }

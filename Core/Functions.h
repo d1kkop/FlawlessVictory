@@ -18,6 +18,10 @@ namespace fv
     // Returns 32 bits murmur hash of key.
     FV_DLL u32 Hash32(const char* key, u32 len);
 
+    FV_DLL u32 Random();
+
+    FV_DLL void Suspend(double seconds);
+
     template <class T> 
     T* CreateOnce(T*& pType) { if (!pType) pType=new T; return pType; }
 }

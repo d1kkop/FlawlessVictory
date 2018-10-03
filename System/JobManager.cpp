@@ -14,26 +14,26 @@ namespace fv
 
     void Job::wait()
     {
+        // Peek done, if so no need to enter state lock.
+        if ( m_State == JobState::Done || m_State == JobState::Cancelled )
+            return;
         // While there are other jobs in queue, process them first to not stall the thread and avoid waiting for a child job
         // that will never run.
         m_Jm->processQueue();
         // Wait on the requested job now.
         unique_lock<Mutex> lk(m_StateMutex);
+        m_NumWaiters++;
         while ( !(m_State == JobState::Done || m_State == JobState::Cancelled) )
         {
             m_StateSignal.wait( lk );
         }
-    }
-
-    void Job::free()
-    {
-        m_Jm->freeJob(this);
+        m_NumWaiters--;
     }
 
     void Job::waitAndFree()
     {
         wait();
-        free();
+        m_Jm->freeJob(this);
     }
 
     bool Job::cancel()
@@ -44,7 +44,7 @@ namespace fv
     bool Job::cancelAndFree()
     {
         bool bRes = cancel();
-        free();
+        waitAndFree();
         return bRes;
     }
 
@@ -79,8 +79,10 @@ namespace fv
         }
     }
 
-    Job* JobManager::addJob( const Function<void (Job * )>& cb )
+    Job* JobManager::addJob( const Function<void ()>& cb )
     {
+        assert( cb );
+
         // ObjectManager is not thread safe
         Job* job;
         {
@@ -107,6 +109,7 @@ namespace fv
     void JobManager::freeJob(Job* job)
     {
         assert(job);
+        job->wait();
         // ObjectManager is not thread safe
         {
             scoped_lock lk(m_ObjectManagerMutex);
@@ -155,6 +158,7 @@ namespace fv
         while ( m_GlobalQueue.size() )
         {
             popAndProcessJob(lk);
+            lk.lock();
         }
     }
 
@@ -165,7 +169,8 @@ namespace fv
         // Should not need jobState lock for this state swap
         job->m_State = JobState::InProgress;
         lk.unlock();
-        job->m_Cb(job);
+        assert(job->m_Cb);
+        if ( job->m_Cb ) job->m_Cb();
         job->finishWith(JobState::Done);
     }
 

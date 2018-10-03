@@ -18,9 +18,14 @@ void shutdown()
 
 int main(int argc, char** argv)
 {
+    LOGC("--- New Session ---");
+    LOGC("--- %s ---", LocalTime().c_str());
+    LOGC("-------------------");
+
     if ( argc < 2 )
     {
         LOGC("No module name specified.");
+        deleteLogManager();
         return 0;
     }
 

@@ -79,6 +79,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Directories.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="Mat3.cpp" />
@@ -95,6 +96,7 @@
     <ClInclude Include="..\Core.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Mat3.h" />

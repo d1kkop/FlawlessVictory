@@ -77,12 +77,15 @@ namespace fv
     void ObjectManager<T>::freeObject(T* object)
     {
         FV_CHECK_MO();
-        assert( !object->m_Freed && object->m_Active );
-        assert( m_FreeObjects.count(object) == 0 );
-        object->m_Freed  = true; // Do not remove from objectList to avoid fragmentation.
-        object->m_Active = false;
-        m_FreeObjects.insert(object);
-        m_NumObjects--;
+        if ( !object->m_Freed && object->m_Active ) // Allow multiple calls to freeObject
+        {
+            // assert( !object->m_Freed && object->m_Active );
+            assert( m_FreeObjects.count(object) == 0 );
+            object->m_Freed  = true; // Do not remove from objectList to avoid fragmentation.
+            object->m_Active = false;
+            m_FreeObjects.insert(object);
+            m_NumObjects--;
+        }
     }
 
     template <class T>

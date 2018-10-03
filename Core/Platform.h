@@ -5,7 +5,7 @@
 #define FV_TRACEJOBSYSTEM 0
 
 #if _DEBUG
-#define FV_DEBUG 1
+    #define FV_DEBUG 1
 #endif
 
 #ifdef FV_EXPORTING
@@ -25,11 +25,14 @@
 // Platform
 #if _MSC_VER
 #define FV_SECURE_CRT 1
+#if !FV_SECURE_CRT
+    #define _CRT_SECURE_NO_WARNINGS
+#endif
 #define FV_INCLUDE_WINHDR 1
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define FV_FUNCTION __FUNCTION__
 #define FV_LINE		__LINE__
-#define FV_FL		MM_FUNCTION, MM_LINE
+#define FV_FL		FV_FUNCTION, FV_LINE
 #endif
 

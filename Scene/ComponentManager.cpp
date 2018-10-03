@@ -51,13 +51,16 @@ namespace fv
     void ComponentManager::freeComponent(Component* c)
     {
         FV_CHECK_MO();
-        assert( !c->m_Freed && c->m_Active );
-        auto& freeComps = m_FreeComponents[c->type()];
-        assert( freeComps.count(c)==0 );
-        c->m_Freed  = true; // NOTE: Do not remove from components list to avoid fragmentation.
-        c->m_Active = false;
-        freeComps.insert( c );
-        m_NumComponents--;
+        if ( !c->m_Freed && c->m_Active ) // Allow multiple calls to freeComponent
+        {
+            // assert( !c->m_Freed && c->m_Active );
+            auto& freeComps = m_FreeComponents[c->type()];
+            assert( freeComps.count(c)==0 );
+            c->m_Freed  = true; // NOTE: Do not remove from components list to avoid fragmentation.
+            c->m_Active = false;
+            freeComps.insert( c );
+            m_NumComponents--;
+        }
     }
 
     void ComponentManager::freeAllOfType(u32 type)

@@ -51,6 +51,9 @@
     <ClCompile Include="OSLayer.cpp">
       <Filter>OSLayer</Filter>
     </ClCompile>
+    <ClCompile Include="Directories.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core.h" />
@@ -104,6 +107,9 @@
     </ClInclude>
     <ClInclude Include="ObjectManager.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Directories.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

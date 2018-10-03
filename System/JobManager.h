@@ -9,7 +9,6 @@ namespace fv
 {
     enum JobState
     {
-        Idle,
         Scheduled,
         InProgress,
         Cancelled,
@@ -21,7 +20,6 @@ namespace fv
     public:
         FV_TS FV_DLL JobState state() const;
         FV_TS FV_DLL void wait();
-        FV_TS FV_DLL void free();
         FV_TS FV_DLL void waitAndFree();
 
         // Will only work if job was not yet started. This will attempt to remove it from the job queue.
@@ -36,8 +34,8 @@ namespace fv
         FV_TS void finishWith(JobState newState);
 
         class JobManager* m_Jm;
-        Function<void (Job*)> m_Cb;
-        Atomic<JobState> m_State = JobState::Idle;
+        Function<void ()> m_Cb;
+        Atomic<JobState> m_State = JobState::Scheduled;
         Mutex m_StateMutex;
         CondVar m_StateSignal;
         u32 m_NumWaiters = 0;
@@ -50,7 +48,7 @@ namespace fv
     {
     public:
         FV_DLL JobManager();
-        FV_TS FV_DLL Job* addJob( const Function<void (Job*)>& cb );
+        FV_TS FV_DLL Job* addJob( const Function<void ()>& cb );
 
     private:
         FV_TS void freeJob(Job* job);
