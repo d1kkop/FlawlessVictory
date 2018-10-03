@@ -4,18 +4,17 @@
 
 namespace fv
 {
-    class FV_DLL Component: public Object
+    class Component: public Object
     {
     public:
         virtual ~Component()= default;
-        virtual u32 updatePriority() const { return 0; }
+        virtual u32 updatePriority() const { return 0; } // TODO set from type registration
         virtual bool updatable() const { return false; }
-        u32 type() const { return m_Type; }
 
-        Component* addComponent(u32 type);
-        Component* getComponent(u32 type);
-        bool hasComponent(u32 type);
-        bool removeComponent(u32 type);
+        FV_DLL Component* addComponent(u32 type);
+        FV_DLL Component* getComponent(u32 type);
+        FV_DLL bool hasComponent(u32 type);
+        FV_DLL bool removeComponent(u32 type);
         template <class T> T* addComponent();
         template <class T> T* getComponent();
         template <class T> bool hasComponent();
@@ -29,7 +28,6 @@ namespace fv
         virtual void physicsUpdateMT(float dt) { }
         virtual void networkUpdateMT(float dt) { }
 
-        u32  m_Type = -1;
         bool m_HasBegun = false;
         class GameObject* m_GameObject{};
 

@@ -2,10 +2,11 @@
 #include "Common.h"
 #include "Thread.h"
 #include "Algorithm.h"
+#include "Reflection.h"
 
 namespace fv
 {
-    class Object
+    class Object: public Type
     {
     public:
         bool m_Freed = false;

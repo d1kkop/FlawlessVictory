@@ -4,18 +4,22 @@
 
 namespace fv
 {
-    void InputManager::update()
+    bool InputManager::update()
     {
     #if FV_SDL
         SDL_Event event;
-        while ( SDL_PollEvent(&event) );
+        while ( SDL_PollEvent(&event) )
+        {
+            if ( event.type == SDL_QUIT )
+                return false;
+        }
         SDL_PumpEvents();
         // Keyboard
         {
             memcpy( m_PrevKeyStates, m_CurKeyStates, sizeof(m_CurKeyStates) );
             int numKeys = 0;
             const byte* sdlKeys = SDL_GetKeyboardState(&numKeys);
-            assert( numKeys <= 256 ); // Size of state array
+            assert( numKeys <= 512 ); // Size of state array
             memcpy( m_CurKeyStates, sdlKeys, numKeys*sizeof(byte) );
         }
         // Mouse
@@ -26,6 +30,7 @@ namespace fv
             m_CurMouseKeysState  = SDL_GetMouseState( (int*)&m_CurMouseX, (int*)&m_CurMouseY );
         }
     #endif
+        return true;
     }
 
 
@@ -126,7 +131,7 @@ namespace fv
         if ( sdlCode != SDLK_UNKNOWN )
         {
             u32 scan = SDL_GetScancodeFromKey(sdlCode);
-            assert( scan < 256 ); // KeyCode buffer size
+            assert( scan < 512 ); // KeyCode buffer size
             return scan;
         }
     #endif

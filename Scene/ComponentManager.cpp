@@ -21,11 +21,12 @@ namespace fv
     {
         FV_CHECK_MO();
         const TypeInfo& ti = typeManager()->typeInfo(type);
+        assert( ti.hash == type );
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
             auto& freeComps = m_FreeComponents[type];
-            Component* newComps = ti.createFunc( ComponentBufferSize ); // Allocates contiguous array
+            Type* newComps = typeManager()->createType( type, ComponentBufferSize ); // Allocates contiguous array
             assert( freeComps.size() == 0 );
             for ( u32 i=0; i<ComponentBufferSize; ++i )
             {
@@ -33,7 +34,7 @@ namespace fv
                 freeComps.insert( c );
             }
             auto& comps = m_Components[type];
-            ComponentArray ca = { newComps, ComponentBufferSize, ti.size };
+            ComponentArray ca = { (Component*)newComps, ComponentBufferSize, ti.size };
             comps.emplace_back( ca ); 
         }
         Component* c = *freeComps.begin();
@@ -42,7 +43,6 @@ namespace fv
         {
             ti.resetFunc( c ); // Only call placement new when object is recycled.
         }
-        c->m_Type = ti.hash;
         c->m_Active = true;
         m_NumComponents++;
         return c;

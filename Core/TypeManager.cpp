@@ -59,8 +59,19 @@ namespace fv
         return InvalidType;
     }
 
+    Type* TypeManager::createType(u32 type, u32 num)
+    {
+        const TypeInfo& ti = typeInfo(type);
+        assert( type == ti.hash );
+        Type* types = ti.createFunc( num );
+        for ( u32 i=0; i<num; ++i )
+        {
+            ((Type*)((char*)types + i*ti.size))->m_Type = type;
+        }
+        return types;
+    }
 
-    TypeManager* g_TypeManager{};
+    TypeManager* g_TypeManager {};
     TypeManager* typeManager() { return CreateOnce(g_TypeManager); }
     void deleteTypeManager() { delete g_TypeManager; g_TypeManager=nullptr; }
 }

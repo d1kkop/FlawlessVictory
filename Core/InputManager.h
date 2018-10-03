@@ -7,7 +7,7 @@ namespace fv
     class InputManager
     {
     public:
-        FV_DLL void update();
+        FV_DLL bool update();
 
         // Keyboard
         FV_DLL bool keyPressed(const char* key);
@@ -29,8 +29,8 @@ namespace fv
         u32 keyNameToScan( const char* key );
         u32 mouseKeyToScan( MouseKey mkey );
 
-        byte m_PrevKeyStates[256]{};
-        byte m_CurKeyStates[256]{};
+        byte m_PrevKeyStates[512]{};
+        byte m_CurKeyStates[512]{};
         byte m_PrevMouseKeysState{};
         byte m_CurMouseKeysState{};
         i32 m_CurMouseX{};

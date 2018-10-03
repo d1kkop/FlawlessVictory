@@ -3,11 +3,20 @@
 
 namespace fv
 {
-    class Component;
+    struct Type;
 
-    using CreateFunc = Component* (*)(u32);
-    using ResetFunc  = void (*)(Component*);
+    using CreateFunc = Type* (*)(u32);
+    using ResetFunc  = void (*)(Type*);
 
+    struct FV_DLL Type
+    {
+        u32 type() const { return m_Type; }
+
+    private:
+        u32 m_Type = -1;
+
+        friend class TypeManager;
+    };
 
     struct FV_DLL TypeInfo
     {
@@ -24,6 +33,7 @@ namespace fv
         FV_DLL u32 registerType(const char* typeName, u32 size, CreateFunc cfunc, ResetFunc rfunc);
         FV_DLL const TypeInfo& typeInfo(const char* typeName);
         FV_DLL const TypeInfo& typeInfo(u32 hash);
+        FV_DLL Type* createType(u32 type, u32 num);
 
     private:
         Map<String, TypeInfo> m_NameToType;

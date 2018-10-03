@@ -33,7 +33,8 @@ namespace fv
 
         while ( !m_Done )
         {
-            inputManager()->update();
+            if (!inputManager()->update())
+                break;
 
             // Deform all components by type into a single array of array<of components>
             Map<u32, Vector<ComponentArray>>& allComponents = componentManager()->components();
