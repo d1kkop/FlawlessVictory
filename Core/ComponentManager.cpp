@@ -34,7 +34,7 @@ namespace fv
             assert( newComps && freeComps.size() == 0 );
             for ( u32 i=0; i<ComponentBufferSize; ++i )
             {
-                Component* c = (Component*) (Type*)( ((char*)newComps + i*ti->size) );
+                Component* c = sc<Component*>( (Type*)( ((char*)newComps + i*ti->size) ) );
                 freeComps.insert( c );
             }
             auto& comps = m_Components[type];
@@ -43,11 +43,16 @@ namespace fv
         }
         Component* c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
+        u32 oldVersion = c->m_Version;
         if ( c->m_Freed ) 
         {
-            ti->resetFunc( c ); // Only call placement new when object is recycled.
+            // Only call placement new when object is recycled. 
+            // Resets user variables for recycled object.
+            ti->resetFunc( c ); 
         }
         c->m_Active = true;
+        c->m_Version = oldVersion+1;
+        TypeManager::setType( type, *c );
         m_NumComponents++;
         return c;
     }

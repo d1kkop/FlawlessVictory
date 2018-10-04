@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 #if !FV_LOAD_TEST_MODULE
     dllPath.remove_filename().append(argv[1]);
 #else
-    dllPath.remove_filename().append("Tests");
+    dllPath.remove_filename().append("UnitTests");
 #endif
 
     SystemParams params{};

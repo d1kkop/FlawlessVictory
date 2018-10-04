@@ -85,6 +85,11 @@ namespace fv
         return types;
     }
 
+    void TypeManager::setType(u32 type, Type& t)
+    {
+        t.m_Type = type;
+    }
+
     TypeManager* g_TypeManager {};
     TypeManager* typeManager() { return CreateOnce(g_TypeManager); }
     void deleteTypeManager() { delete g_TypeManager; g_TypeManager=nullptr; }

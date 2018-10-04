@@ -28,6 +28,7 @@ class UnitTestComponent: public GameComponent
             }
             delete ut;
         }
+        system("pause");
     }
 };
 FV_TYPE_IMPL(UnitTestComponent)

@@ -38,6 +38,8 @@ namespace fv
         FV_DLL Type* createTypes(u32 type, u32 num);
         FV_DLL Type* createTypes(const TypeInfo&, u32 num);
 
+        static void setType( u32 type, Type& t );
+
     private:
         Map<String, TypeInfo> m_NameToType;
         Map<u32, TypeInfo*> m_HashToType;

@@ -2,6 +2,7 @@
 #include "UnitTest.h"
 #include "../Core.h"
 #include "../Core/ComponentManager.h"
+#include "../Scene/GameComponent.h"
 #include <cassert>
 using namespace fv;
 
