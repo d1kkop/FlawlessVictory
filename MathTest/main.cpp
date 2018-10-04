@@ -4,13 +4,13 @@
 #include "TimeTests.h"
 #include "Bechmarks.h"
 #include "../Core/Reflection.h"
-#include "../Scene/Component.h"
+#include "../Core/Component.h"
 #include <iostream>
 using namespace std;
 using namespace UnitTest;
 using namespace fv;
 
-class UnitTestComponent: public Component
+class UnitTestComponent: public GameComponent
 {
     FV_TYPE(UnitTestComponent, 0, false)
 

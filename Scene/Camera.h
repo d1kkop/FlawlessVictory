@@ -1,12 +1,12 @@
 #pragma once
-#include "Component.h"
+#include "GameComponent.h"
 #include "../Core/Math.h"
 #include "../Core/Reflection.h"
 #define FV_CAMERA_PRIORITY (-990)
 
 namespace fv
 {
-    class Camera: public Component
+    class Camera: public GameComponent
     {
     public:
         FV_TYPE(Camera, FV_CAMERA_PRIORITY, false)

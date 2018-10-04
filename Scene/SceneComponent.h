@@ -1,5 +1,5 @@
 #pragma once
-#include "Component.h"
+#include "GameComponent.h"
 #include "../Core/TypeManager.h"
 #include "../Core/Math.h"
 #include "../Core/Reflection.h"
@@ -9,7 +9,7 @@ namespace fv
 {
     class SceneWorld;
 
-    class SceneComponent: public Component
+    class SceneComponent: public GameComponent
     {
         FV_TYPE(SceneComponent, FV_SCENECOMPONENT_PRIORITY, false)
 

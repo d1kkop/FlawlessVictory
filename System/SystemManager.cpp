@@ -4,10 +4,17 @@
 #include "../Core/Thread.h"
 #include "../Core/OSLayer.h"
 #include "../Core/InputManager.h"
-#include "../Scene/ComponentManager.h"
+#include "../Core/ComponentManager.h"
+#include "../Scene/GameComponent.h"
 
 namespace fv
 {
+    // For testing module only. TODO change this for something more appropriate.
+    void SystemManager::callBeginForComponent(class GameComponent* gc)
+    {
+        gc->begin();
+    }
+
     bool SystemManager::initialize(const SystemParams& params)
     {
         if ( !OSInitialize() )
@@ -45,7 +52,7 @@ namespace fv
                 Vector<ComponentArray>& compArrayList = kvp.second;
                 for ( auto& compArray : compArrayList )
                 {
-                    if ( compArray.size > 0 && compArray.elements[0].updatable() )
+                    if ( compArray.size > 0 && ((GameComponent&)compArray.elements[0]).updatable() )
                     {
                         sortedListOfComponentArrays.emplace_back( compArray );
                     }
@@ -56,14 +63,14 @@ namespace fv
             Sort(sortedListOfComponentArrays, [](const ComponentArray& a, const ComponentArray& b)
             {
                 assert( a.size && b.size );
-                return a.elements[0].updatePriority() < b.elements[0].updatePriority();
+                return ((GameComponent&)a.elements[0]).updatePriority() < ((GameComponent&)b.elements[0]).updatePriority();
             });
 
             // Call begin (ST)
             for ( auto& components : sortedListOfComponentArrays )
                 for ( u32 i=0; i<components.size; ++i )
                 {
-                    Component* c = (Component*)((char*)components.elements + i*components.compSize);
+                    GameComponent* c = (GameComponent*)((char*)components.elements + i*components.compSize);
                     if ( c->inUse() && !c->m_HasBegun )
                     {
                         c->m_HasBegun = true;
@@ -81,7 +88,7 @@ namespace fv
                 for ( auto& components : sortedListOfComponentArrays )
                     for ( u32 i=0; i<components.size; ++i )
                     {
-                        Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
                         if ( c->inUse() )
                             c->networkUpdateMT( Time::networkDt() );
                     }
@@ -94,7 +101,7 @@ namespace fv
                 for ( auto& components : sortedListOfComponentArrays )
                     for ( u32 i=0; i<components.size; ++i )
                     {
-                        Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
                         if ( c->inUse() )
                             c->physicsUpdateMT(Time::networkDt());
                     }
@@ -104,7 +111,7 @@ namespace fv
             for ( auto& components : sortedListOfComponentArrays )
                 for ( u32 i=0; i<components.size; ++i )
                 {
-                    Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                    GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
                     if ( c->inUse() )
                         c->updateMT(Time::networkDt());
                 }
@@ -115,7 +122,7 @@ namespace fv
             for ( auto& components : sortedListOfComponentArrays )
                 for ( u32 i=0; i<components.size; ++i )
                 {
-                    Component* c = (Component*) ((char*)components.elements + i*components.compSize);
+                    GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
                     if ( c->inUse() )
                         c->updateMT(Time::networkDt());
                 }

@@ -4,6 +4,8 @@
 
 namespace fv
 {
+    // ------------ Object ----------------------------------------------------------------------------------------
+
     class Object: public Type
     {
     public:
@@ -20,11 +22,16 @@ namespace fv
         friend class ComponentManager;
     };
 
+    // ------------ ObjectArray ----------------------------------------------------------------------------------------
+
     struct ObjectArray
     {
         Object* elements;
         u32 size;
     };
+
+    // ------------ Ref to recycled Object -------------------------------------------------------------------------------
+    // NOT thread safe.
 
     template <class T>
     class Ref

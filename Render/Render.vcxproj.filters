@@ -14,9 +14,27 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="..\Render.h" />
+    <ClInclude Include="RenderManager.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicResource.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsResourceVK.h">
+      <Filter>Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Mesh.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderManager.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicResource.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsResourceVK.cpp">
       <Filter>Render</Filter>
     </ClCompile>
   </ItemGroup>

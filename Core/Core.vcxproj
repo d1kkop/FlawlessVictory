@@ -79,14 +79,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="Directories.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="JobManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="Mat3.cpp" />
     <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="OSLayer.cpp" />
+    <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Quat.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Time.cpp" />
@@ -98,10 +101,13 @@
     <ClInclude Include="..\Core.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Component.h" />
+    <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="JobManager.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mat4.h" />

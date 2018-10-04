@@ -18,10 +18,14 @@ namespace fv
     // Returns 32 bits murmur hash of key.
     FV_DLL u32 Hash32(const char* key, u32 len);
 
+    // Returns random integer.
     FV_DLL u32 Random();
 
+    // Sleeps the thread for seconds.
     FV_DLL void Suspend(double seconds);
 
-    template <class T> 
-    T* CreateOnce(T*& pType) { if (!pType) pType=new T; return pType; }
+    FV_DLL void StringCopy(char* dst, u32 dstSize, const char* src);
+
+    template <class T, class ...Args> 
+    T* CreateOnce(T*& pType, Args... args) { if (!pType) pType=new T(args...); return pType; }
 }

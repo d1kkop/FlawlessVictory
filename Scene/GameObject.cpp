@@ -1,6 +1,7 @@
 #include "GameObject.h"
 #include "../Core/Functions.h"
 #include "../Core/Reflection.h"
+#include "../Core/ObjectManager.h"
 
 namespace fv
 {
@@ -10,22 +11,22 @@ namespace fv
         m_Components.clear();
     }
 
-    FV_MO Component* GameObject::addComponent(u32 type)
+    FV_MO GameComponent* GameObject::addComponent(u32 type)
     {
         FV_CHECK_MO();
-        Component* c = getComponent(type);
+        GameComponent* c = getComponent(type);
         if ( c ) 
         {
             auto* ti = typeManager()->typeInfo(type);
             LOGW("Component of type %s already added.", ti?ti->name->c_str():"unknown" );
             return c;
         }
-        c = componentManager()->newComponent( type );
+        c = sc<GameComponent*>(componentManager()->newComponent( type ));
         m_Components[type] = c;
         return c;
     }
 
-    FV_MO Component* GameObject::getComponent(u32 type)
+    FV_MO GameComponent* GameObject::getComponent(u32 type)
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find( type );

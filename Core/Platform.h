@@ -16,13 +16,16 @@
 
 // Configuration
 #define FV_EDITOR 1
-#define FV_SDL 1
+#define FV_MAX_EXTENSION 16
 
-// API Constants
-#define FV_NO_IMPLEMENTATION_ERR (-9999)
-#define FV_INVALID_IDX (-1)
+// Platform enables/disables
+#if _WIN32
+    #define FV_SDL 1
+    #define FV_STB 0
+    #define FV_VK  1
+#endif
 
-// Platform
+// Compiler mappings
 #if _MSC_VER
 #define FV_SECURE_CRT 1
 #if !FV_SECURE_CRT
@@ -36,10 +39,16 @@
 #define FV_FL		FV_FUNCTION, FV_LINE
 #endif
 
+
 #if FV_SDL
 #include "../3rdParty/SDL/include/SDL.h"
 #undef main
 #if _MSC_VER
 #pragma comment(lib, "../3rdParty/SDL/lib/x64/SDL2.lib")
 #endif
+#endif
+
+
+#if FV_STB
+#include "../3rdParty/stb-master/stb_image.h"
 #endif

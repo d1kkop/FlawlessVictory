@@ -5,7 +5,7 @@ using namespace fv;
 
 namespace game
 {
-    class AIComponent: public Component
+    class AIComponent: public GameComponent
     {
         FV_TYPE(AIComponent, 0, false)
 

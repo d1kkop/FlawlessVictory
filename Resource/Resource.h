@@ -6,8 +6,9 @@ namespace fv
 {
     class Resource: public Type
     {
-        FV_TYPE(Resource, 0, false)
-
     public:
+        // Called from different thread.
+        virtual void load(const Path& path) { };
+        virtual void onDoneOrCancelled(class Job* loadJob) { };
     };
 }

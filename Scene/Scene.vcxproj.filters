@@ -16,10 +16,7 @@
     <ClInclude Include="GameObject.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Component.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentManager.h">
+    <ClInclude Include="GameComponent.h">
       <Filter>Scene</Filter>
     </ClInclude>
   </ItemGroup>
@@ -33,10 +30,7 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="ComponentManager.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Component.cpp">
+    <ClCompile Include="GameComponent.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>

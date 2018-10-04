@@ -76,8 +76,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
+    <ClInclude Include="GraphicResource.h" />
+    <ClInclude Include="GraphicsResourceVK.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="RenderManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -88,7 +91,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GraphicResource.cpp" />
+    <ClCompile Include="GraphicsResourceVK.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="RenderManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

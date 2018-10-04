@@ -1,4 +1,4 @@
 
-- Placement new for recycled gameobject (Reset object)
-- Placement new for recycled component (Reset object)
-- SingleTHread specifications for ComponentManager
+
+- Remove Extension in FV_RESROUCE_TYPE
+- Update priority no longer set from FV_TYPE

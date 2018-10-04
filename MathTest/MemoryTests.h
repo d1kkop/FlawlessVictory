@@ -1,12 +1,13 @@
 #pragma once
 #include "UnitTest.h"
 #include "../Core.h"
-#include "../System/JobManager.h"
-#include "../Scene/ComponentManager.h"
+#include "../Core/JobManager.h"
+#include "../Core/ComponentManager.h"
+#include "../Scene/GameComponent.h"
 #include <cassert>
 using namespace fv;
 
-class TestComponent: public Component
+class TestComponent: public GameComponent
 {
     FV_TYPE(TestComponent, 0, false)
 

@@ -76,12 +76,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="JobManager.cpp" />
     <ClCompile Include="SystemManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\System.h" />
-    <ClInclude Include="JobManager.h" />
     <ClInclude Include="SystemManager.h" />
   </ItemGroup>
   <ItemGroup>

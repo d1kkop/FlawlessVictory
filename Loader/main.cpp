@@ -1,11 +1,13 @@
-#include "../Core.h"
-#include "../Scene.h"
-#include "../Render.h"
-#include "../System.h"
+#include "../Core/TypeManager.h"
+#include "../Core/LogManager.h"
+#include "../Core/JobManager.h"
 #include "../Core/InputManager.h"
+#include "../Core/Functions.h"
+#include "../Scene/GameObject.h"
+#include "../System/SystemManager.h"
 using namespace fv;
 
-#define FV_LOAD_TEST_MODULE 0
+#define FV_LOAD_TEST_MODULE 1
 
 void shutdown()
 {
@@ -47,8 +49,8 @@ int main(int argc, char** argv)
     if ( systemManager()->initialize( params ) )
     {
     #if FV_LOAD_TEST_MODULE 
-        Component* c = typeManager()->typeInfo("UnitTestComponent").createFunc(1);
-        c->begin();
+        GameComponent* c = (GameComponent*)typeManager()->typeInfo("UnitTestComponent")->createFunc(1);
+        systemManager()->callBeginForComponent( c );
         return 0;
     #endif
 

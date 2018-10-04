@@ -5,7 +5,7 @@
 
 namespace fv
 {
-    u32 TypeManager::registerType(const char* name, u32 size, CreateFunc cfunc, ResetFunc rfunc, i32 updatePriority)
+    u32 TypeManager::registerType(const char* name, u32 size, CreateFunc cfunc, ResetFunc rfunc, i32 updatePriority, const char* extension)
     {
         assert( name && size && cfunc && rfunc );
         auto nIt = m_NameToType.find(name);
@@ -22,7 +22,16 @@ namespace fv
             }
 
             // Use original name to obtain chosen hash ID
-            TypeInfo ti = { hash, size, cfunc, rfunc, nullptr, updatePriority };
+            TypeInfo ti;
+            {
+                ti.hash=hash;
+                ti.size=size;
+                ti.createFunc=cfunc;
+                ti.resetFunc=rfunc;
+                ti.name=nullptr; // Name stored in m_NameToType, ptr assigned to that value below.
+                ti.updatePriority=updatePriority;
+                StringCopy(ti.extension, FV_MAX_EXTENSION, extension);
+            }
             m_NameToType[name] = ti;
             m_HashToType[hash] = &m_NameToType[name];
             auto tIt = m_NameToType.find(name);

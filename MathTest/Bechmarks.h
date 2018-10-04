@@ -1,7 +1,7 @@
 #pragma once
 #include "UnitTest.h"
 #include "../Core.h"
-#include "../Scene/ComponentManager.h"
+#include "../Core/ComponentManager.h"
 #include <cassert>
 using namespace fv;
 

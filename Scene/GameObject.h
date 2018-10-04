@@ -1,8 +1,6 @@
 #pragma once
-#include "Component.h"
-#include "ComponentManager.h"
-#include "../Core/ObjectManager.h"
-#include "../Core/Platform.h"
+#include "GameComponent.h"
+#include "../Core/ComponentManager.h"
 #include "../Core/Thread.h"
 
 namespace fv
@@ -12,9 +10,9 @@ namespace fv
     public:
         FV_DLL GameObject();
 
-        FV_MO FV_DLL Component* addComponent(u32 type);
+        FV_MO FV_DLL GameComponent* addComponent(u32 type);
         FV_MO FV_DLL bool hasComponent(u32 type);
-        FV_MO FV_DLL Component* getComponent(u32 type);
+        FV_MO FV_DLL GameComponent* getComponent(u32 type);
         FV_MO FV_DLL bool removeComponent(u32 type);
 
         template <class T>
@@ -33,7 +31,7 @@ namespace fv
 
     private:
         u32 m_Id = -1;
-        Map<u32, Component*> m_Components;
+        Map<u32, GameComponent*> m_Components;
     };
 
 
@@ -42,7 +40,7 @@ namespace fv
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find(T::type());
-        Component* pComponent;
+        GameComponent* pComponent;
         if ( cIt == m_Components.end() )
         {
             pComponent = componentManager()->newComponent<T>();
@@ -89,5 +87,4 @@ namespace fv
 
     FV_DLL ObjectManager<GameObject>* gameObjectManager();
     FV_DLL void deleteGameObjectManager();
-
 }

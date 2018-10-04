@@ -16,6 +16,9 @@
     <Filter Include="Input">
       <UniqueIdentifier>{40fbc9f4-dac5-438d-bb8f-58927ff0142e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BaseObjects">
+      <UniqueIdentifier>{d6867278-0721-4204-8430-8d16130271ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TypeManager.cpp">
@@ -59,6 +62,15 @@
     </ClCompile>
     <ClCompile Include="Input.cpp">
       <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="JobManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,8 +135,17 @@
     <ClInclude Include="Input.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="Object.h">
+    <ClInclude Include="JobManager.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>BaseObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>BaseObjects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

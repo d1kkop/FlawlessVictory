@@ -4,7 +4,7 @@ using namespace fv;
 
 namespace game
 {
-    class PlayerComponent: public Component
+    class PlayerComponent: public GameComponent
     {
         FV_TYPE(PlayerComponent, 0, false)
 

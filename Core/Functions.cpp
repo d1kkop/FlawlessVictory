@@ -119,4 +119,13 @@ namespace fv
         std::this_thread::sleep_for( duration<double>(seconds) );
     }
 
+    void StringCopy(char* dst, u32 dstSize, const char* src)
+    {
+    #if FV_SECURE_CRT
+        strcpy_s( dst, dstSize, src );
+    #else
+        strcpy( dst,src );
+    #endif
+    }
+
 }
