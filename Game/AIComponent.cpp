@@ -21,14 +21,14 @@ namespace game
         float dist = FLT_MAX;
         Vec3 usPos = getComponent<SceneComponent>()->position();
         PlayerComponent* closestPlayer = nullptr;
-        for ( PlayerComponent& player : Itr<PlayerComponent>() )
+        for ( PlayerComponent* player : Itr<PlayerComponent>() )
         {
-            Vec3 pos = player.getComponent<SceneComponent>()->position();
+            Vec3 pos = player->getComponent<SceneComponent>()->position();
             float kDist = pos.distSq( usPos );
             if ( kDist < dist )
             {
                 dist = kDist;
-                closestPlayer = &player;
+                closestPlayer = player;
             }
         }
         if ( closestPlayer )

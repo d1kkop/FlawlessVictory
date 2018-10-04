@@ -78,7 +78,7 @@ UTESTBEGIN(IterTest)
 {
     // Test 0 elements
     u32 g = 0;
-    for ( TestUpdComponent& tc : Itr<TestUpdComponent>() )
+    for ( TestUpdComponent* tc : Itr<TestUpdComponent>() )
     {
         g++;
     }
@@ -90,7 +90,7 @@ UTESTBEGIN(IterTest)
 
     // Should be 3 now
     g = 0;
-    for ( TestUpdComponent& tc : Itr<TestUpdComponent>() )
+    for ( TestUpdComponent* tc : Itr<TestUpdComponent>() )
     {
         g++;
     }
@@ -107,9 +107,9 @@ UTESTBEGIN(IterTest)
     assert( g==1000 );
 
     // Test if mapping to derived component is correct (no invalid ptr offsets)
-    for ( auto& tc : Itr<TestComponent>() )
+    for ( auto* tc : Itr<TestComponent>() )
     {
-        assert( tc.s == "Hello Iterator" );
+        assert( tc->s == "Hello Iterator" );
     }
     return true;
 

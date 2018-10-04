@@ -14,7 +14,7 @@ namespace fv
 
         FV_MO FV_DLL Component* newComponent(u32 type);
         FV_MO FV_DLL void growComponents(u32 type);
-        FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& components();
+        FV_MO FV_DLL Map<u32, Set<Component*>>& components();
         FV_MO FV_DLL void freeComponent(Component* c);
         FV_MO FV_DLL void freeAllOfType(u32 type);
         FV_MO FV_DLL u32 numComponents() const;
@@ -25,7 +25,7 @@ namespace fv
         FV_MO template <class T> u32 numComponents();
 
     private:
-        Map<u32, Vector<ComponentArray>> m_Components;
+        Map<u32, Set<Component*>> m_Components;
         Map<u32, Set<Component*>> m_FreeComponents;
         u32 m_NumComponents = 0;
     };
@@ -53,10 +53,12 @@ namespace fv
     FV_MO FV_DLL ComponentManager* componentManager();
     FV_MO FV_DLL void deleteComponentManager();
 
+ //   ComponentIter<T> Itr()
     template <class T>
-    ComponentIter<T> Itr()
+    Set<T*> Itr()
     {
-        Vector<ComponentArray>& components = componentManager()->components()[T::type()];
-        return ComponentIter<T>(components);
+        auto& components = componentManager()->components()[T::type()];
+        return *(Set<T*>*)( &components );
+       // return ComponentIter<T>(components);
     }
 }

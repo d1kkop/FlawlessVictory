@@ -44,88 +44,90 @@ namespace fv
                 break;
 
             // Deform all components by type into a single array of array<of components>
-            Map<u32, Vector<ComponentArray>>& allComponents = componentManager()->components();
-            Vector<ComponentArray> sortedListOfComponentArrays;
+            Map<u32, Set<Component*>>& allComponents = componentManager()->components();
+            Vector<Set<Component*>*> sortedListOfComponentArrays;
             sortedListOfComponentArrays.reserve(allComponents.size());
             for ( auto& kvp : allComponents )
             {
-                Vector<ComponentArray>& compArrayList = kvp.second;
-                for ( auto& compArray : compArrayList )
-                {
-                    if ( compArray.size > 0 && ((GameComponent&)compArray.elements[0]).updatable() )
-                    {
-                        sortedListOfComponentArrays.emplace_back( compArray );
-                    }
-                }
+                Set<Component*>& compArrayList = kvp.second;
+                if ( !compArrayList.empty() )
+                    sortedListOfComponentArrays.emplace_back( &compArrayList );
+                //for ( auto& compArray : compArrayList )
+                //{
+                //    if ( compArray.size > 0 && ((GameComponent&)compArray.elements[0]).updatable() )
+                //    {
+                //        sortedListOfComponentArrays.emplace_back( compArray );
+                //    }
+                //}
             }
 
-            // Sort update by priority
-            Sort(sortedListOfComponentArrays, [](const ComponentArray& a, const ComponentArray& b)
-            {
-                assert( a.size && b.size );
-                return ((GameComponent&)a.elements[0]).updatePriority() < ((GameComponent&)b.elements[0]).updatePriority();
-            });
+            //// Sort update by priority
+            //Sort(sortedListOfComponentArrays, [](const ComponentArray& a, const ComponentArray& b)
+            //{
+            //    assert( a.size && b.size );
+            //    return ((GameComponent&)a.elements[0]).updatePriority() < ((GameComponent&)b.elements[0]).updatePriority();
+            //});
 
-            // Call begin (ST)
-            for ( auto& components : sortedListOfComponentArrays )
-                for ( u32 i=0; i<components.size; ++i )
-                {
-                    GameComponent* c = (GameComponent*)((char*)components.elements + i*components.compSize);
-                    if ( c->inUse() && !c->m_HasBegun )
-                    {
-                        c->m_HasBegun = true;
-                        c->begin();
-                    }
-                }
+            //// Call begin (ST)
+            //for ( auto& components : sortedListOfComponentArrays )
+            //    for ( u32 i=0; i<components.size; ++i )
+            //    {
+            //        GameComponent* c = (GameComponent*)((char*)components.elements + i*components.compSize);
+            //        if ( c->inUse() && !c->m_HasBegun )
+            //        {
+            //            c->m_HasBegun = true;
+            //            c->begin();
+            //        }
+            //    }
 
-            // MT updates first
-            setExecutingParallel( true );
+            //// MT updates first
+            //setExecutingParallel( true );
 
-            // Check to see if can update network
-            if ( Time::elapsed() - lastNetworkUpdate )
-            {
-                lastNetworkUpdate = Time::elapsed();
-                for ( auto& components : sortedListOfComponentArrays )
-                    for ( u32 i=0; i<components.size; ++i )
-                    {
-                        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                        if ( c->inUse() )
-                            c->networkUpdateMT( Time::networkDt() );
-                    }
-            }
+            //// Check to see if can update network
+            //if ( Time::elapsed() - lastNetworkUpdate )
+            //{
+            //    lastNetworkUpdate = Time::elapsed();
+            //    for ( auto& components : sortedListOfComponentArrays )
+            //        for ( u32 i=0; i<components.size; ++i )
+            //        {
+            //            GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
+            //            if ( c->inUse() )
+            //                c->networkUpdateMT( Time::networkDt() );
+            //        }
+            //}
 
-            // Check to see if can update physics
-            if ( Time::elapsed() - lastPhysicsUpdate )
-            {
-                lastPhysicsUpdate = Time::elapsed();
-                for ( auto& components : sortedListOfComponentArrays )
-                    for ( u32 i=0; i<components.size; ++i )
-                    {
-                        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                        if ( c->inUse() )
-                            c->physicsUpdateMT(Time::networkDt());
-                    }
-            }
+            //// Check to see if can update physics
+            //if ( Time::elapsed() - lastPhysicsUpdate )
+            //{
+            //    lastPhysicsUpdate = Time::elapsed();
+            //    for ( auto& components : sortedListOfComponentArrays )
+            //        for ( u32 i=0; i<components.size; ++i )
+            //        {
+            //            GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
+            //            if ( c->inUse() )
+            //                c->physicsUpdateMT(Time::networkDt());
+            //        }
+            //}
 
-            // Call MT update on components
-            for ( auto& components : sortedListOfComponentArrays )
-                for ( u32 i=0; i<components.size; ++i )
-                {
-                    GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                    if ( c->inUse() )
-                        c->updateMT(Time::networkDt());
-                }
+            //// Call MT update on components
+            //for ( auto& components : sortedListOfComponentArrays )
+            //    for ( u32 i=0; i<components.size; ++i )
+            //    {
+            //        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
+            //        if ( c->inUse() )
+            //            c->updateMT(Time::networkDt());
+            //    }
 
-            setExecutingParallel( false );
+            //setExecutingParallel( false );
 
-            // Call ST update on components
-            for ( auto& components : sortedListOfComponentArrays )
-                for ( u32 i=0; i<components.size; ++i )
-                {
-                    GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                    if ( c->inUse() )
-                        c->updateMT(Time::networkDt());
-                }
+            //// Call ST update on components
+            //for ( auto& components : sortedListOfComponentArrays )
+            //    for ( u32 i=0; i<components.size; ++i )
+            //    {
+            //        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
+            //        if ( c->inUse() )
+            //            c->updateMT(Time::networkDt());
+            //    }
 
             if ( m_Window )
             {

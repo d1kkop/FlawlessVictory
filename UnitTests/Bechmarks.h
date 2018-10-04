@@ -51,9 +51,9 @@ UTESTBEGIN(BenchLoopOverComponents)
             componentManager()->newComponent<BenchComponent>();
         }
         s = RunTime();
-        for ( BenchComponent& c : Itr<BenchComponent>() )
+        for ( BenchComponent* c : Itr<BenchComponent>() )
         {
-            c.multiply();
+            c->multiply();
         }
         s2 = RunTime();
         printf("Loop over contiguous array %.3f us\n", (s2-s)*1000.f*1000.f);
