@@ -16,7 +16,8 @@ namespace fv
         Component* c = getComponent(type);
         if ( c ) 
         {
-            LOGW("Component of type %s already added.", typeManager()->typeInfo(type).name->c_str() );
+            auto* ti = typeManager()->typeInfo(type);
+            LOGW("Component of type %s already added.", ti?ti->name->c_str():"unknown" );
             return c;
         }
         c = componentManager()->newComponent( type );

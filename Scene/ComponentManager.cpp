@@ -20,28 +20,30 @@ namespace fv
     Component* ComponentManager::newComponent(u32 type)
     {
         FV_CHECK_MO();
-        const TypeInfo& ti = typeManager()->typeInfo(type);
-        assert( ti.hash == type );
+        const TypeInfo* ti = typeManager()->typeInfo(type);
+        if (!ti) return nullptr;
+        assert( ti->hash == type );
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
             auto& freeComps = m_FreeComponents[type];
-            Type* newComps = typeManager()->createType( type, ComponentBufferSize ); // Allocates contiguous array
+            Type* newComps = typeManager()->createTypes( type, ComponentBufferSize ); // Allocates contiguous array
+            if (!newComps) return nullptr; // Type did not exist
             assert( freeComps.size() == 0 );
             for ( u32 i=0; i<ComponentBufferSize; ++i )
             {
-                Component* c = (Component*)((char*)newComps + i*ti.size);
+                Component* c = (Component*)((char*)newComps + i*ti->size);
                 freeComps.insert( c );
             }
             auto& comps = m_Components[type];
-            ComponentArray ca = { (Component*)newComps, ComponentBufferSize, ti.size };
+            ComponentArray ca = { (Component*)newComps, ComponentBufferSize, ti->size };
             comps.emplace_back( ca ); 
         }
         Component* c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
         if ( c->m_Freed ) 
         {
-            ti.resetFunc( c ); // Only call placement new when object is recycled.
+            ti->resetFunc( c ); // Only call placement new when object is recycled.
         }
         c->m_Active = true;
         m_NumComponents++;

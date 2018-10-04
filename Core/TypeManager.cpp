@@ -5,10 +5,9 @@
 
 namespace fv
 {
-    TypeInfo InvalidType = { (u32)-1, (u32)-1, nullptr, nullptr, nullptr };
-
     u32 TypeManager::registerType(const char* name, u32 size, CreateFunc cfunc, ResetFunc rfunc)
     {
+        assert( name && size && cfunc && rfunc );
         auto nIt = m_NameToType.find(name);
         if ( nIt == m_NameToType.end() )
         {
@@ -34,39 +33,40 @@ namespace fv
         {
             LOGW("Type %s already registered.", name);
         }
-        return typeInfo(name).hash;
+        return typeInfo(name)->hash;
     }
 
-    const TypeInfo& TypeManager::typeInfo(const char* name)
+    const TypeInfo* TypeManager::typeInfo(const char* name)
     {
         auto nIt = m_NameToType.find(name);
         if ( nIt != m_NameToType.end() )
         {
-            return nIt->second;
+            return &nIt->second;
         }
         LOGC( "Cannot find type: %s.", name );
-        return InvalidType;
+        return nullptr;
     }
 
-    const TypeInfo& TypeManager::typeInfo(u32 hash)
+    const TypeInfo* TypeManager::typeInfo(u32 hash)
     {
         auto nIt = m_HashToType.find(hash);
         if ( nIt != m_HashToType.end() )
         {
-            return *nIt->second;
+            return nIt->second;
         }
         LOGC("Cannot find type hash: %d.", hash);
-        return InvalidType;
+        return nullptr;
     }
 
-    Type* TypeManager::createType(u32 type, u32 num)
+    Type* TypeManager::createTypes(u32 type, u32 num)
     {
-        const TypeInfo& ti = typeInfo(type);
-        assert( type == ti.hash );
-        Type* types = ti.createFunc( num );
+        const TypeInfo* ti = typeInfo(type);
+        if ( !ti ) return nullptr;
+        assert( type == ti->hash );
+        Type* types = ti->createFunc( num );
         for ( u32 i=0; i<num; ++i )
         {
-            ((Type*)((char*)types + i*ti.size))->m_Type = type;
+            ((Type*)((char*)types + i*ti->size))->m_Type = type;
         }
         return types;
     }
