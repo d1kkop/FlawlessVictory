@@ -19,47 +19,39 @@ namespace fv
 
 
     template <class T>
-    struct ComponentIter
+    struct ComponentCollection
     {
-        ComponentIter(Vector<ComponentArray>& components):
+        ComponentCollection(Vector<ComponentArray>& components):
             m_Components(components) { }
 
         template <class T>
         struct iterator
         {
-            ComponentIter<T>* ptr;
-
-            iterator (ComponentIter<T>* p = nullptr):
-                ptr(p)
-            {
-                if ( ptr && ptr->m_Components.size() ) m_ElemArray = &ptr->m_Components[0];
-                else ptr = nullptr;
-            }
-            T& operator*() const { return *(((T*)m_ElemArray->elements) + m_Cur); }
+            T& operator*() const { return *(sc<T*>(m_ElemArray) + m_Cur); }
             iterator operator++ (int) { iterator tmp = *this; ++*this; return tmp; }
-            bool operator== (const iterator& other) const { return ptr == other.ptr; }
-            bool operator!= (const iterator& other) const { return ptr != other.ptr; }
+            bool operator== (const iterator& other) const { return m_Components == other.m_Components; }
+            bool operator!= (const iterator& other) const { return m_Components != other.m_Components; }
 
             void operator++ ()
             {
-                while ( true )
+                do
                 {
-                    if ( ++m_Cur == m_ElemArray->size )
+                    if ( ++m_Cur == ComponentManager::ComponentBufferSize )
                     {
-                        if ( ++m_VecCur == (u32)ptr->m_Components.size() ) { ptr = nullptr; return; }
-                        else { m_Cur = 0; m_ElemArray = &ptr->m_Components[m_VecCur]; }
+                        if ( ++m_VecCur == (u32)m_Components->size() ) { m_Components=nullptr; return; }
+                        else { m_Cur = 0; m_ElemArray = (*m_Components)[m_VecCur].elements; }
                     }
-                    if ( (((T*)m_ElemArray->elements) + m_Cur)->inUse() ) return;
-                }
+                } while (!(sc<T*>(m_ElemArray) + m_Cur)->inUse());
             }
 
-            const ComponentArray* m_ElemArray = nullptr;
+            const Vector<ComponentArray>* m_Components;
+            Component* m_ElemArray;
             u32 m_Cur = 0;
             u32 m_VecCur = 0;
         };
 
-        iterator<T> begin() { return iterator<T>(this); }
-        iterator<T>& end() { static iterator<T> et; return et; }
+        iterator<T> begin() { return iterator<T>{ m_Components.size()?&m_Components:nullptr, m_Components.size()?m_Components[0].elements:nullptr }; }
+        iterator<T>& end() { static iterator<T> et{}; return et; }
 
     private:
         const Vector<ComponentArray>& m_Components;

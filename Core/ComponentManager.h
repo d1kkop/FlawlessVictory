@@ -6,7 +6,8 @@ namespace fv
 {
     class ComponentManager
     {
-        const u32 ComponentBufferSize = 128;
+    public:
+        static const u32 ComponentBufferSize = 128;
 
     public:
         ComponentManager() = default;
@@ -54,9 +55,9 @@ namespace fv
     FV_MO FV_DLL void deleteComponentManager();
 
     template <class T>
-    ComponentIter<T> Itr()
+    ComponentCollection<T> Itr()
     {
         Vector<ComponentArray>& components = componentManager()->components()[T::type()];
-        return ComponentIter<T>(components);
+        return ComponentCollection<T>(components);
     }
 }
