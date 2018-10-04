@@ -123,5 +123,8 @@
     <ClInclude Include="Input.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -15,6 +15,6 @@ namespace game
         void update(float t) override;
 
     private:
-        class PlayerComponent* m_TargetPlayer{};
+        Ref<class PlayerComponent> m_TargetPlayer;
     };
 }

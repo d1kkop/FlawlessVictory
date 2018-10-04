@@ -35,6 +35,11 @@ namespace game
         {
             m_TargetPlayer = closestPlayer;
         }
+
+        if ( m_TargetPlayer )
+        {
+            m_TargetPlayer->addComponent<PlayerComponent>();
+        }
     }
 
 }

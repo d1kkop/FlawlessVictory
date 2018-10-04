@@ -1,5 +1,6 @@
 #include "JobManager.h"
 #include "../Core/Functions.h"
+#include "../Core/Algorithm.h"
 #include "../Core/OSLayer.h"
 using namespace std;
 

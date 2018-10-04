@@ -1,24 +1,9 @@
 #pragma once
-#include "Common.h"
+#include "Object.h"
 #include "Thread.h"
-#include "Algorithm.h"
-#include "Reflection.h"
 
 namespace fv
 {
-    class Object: public Type
-    {
-    public:
-        bool m_Freed = false;
-        bool m_Active = false;
-    };
-
-    struct ObjectArray
-    {
-        Object* elements;
-        u32 size;
-    };
-
     template <class T>
     class ObjectManager
     {
@@ -68,8 +53,10 @@ namespace fv
         }
         T* o = *m_FreeObjects.begin();
         m_FreeObjects.erase(m_FreeObjects.begin());
+        u32 oldVersion = o->m_Version;
         if ( o->m_Freed ) new (o)T; // Only call if object was recycled.
         o->m_Active = true;
+        o->m_Version = oldVersion+1;
         m_NumObjects++;
         return o;
     }

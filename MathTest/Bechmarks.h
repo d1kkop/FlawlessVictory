@@ -9,9 +9,9 @@ class BenchComponent: public Component
 {
     FV_TYPE(BenchComponent, 0, false)
 
-    void update(float dt) override
+    void multiply()
     {
-        product = a * b;
+        product = a*b;
     }
 
     float product;
@@ -40,8 +40,8 @@ UTESTBEGIN(BenchLoopOverComponents)
         s = RunTime();
         for ( u32 i=0; i<numItrs; ++i )
         {
-            Component*c = benchComps[i];
-            c->update( 0 );
+            BenchComponent*c = benchComps[i];
+            c->multiply();
         }
         s2 = RunTime();
         printf("Loop over scattered memory %.3f us\n", (s2-s)*1000.f*1000.f);
@@ -50,9 +50,9 @@ UTESTBEGIN(BenchLoopOverComponents)
             componentManager()->newComponent<BenchComponent>();
         }
         s = RunTime();
-        for ( Component& c : Itr<BenchComponent>() )
+        for ( BenchComponent& c : Itr<BenchComponent>() )
         {
-            c.update( 0 );
+            c.multiply();
         }
         s2 = RunTime();
         printf("Loop over contiguous array %.3f us\n", (s2-s)*1000.f*1000.f);

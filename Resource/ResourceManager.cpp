@@ -3,7 +3,7 @@
 
 namespace fv
 {
-    Resource* ResourceManager::load(u32 type)
+    Resource* ResourceManager::load(u32 type, const String& name)
     {
         return nullptr;
     }

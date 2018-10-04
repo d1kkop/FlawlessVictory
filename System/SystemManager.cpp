@@ -64,7 +64,7 @@ namespace fv
                 for ( u32 i=0; i<components.size; ++i )
                 {
                     Component* c = (Component*)((char*)components.elements + i*components.compSize);
-                    if ( c->m_Active && !c->m_HasBegun )
+                    if ( c->inUse() && !c->m_HasBegun )
                     {
                         c->m_HasBegun = true;
                         c->begin();
@@ -82,7 +82,7 @@ namespace fv
                     for ( u32 i=0; i<components.size; ++i )
                     {
                         Component* c = (Component*) ((char*)components.elements + i*components.compSize);
-                        if ( c->m_Active )
+                        if ( c->inUse() )
                             c->networkUpdateMT( Time::networkDt() );
                     }
             }
@@ -95,7 +95,7 @@ namespace fv
                     for ( u32 i=0; i<components.size; ++i )
                     {
                         Component* c = (Component*) ((char*)components.elements + i*components.compSize);
-                        if ( c->m_Active )
+                        if ( c->inUse() )
                             c->physicsUpdateMT(Time::networkDt());
                     }
             }
@@ -105,7 +105,7 @@ namespace fv
                 for ( u32 i=0; i<components.size; ++i )
                 {
                     Component* c = (Component*) ((char*)components.elements + i*components.compSize);
-                    if ( c->m_Active )
+                    if ( c->inUse() )
                         c->updateMT(Time::networkDt());
                 }
 
@@ -116,7 +116,7 @@ namespace fv
                 for ( u32 i=0; i<components.size; ++i )
                 {
                     Component* c = (Component*) ((char*)components.elements + i*components.compSize);
-                    if ( c->m_Active )
+                    if ( c->inUse() )
                         c->updateMT(Time::networkDt());
                 }
 

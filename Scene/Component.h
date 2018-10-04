@@ -8,7 +8,7 @@ namespace fv
     {
     public:
         virtual ~Component()= default;
-        virtual u32 updatePriority() const { return 0; } // TODO set from type registration
+        u32 updatePriority() const { return m_UpdatePriority; }
         virtual bool updatable() const { return false; }
 
         FV_DLL Component* addComponent(u32 type);
@@ -21,7 +21,6 @@ namespace fv
         template <class T> bool removeComponent();
 
     private:
-    public: // TODO remove
         FV_MO virtual void begin() { }
         FV_MO virtual void update(float dt) { }
         virtual void updateMT(float dt) { }
@@ -29,6 +28,7 @@ namespace fv
         virtual void networkUpdateMT(float dt) { }
 
         bool m_HasBegun = false;
+        bool m_UpdatePriority;
         class GameObject* m_GameObject{};
 
         friend class SystemManager;

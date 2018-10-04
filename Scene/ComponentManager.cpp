@@ -21,15 +21,18 @@ namespace fv
     {
         FV_CHECK_MO();
         const TypeInfo* ti = typeManager()->typeInfo(type);
-        if (!ti) return nullptr;
+        if (!ti) 
+        {
+            LOGC("Invalid type %d, component NOT created.", type);
+            return nullptr;
+        }
         assert( ti->hash == type );
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
             auto& freeComps = m_FreeComponents[type];
-            Type* newComps = typeManager()->createTypes( type, ComponentBufferSize ); // Allocates contiguous array
-            if (!newComps) return nullptr; // Type did not exist
-            assert( freeComps.size() == 0 );
+            Type* newComps = typeManager()->createTypes( *ti, ComponentBufferSize ); // Allocates contiguous array
+            assert( newComps && freeComps.size() == 0 );
             for ( u32 i=0; i<ComponentBufferSize; ++i )
             {
                 Component* c = (Component*)((char*)newComps + i*ti->size);
@@ -46,6 +49,7 @@ namespace fv
             ti->resetFunc( c ); // Only call placement new when object is recycled.
         }
         c->m_Active = true;
+        c->m_UpdatePriority = ti->updatePriority;
         m_NumComponents++;
         return c;
     }

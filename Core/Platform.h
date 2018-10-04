@@ -1,7 +1,7 @@
 #pragma once
 
-#define FV_MO /* A function that cannot be called from updateMT! */
-#define FV_TS /* A thread safe function. */
+#define FV_MO /* A mono function that cannot be called from updateMT! */
+#define FV_TS /* A thread safe function. Can be called from anywhere. */
 #define FV_TRACEJOBSYSTEM 0
 
 #if _DEBUG

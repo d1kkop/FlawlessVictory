@@ -106,6 +106,7 @@
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mat4.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="OSLayer.h" />
     <ClInclude Include="Platform.h" />

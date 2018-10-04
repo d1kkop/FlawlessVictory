@@ -43,7 +43,7 @@ namespace fv
                         if ( ++m_VecCur == (u32)ptr->m_Components.size() ) { ptr = nullptr; return; } 
                         else { m_Cur = 0; m_ElemArray = &ptr->m_Components[m_VecCur]; }
                     }
-                    if ( (((T*)m_ElemArray->elements) + m_Cur)->m_Active ) return;
+                    if ( (((T*)m_ElemArray->elements) + m_Cur)->inUse() ) return;
                 }
             }
 
