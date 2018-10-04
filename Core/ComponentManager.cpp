@@ -11,9 +11,9 @@ namespace fv
     {
         for ( auto& kvp : m_Components ) 
         {
-            //Set<Component*>& comps = kvp.second;
-            //for ( auto*c : objs )
-            //    delete [] ar.elements;
+            Vector<ComponentArray>& objs = kvp.second;
+            for ( auto& ar : objs )
+                delete [] ar.elements;
         }
     }
 
@@ -37,9 +37,9 @@ namespace fv
                 Component* c = sc<Component*>( (Type*)( ((char*)newComps + i*ti->size) ) );
                 freeComps.insert( c );
             }
-        //    auto& comps = m_Components[type];
-        //    ComponentArray ca = { (Component*)newComps, ComponentBufferSize, ti->size };
-       //     comps.emplace_back( ca ); 
+            auto& comps = m_Components[type];
+            ComponentArray ca = { (Component*)newComps, ComponentBufferSize, ti->size };
+            comps.emplace_back( ca ); 
         }
         Component* c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
@@ -53,9 +53,6 @@ namespace fv
         c->m_Active = true;
         c->m_Version = oldVersion+1;
         TypeManager::setType( type, *c );
-        auto& newComps = m_Components[c->type()];
-        assert(newComps.count(c)==0);
-        newComps.insert( c );
         m_NumComponents++;
         return c;
     }
@@ -72,9 +69,6 @@ namespace fv
             c->m_Active = false;
             freeComps.insert( c );
             m_NumComponents--;
-            auto& activeComps = m_Components[c->type()];
-            assert( activeComps.count(c)==1 );
-            activeComps.erase(c);
         }
     }
 
@@ -82,11 +76,11 @@ namespace fv
     {
         FV_CHECK_MO();
         auto& compVector = m_Components[type];
-        for ( auto* c : compVector )
+        for ( auto& compArray : compVector )
         {
-        //    for ( u32 i = 0; i < compArray.size; i++ )
+            for ( u32 i = 0; i < compArray.size; i++ )
             {
-              //  Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
+                Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
                 if ( !c->m_Freed && c->m_Active )
                 {
                     freeComponent(c);
@@ -105,16 +99,15 @@ namespace fv
     {
         FV_CHECK_MO();
         const auto& compsVector = m_Components[type];
-        return (u32)compsVector.size();
-        //u32 k=0;
-        //for ( const auto& compArray : compsVector )
-        //{
-        //    k += compArray.size;
-        //}
-        //return k;
+        u32 k=0;
+        for ( const auto& compArray : compsVector )
+        {
+            k += compArray.size;
+        }
+        return k;
     }
 
-    Map<u32, Set<Component*>>& ComponentManager::components()
+    Map<u32, Vector<ComponentArray>>& ComponentManager::components()
     {
         FV_CHECK_MO();
         return m_Components;

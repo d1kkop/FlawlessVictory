@@ -16,6 +16,14 @@ namespace game
         {
 
         }*/
+
+        ComponentIter<PlayerComponent> it = Itr<PlayerComponent>();
+        auto bg = it.begin();
+        auto eg = it.end();
+        for ( ; bg != eg; ++bg )
+        {
+
+        }
     }
 
 }
