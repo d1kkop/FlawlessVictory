@@ -1,3 +1,2 @@
 #pragma once
-#include "Resource/Resource.h"
-#include "Resource/ResourceManager.h"
+#include "Resource/Texture2D.h"

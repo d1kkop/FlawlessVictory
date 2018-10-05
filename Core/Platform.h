@@ -22,7 +22,8 @@
 #if _WIN32
     #define FV_SDL 1
     #define FV_STB 0
-    #define FV_VK  1
+    #define FV_FREEIMAGE 1
+    #define FV_VULKAN  1
 #endif
 
 // Compiler mappings
@@ -51,4 +52,12 @@
 
 #if FV_STB
 #include "../3rdParty/stb-master/stb_image.h"
+#endif
+
+
+#if FV_FREEIMAGE
+#include "../3rdParty/FreeImage/Dist/x64/FreeImage.h"
+#if _MSC_VER
+#pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
+#endif
 #endif

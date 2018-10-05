@@ -91,7 +91,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphicResource.cpp" />
     <ClCompile Include="GraphicsResourceVK.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="RenderManager.cpp" />

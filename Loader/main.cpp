@@ -3,6 +3,8 @@
 #include "../Core/JobManager.h"
 #include "../Core/InputManager.h"
 #include "../Core/Functions.h"
+#include "../Render/RenderManager.h"
+#include "../Resource/ResourceManager.h"
 #include "../Scene/GameObject.h"
 #include "../System/SystemManager.h"
 using namespace fv;
@@ -15,6 +17,8 @@ void shutdown()
     deleteInputManager();
     deleteGameObjectManager();
     deleteSystemManager();
+    deleteResourceManager();
+    deleteRenderManager();
     deleteTypeManager();
     deleteLogManager();
 }
@@ -39,6 +43,9 @@ int main(int argc, char** argv)
 #else
     dllPath.remove_filename().append("UnitTests");
 #endif
+
+    // Force cache all search directories, so that lookup is thread safe without lock.
+    resourceManager();
 
     SystemParams params{};
     params.moduleName = dllPath.string();

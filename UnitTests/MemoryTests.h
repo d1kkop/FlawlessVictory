@@ -130,7 +130,7 @@ void addJob1AndWait()
         return;
 
     u32 v = g_JobRecursion;
-    printf("Job %d executed \n", v);
+ //   printf("Job %d executed \n", v);
 
     jobManager()->addJob( addJob2AndWait )->waitAndFree();
 }
@@ -161,21 +161,21 @@ void addJob1()
     // Do random, wait/cancel
     if ( Random() % 200 == 0 )
         jobManager()->addJob([v]() {
-            printf("Job %d executed \n", v);        
+          //  printf("Job %d executed \n", v);        
             addJob2(); 
     })->waitAndFree();
     else
     {
         Job* jChild = jobManager()->addJob([v]() {
-            printf("Job %d executed \n", v);
+         //   printf("Job %d executed \n", v);
             addJob2();
         });
 
         Suspend(0.0001);
         if ( Random() % 2 == 0 )
-            if ( jChild->cancelAndFree() ) printf("Job %d cancelled\n", v);
+           if ( jChild->cancelAndFree() ) { /* printf("Job %d cancelled\n", v);*/ }
         else
-            if ( jChild->cancel() ) printf("Job %d cancelled\n", v);
+           if ( jChild->cancel() ) { /* printf("Job %d cancelled\n", v); */ }
     }
 }
 void addJob2()

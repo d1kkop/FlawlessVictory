@@ -31,5 +31,8 @@
     <ClInclude Include="Bechmarks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GraphicTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

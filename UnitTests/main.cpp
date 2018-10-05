@@ -3,6 +3,7 @@
 #include "MathTests.h"
 #include "TimeTests.h"
 #include "Bechmarks.h"
+#include "GraphicTests.h"
 #include "../Core/Reflection.h"
 #include "../Core/Component.h"
 #include <iostream>

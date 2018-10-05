@@ -77,6 +77,9 @@
     <ProjectReference Include="..\Render\Render.vcxproj">
       <Project>{f230bdbe-21b1-43a1-bf32-02951677935a}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Resource\Resource.vcxproj">
+      <Project>{0c7a13f5-2945-4956-8277-21a950b7c8fc}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Scene\Scene.vcxproj">
       <Project>{906ba074-21f0-4aaa-af59-6de1e9abca02}</Project>
     </ProjectReference>

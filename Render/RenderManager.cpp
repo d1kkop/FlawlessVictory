@@ -1,4 +1,5 @@
 #include "RenderManager.h"
+#include "GraphicResource.h"
 #include "../Core/Functions.h"
 #include "../Core/ComponentManager.h"
 
@@ -9,13 +10,17 @@ namespace fv
 
     }
 
-
     GraphicResource* RenderManager::createGraphic(u32 type)
     {
-        return nullptr;
+        // Recycle GraphicResources.
+        return sc<GraphicResource*>( componentManager()->newComponent(type) );
     }
 
-
+    void RenderManager::freeGraphic(GraphicResource* graphic)
+    {
+        if (!graphic) return;
+        componentManager()->freeComponent( graphic );
+    }
 
     RenderManager* g_RenderManager {};
     RenderManager* renderManager() { return CreateOnce(g_RenderManager); }

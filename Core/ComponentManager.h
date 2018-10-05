@@ -16,8 +16,8 @@ namespace fv
         FV_MO FV_DLL Component* newComponent(u32 type);
         FV_MO FV_DLL void growComponents(u32 type);
         FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& components();
-        FV_MO FV_DLL void freeComponent(Component* c);
-        FV_MO FV_DLL void freeAllOfType(u32 type);
+        FV_MO FV_DLL void freeComponent(Component* c); // Dangerous function. All raw ptrs to these types are not nulled! Refs are!
+        FV_MO FV_DLL void freeAllOfType(u32 type); // Dangerous function. All raw ptrs to these types are not nulled! Refs are!
         FV_MO FV_DLL u32 numComponents() const;
         FV_MO FV_DLL u32 numComponents(u32 type);
 

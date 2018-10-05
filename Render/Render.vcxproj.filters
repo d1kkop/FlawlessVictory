@@ -31,9 +31,6 @@
     <ClCompile Include="RenderManager.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicResource.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicsResourceVK.cpp">
       <Filter>Render</Filter>
     </ClCompile>

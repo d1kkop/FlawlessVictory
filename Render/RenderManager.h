@@ -11,6 +11,7 @@ namespace fv
     public:
         void render(const class Camera* camera);
         FV_DLL GraphicResource* createGraphic(u32 type);
+        FV_DLL void freeGraphic(GraphicResource* graphic);
 
         template <class T> GraphicResource* createGraphic();
     };
