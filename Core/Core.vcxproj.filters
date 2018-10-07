@@ -69,9 +69,6 @@
     <ClCompile Include="ComponentManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="Platform.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="ComponentManager2.cpp">
       <Filter>Managers</Filter>
     </ClCompile>

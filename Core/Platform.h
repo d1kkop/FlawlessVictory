@@ -60,10 +60,3 @@
 #pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
 #endif
 #endif
-
-//#if FV_VULKAN
-//#include "../3rdParty/Vulkan-Hpp-master/vulkan/vulkan.hpp"
-//#if _MSC_VER
-//#pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
-//#endif
-//#endif

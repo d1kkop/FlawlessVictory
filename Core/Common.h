@@ -20,6 +20,7 @@ namespace fv
     template <class T> using Set     = std::set<T>;
     template <class T> using HashSet = std::unordered_set<T>;
     template <class T> using Function = std::function<T>;
+    template <class T> using Optional = std::optional<T>;
     template <class Key, class Value> using Map = std::map<Key, Value>;
     template <class Key, class Value> using HashMap = std::unordered_map<Key, Value>;
 

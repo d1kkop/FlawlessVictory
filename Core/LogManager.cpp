@@ -24,38 +24,43 @@ namespace fv
         vsprintf_s(buff, 8190, msg, myargs);
         va_end(myargs);
 
-        String finalStr; // Do not add time to every line to avoid verbosity = LocalTime();
+        String finalStr = "-> "; // Do not add time to every line to avoid verbosity = LocalTime();
+        bool logLineAndFile = false;
         if ( type != LogType::Message )
         {
             String warnStr;
             switch ( type )
             {
             case LogType::Warning:
-                warnStr = " WARNING: ";
+                warnStr = "WARNING: ";
+                logLineAndFile = true;
                 break;
             case LogType::Error:
-                warnStr = " ERROR ";
+                warnStr = "ERROR ";
+                logLineAndFile = true;
                 break;
             }
             finalStr += warnStr;
         }
 
-        if ( m_LogLineAndFile ) 
+        if ( logLineAndFile ) 
         {
-            finalStr +=  String(functionName) + " line: " + std::to_string(line);
+            finalStr += String(buff) + " In: " + String(functionName) + " line: " + std::to_string(line) + "\n";
+        }
+        else
+        {
+            finalStr += String(buff) + "\n";
         }
 
-        finalStr += " " + String(buff) + "\n";
 
         logToFile(finalStr.c_str());
         logToIde(finalStr.c_str());
     }
 
-    void LogManager::setOptions(bool logFile, bool logIde, bool logFileAndLine)
+    void LogManager::setOptions(bool logFile, bool logIde)
     {
         m_LogToFile = logFile;
         m_LogToIde = logIde;
-        m_LogLineAndFile = logFileAndLine;
     }
 
     void LogManager::logToFile(const char* msg)

@@ -30,6 +30,9 @@ namespace fv
 
     FV_DLL void StringCopy(char* dst, u32 dstSize, const char* src);
 
+    // Allocates a new char array and copies from srouce. Len is optional.
+    FV_DLL const char* NewString( const char* src, u32 len=-1 );
+
     template <class T, class ...Args> 
     T* CreateOnce(T*& pType, Args... args) { if (!pType) pType=new T(args...); return pType; }
 }

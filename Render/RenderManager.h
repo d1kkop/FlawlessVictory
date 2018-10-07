@@ -6,11 +6,20 @@ namespace fv
 {
     class GraphicResource;
 
+    struct RenderManagerParams
+    {
+        Vector<void*> windowHandles;
+    };
+
     class RenderManager
     {
     public:
-        virtual void render(const class Camera* camera);
-        FV_DLL virtual GraphicResource* createGraphic() = 0;
+        virtual ~RenderManager() = default;
+        virtual bool initGraphics(const RenderManagerParams& params) = 0;
+        virtual void closeGraphics() = 0;
+        virtual GraphicResource* createGraphic() = 0;
+        virtual void render(const class Camera* camera) = 0;
+
         FV_DLL void freeGraphic(GraphicResource* graphic);
 
         template <class T> GraphicResource* createGraphic();

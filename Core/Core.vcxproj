@@ -92,7 +92,6 @@
     <ClCompile Include="Mat3.cpp" />
     <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="OSLayer.cpp" />
-    <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Quat.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Time.cpp" />

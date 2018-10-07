@@ -124,4 +124,13 @@ namespace fv
     #endif
     }
 
+    const char* NewString(const char* src, u32 len)
+    {
+        if ( len == -1 )
+            len = (u32) strlen(src);
+        char* c = new char[len+1];
+        StringCopy(c, len+1, src);
+        return c;
+    }
+
 }

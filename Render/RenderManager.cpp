@@ -5,11 +5,6 @@
 
 namespace fv
 {
-    void RenderManager::render(const class Camera* camera)
-    {
-
-    }
-
     void RenderManager::freeGraphic(GraphicResource* graphic)
     {
         if (!graphic) return;

@@ -20,7 +20,7 @@ namespace fv
     public:
         FV_DLL LogManager();
         FV_TS FV_DLL void log( LogType type, const char* functionName, u64 line, const char* msg, ... );
-        FV_DLL void setOptions( bool logFile, bool logIde, bool logFileAndLine );
+        FV_DLL void setOptions( bool logFile, bool logIde );
 
     private:
         void logToFile(const char* msg);
@@ -29,7 +29,6 @@ namespace fv
         RMutex m_LogMutex;
         bool m_LogToFile = true;
         bool m_LogToIde  = true;
-        bool m_LogLineAndFile = true;
         String m_Filename;
     };
 

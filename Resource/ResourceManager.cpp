@@ -64,7 +64,7 @@ namespace fv
         scoped_lock lk(m_LoadMutex);
         for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); )
         {
-            if ( it->second.unique() )
+            if ( it->second.use_count()==1 )
             {
                 it = m_NameToResource.erase( it );
                 continue;

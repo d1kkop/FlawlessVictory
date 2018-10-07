@@ -6,6 +6,7 @@
 #include "../Core/InputManager.h"
 #include "../Core/ComponentManager.h"
 #include "../Scene/GameComponent.h"
+#include "../Render/RenderManager.h"
 
 namespace fv
 {
@@ -26,6 +27,12 @@ namespace fv
             return false;
         }
         if ( !(m_Window = OSCreateWindow( params.moduleName.c_str(), 100, 100, params.windowWidth, params.windowHeight, params.fullscreen )) )
+        {
+            return false;
+        }
+        RenderManagerParams renderParams;
+        renderParams.windowHandles.emplace_back( m_Window );
+        if ( !renderManager()->initGraphics( renderParams ) )
         {
             return false;
         }
