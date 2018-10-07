@@ -21,6 +21,7 @@ namespace fv
         template <class T>
         friend class ObjectManager;
         friend class ComponentManager;
+        friend class ComponentManager2;
     };
 
     // ------------ ObjectArray ----------------------------------------------------------------------------------------

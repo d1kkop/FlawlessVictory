@@ -21,6 +21,8 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
+#include <unordered_set>
+#include <unordered_map>
 #include <functional>
 #include <filesystem>
 #include <condition_variable>

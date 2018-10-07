@@ -127,11 +127,6 @@ namespace fv
                         c->updateMT(Time::networkDt());
                 }
 
-            if ( m_Window )
-            {
-                OSSwapWindow( m_Window );
-            }
-
             // Update timings
             Time::update();
         }

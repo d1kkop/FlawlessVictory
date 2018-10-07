@@ -19,6 +19,9 @@ class UnitTestComponent: public GameComponent
     {
         for ( auto* ut : g_UnitTests )
         {
+       //     if ( ut->name() != "BenchLoopOverComponents3") // For testing a single unit
+       //         continue;
+
             if ( ut->run() )
             {
                 cout << ut->name() << " Fine" << endl;

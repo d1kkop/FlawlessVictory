@@ -4,6 +4,9 @@
 
 namespace fv
 {
+    template <class T> T Min(T a, T b) { return a<b?a:b; }
+    template <class T> T Max(T a, T b) { return a>b?a:b; }
+
     // Returns local time as string.
     FV_DLL String LocalTime();
 

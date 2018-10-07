@@ -72,6 +72,9 @@
     <ClCompile Include="Platform.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="ComponentManager2.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core.h" />
@@ -149,6 +152,9 @@
     </ClInclude>
     <ClInclude Include="PCH.h">
       <Filter>BaseObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentManager2.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

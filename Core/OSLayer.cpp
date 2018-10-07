@@ -94,8 +94,4 @@ namespace fv
     #endif
     }
 
-    void OSSwapWindow(void* pWindow)
-    {
-    }
-
 }

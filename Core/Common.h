@@ -13,13 +13,15 @@ namespace fv
     using u64  = unsigned long long;
 
     template <class T, class S> using Pair = std::pair<T, S>;
-    template <class T> using Vector = std::vector<T>;
-    template <class T> using Queue  = std::queue<T>;
-    template <class T> using Stack  = std::stack<T>;
-    template <class T> using Deck   = std::deque<T>;
-    template <class T> using Set    = std::set<T>;
+    template <class T> using Vector  = std::vector<T>;
+    template <class T> using Queue   = std::queue<T>;
+    template <class T> using Stack   = std::stack<T>;
+    template <class T> using Deck    = std::deque<T>;
+    template <class T> using Set     = std::set<T>;
+    template <class T> using HashSet = std::unordered_set<T>;
     template <class T> using Function = std::function<T>;
     template <class Key, class Value> using Map = std::map<Key, Value>;
+    template <class Key, class Value> using HashMap = std::unordered_map<Key, Value>;
 
     using String        = std::string;
     using Path          = std::experimental::filesystem::path;

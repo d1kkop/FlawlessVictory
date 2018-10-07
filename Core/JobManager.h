@@ -49,6 +49,7 @@ namespace fv
     public:
         FV_DLL JobManager();
         FV_TS FV_DLL Job* addJob( const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
+        FV_TS FV_DLL u32 numThreads() const;
 
     private:
         FV_TS void freeJob(Job* job);
@@ -71,4 +72,42 @@ namespace fv
 
     FV_DLL JobManager* jobManager();
     FV_DLL void deleteJobManager();
+
+
+    template <class T, class C, class CB>
+    void ParallelFor(const C& collection, const CB& cb)
+    {
+        i32 s  = (i32)collection.size();
+        i32 nt = jobManager()->numThreads();
+        i32 pt = (s+(nt-1)) / nt;
+        i32 ofs = 0;
+        Job* jobs[64];
+        assert(nt<=64);
+        i32 i;
+        for ( i=0; i<nt && s>0; ++i )
+        {
+            u32 count = Min(s, pt);
+            jobs[i] = jobManager()->addJob([=]()
+            {
+                for ( u32 j=ofs; j<ofs+count; ++j )
+                {
+                    auto& compArray = collection[j];
+                    for ( u32 k=0; k<compArray.size; ++k )
+                    {
+                        T* comp = (T*)((char*)compArray.elements + k*compArray.compSize);
+                        if ( comp->inUse() )
+                            cb ( *comp );
+                    }
+                }
+            });
+            s -= pt;
+            ofs += pt;
+        }
+        i--;
+        for ( ; i>=0; --i )
+        {
+            jobs[i]->waitAndFree();
+        }
+    }
+
 }

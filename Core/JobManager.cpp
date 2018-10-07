@@ -118,6 +118,11 @@ namespace fv
         return job;
     }
 
+    u32 JobManager::numThreads() const
+    {
+        return (u32)m_Threads.size();
+    }
+
     void JobManager::freeJob(Job* job)
     {
         assert(job);
