@@ -62,12 +62,14 @@ namespace fv
     void ResourceManager::cleanupResourcesWithoutReferences()
     {
         scoped_lock lk(m_LoadMutex);
-        for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); ++it )
+        for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); )
         {
             if ( it->second.unique() )
             {
                 it = m_NameToResource.erase( it );
+                continue;
             }
+            ++it;
         }
     }
 

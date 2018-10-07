@@ -14,7 +14,10 @@ namespace fv
         {
             Vector<ComponentArray>& objs = kvp.second;
             for ( auto& ar : objs )
-                delete [] ar.elements;
+                if ( ComponentBufferSize != 1 )
+                    delete [] ar.elements;
+                else
+                    delete ar.elements;
         }
     }
 

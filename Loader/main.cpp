@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
     // Force cache all search directories, so that lookup is thread safe 
     resourceManager();
-
+    
     SystemParams params{};
     params.moduleName = dllPath.string();
     params.windowWidth  = 1600;
