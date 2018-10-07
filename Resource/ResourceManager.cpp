@@ -46,18 +46,29 @@ namespace fv
         }
         const TypeInfo* ti = typeManager()->typeInfo(type);
         if (!ti) return nullptr;
-        M<Resource> resource = M<Resource>( (Resource*)ti->createFunc(1) );
+        M<Resource> resource = M<Resource>( sc<Resource*>( ti->createFunc(1) ) );
         // Store already, although not loaded yet. Other requests to same resource should already obtain this handle.
         m_NameToResource[name] = resource;
         jobManager()->addJob([=, pth = fIt->second]() mutable
         {
-            pth.replace_filename( name );
-            resource->load(pth);
+            resource->load( pth / name );
         }, [=](Job* j) 
         {
             resource->onDoneOrCancelled(j);
         });
         return resource;
+    }
+
+    void ResourceManager::cleanupResourcesWithoutReferences()
+    {
+        scoped_lock lk(m_LoadMutex);
+        for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); ++it )
+        {
+            if ( it->second.unique() )
+            {
+                it = m_NameToResource.erase( it );
+            }
+        }
     }
 
     ResourceManager* g_ResourceManager {};

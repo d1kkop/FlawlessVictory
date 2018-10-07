@@ -1,4 +1,5 @@
 #pragma once
+#include "PCH.h"
 #include "Common.h"
 
 #define LOG( msg, ... )  logManager()->log( LogType::Message, FV_FUNCTION, FV_LINE, msg, __VA_ARGS__ )

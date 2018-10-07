@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     dllPath.remove_filename().append("UnitTests");
 #endif
 
-    // Force cache all search directories, so that lookup is thread safe without lock.
+    // Force cache all search directories, so that lookup is thread safe 
     resourceManager();
 
     SystemParams params{};

@@ -18,9 +18,9 @@ namespace fv
         bool graphicUpdated = false;
 
     #if FV_FREEIMAGE
-
-        // TODO filename is incorrect from path ...
-        const char* filename = path.string().c_str();
+    
+        String sPath = path.generic_string();
+        const char* filename = sPath.c_str();
         FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(filename, 0);
         if ( fif == FIF_UNKNOWN ) fif = FreeImage_GetFIFFromFilename(filename);
         if ( fif == FIF_UNKNOWN )

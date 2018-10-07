@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "LogManager.h"
 #include "Functions.h"
 #include "Directories.h"

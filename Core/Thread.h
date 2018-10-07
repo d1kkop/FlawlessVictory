@@ -1,7 +1,7 @@
 #pragma once
+#include "PCH.h"
 #include "Common.h"
 #include "LogManager.h"
-#include <cassert>
 
 #if FV_DEBUG
     #define FV_CHECK_MO() \

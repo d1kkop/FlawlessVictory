@@ -1,5 +1,5 @@
-#include "RenderManager.h"
-#include "GraphicResource.h"
+#include "RenderManagerVK.h"
+#include "GraphicsResourceVK.h"
 #include "../Core/Functions.h"
 #include "../Core/ComponentManager.h"
 
@@ -10,12 +10,6 @@ namespace fv
 
     }
 
-    GraphicResource* RenderManager::createGraphic(u32 type)
-    {
-        // Recycle GraphicResources.
-        return sc<GraphicResource*>( componentManager()->newComponent(type) );
-    }
-
     void RenderManager::freeGraphic(GraphicResource* graphic)
     {
         if (!graphic) return;
@@ -23,6 +17,13 @@ namespace fv
     }
 
     RenderManager* g_RenderManager {};
-    RenderManager* renderManager() { return CreateOnce(g_RenderManager); }
+    RenderManager* renderManager() 
+    { 
+    #if FV_VULKAN
+        auto rvk = (RenderManagerVK*)g_RenderManager;
+        g_RenderManager = CreateOnce<RenderManagerVK>( rvk );
+    #endif
+        return g_RenderManager;
+    }
     void deleteRenderManager() { delete g_RenderManager; g_RenderManager=nullptr; }
 }

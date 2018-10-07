@@ -147,5 +147,8 @@
     <ClInclude Include="Component.h">
       <Filter>BaseObjects</Filter>
     </ClInclude>
+    <ClInclude Include="PCH.h">
+      <Filter>BaseObjects</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

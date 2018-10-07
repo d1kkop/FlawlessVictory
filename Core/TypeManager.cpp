@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "TypeManager.h"
 #include "Functions.h"
 #include "LogManager.h"

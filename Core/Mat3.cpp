@@ -1,11 +1,4 @@
-#include "Mat3.h"
-#include "Quat.h"
-#include "Vec3.h"
-#include "Mat4.h"
-#include "Math.h"
-#include <cassert>
-#include <cmath>
-#include <string>
+#include "PCH.h"
 
 namespace fv
 {

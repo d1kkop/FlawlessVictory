@@ -193,3 +193,23 @@ UTESTBEGIN(JobManagerNonRecursionTest)
     return true;
 }
 UNITTESTEND(JobManagerNonRecursionTest)
+
+
+UTESTBEGIN(RemoveFromMapWhileIterating)
+{
+    Map<String, String> map;
+    map["Aap"] = "Beer";
+    map["Beer"] = "Apple";
+    map["Knife"] = "Test";
+    map["Knife2"] = "Test2";
+    for ( auto it = map.begin(); it != map.end(); ++it )
+    {
+        printf("Name %s\n", it->first.c_str());
+        if ( it->second =="Test" )
+        {
+            it = map.erase(it);
+        }
+    }
+    return true;
+}
+UNITTESTEND(RemoveFromMapWhileIterating)

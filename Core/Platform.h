@@ -17,6 +17,7 @@
 // Configuration
 #define FV_EDITOR 1
 #define FV_MAX_EXTENSION 16
+#define FV_USEJOBSYSTEM 1
 
 // Platform enables/disables
 #if _WIN32
@@ -49,11 +50,9 @@
 #endif
 #endif
 
-
 #if FV_STB
 #include "../3rdParty/stb-master/stb_image.h"
 #endif
-
 
 #if FV_FREEIMAGE
 #include "../3rdParty/FreeImage/Dist/x64/FreeImage.h"
@@ -61,3 +60,10 @@
 #pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
 #endif
 #endif
+
+//#if FV_VULKAN
+//#include "../3rdParty/Vulkan-Hpp-master/vulkan/vulkan.hpp"
+//#if _MSC_VER
+//#pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
+//#endif
+//#endif

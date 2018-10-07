@@ -1,6 +1,4 @@
-#include "Vec3.h"
-#include "Math.h"
-#include <cassert>
+#include "PCH.h"
 
 namespace fv
 {

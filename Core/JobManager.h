@@ -1,6 +1,5 @@
 #pragma once
-
-#pragma once
+#include "PCH.h"
 #include "Common.h"
 #include "Thread.h"
 #include "ObjectManager.h"

@@ -9,8 +9,8 @@ namespace fv
     class RenderManager
     {
     public:
-        void render(const class Camera* camera);
-        FV_DLL GraphicResource* createGraphic(u32 type);
+        virtual void render(const class Camera* camera);
+        FV_DLL virtual GraphicResource* createGraphic() = 0;
         FV_DLL void freeGraphic(GraphicResource* graphic);
 
         template <class T> GraphicResource* createGraphic();
@@ -20,7 +20,9 @@ namespace fv
     template <class T> 
     GraphicResource* RenderManager::createGraphic()
     {
-        return createGraphic(T::type());
+        GraphicResource* graphic = createGraphic();
+        graphic->m_ResourceType = T::type();
+        return graphic;
     }
 
     FV_DLL RenderManager* renderManager();

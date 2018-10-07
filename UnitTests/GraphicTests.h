@@ -19,6 +19,8 @@ UTESTBEGIN(LoadTexture2D)
             textures.emplace_back( tex2D );
         }
     }
+    textures.clear();
+    resourceManager()->cleanupResourcesWithoutReferences();
     return true;
 }
 UNITTESTEND(LoadTexture2D)

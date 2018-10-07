@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "ComponentManager.h"
 #include "Algorithm.h"
 #include "Functions.h"
@@ -80,7 +81,7 @@ namespace fv
         {
             for ( u32 i = 0; i < compArray.size; i++ )
             {
-                Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
+                Component* c = sc<Component*>( (Type*)( ((char*)compArray.elements + i*compArray.compSize) ) );
                 if ( !c->m_Freed && c->m_Active )
                 {
                     freeComponent(c);

@@ -1,9 +1,5 @@
+#include "PCH.h"
 #include "Functions.h"
-#include <ctime>
-#include <cstdlib>
-#include <cstdarg>
-#include <string>
-#include <chrono>
 #if FV_SDL
 #include "../3rdParty/SDL/include/SDL.h"
 #endif

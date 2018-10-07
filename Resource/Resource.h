@@ -16,7 +16,7 @@ namespace fv
         bool loadDone() const { return m_LoadDone; }
 
     protected:
-        Atomic<bool> m_LoadDone;
-        Atomic<bool> m_LoadSuccesful;
+        Atomic<bool> m_LoadDone = false;
+        Atomic<bool> m_LoadSuccesful = false;
     };
 }

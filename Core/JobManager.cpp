@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "JobManager.h"
 #include "Functions.h"
 #include "Algorithm.h"
@@ -100,6 +101,7 @@ namespace fv
         job->m_OnDoneOrCancelled = onDoneOrCancelled;
         job->m_NumWaiters = 0;
 
+    #if FV_USEJOBSYSTEM
         scoped_lock lk(m_QueueMutex);
         m_GlobalQueue.emplace_back( job );
         if ( m_NumThreadsSuspended > 0 )
@@ -107,6 +109,11 @@ namespace fv
             m_NumThreadsSuspended--;
             m_ThreadSuspendSignal.notify_all();
         }
+    #else
+        if ( cb ) cb();
+        job->finishWith(JobState::Done);
+        if ( onDoneOrCancelled ) onDoneOrCancelled( job );
+    #endif
 
         return job;
     }
@@ -115,6 +122,8 @@ namespace fv
     {
         assert(job);
         job->wait();
+        job->m_Cb = nullptr; // Set these to null to ensure shared embedded resources are unreffed.
+        job->m_OnDoneOrCancelled = nullptr; 
         // ObjectManager is not thread safe
         {
             scoped_lock lk(m_ObjectManagerMutex);
