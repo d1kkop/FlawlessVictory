@@ -7,9 +7,6 @@ namespace fv
     struct SystemParams
     {
         String moduleName;
-        u32 windowWidth;
-        u32 windowHeight;
-        bool fullscreen;
     };
 
     class SystemManager
@@ -22,8 +19,7 @@ namespace fv
 
     private:
         bool m_Done = false;
-        SystemParams m_Params;
-        void* m_Window {};
+        SystemParams m_Params {};
     };
 
     FV_DLL class SystemManager* systemManager();

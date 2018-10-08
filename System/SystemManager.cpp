@@ -26,13 +26,7 @@ namespace fv
         {
             return false;
         }
-        if ( !(m_Window = OSCreateWindow( params.moduleName.c_str(), 100, 100, params.windowWidth, params.windowHeight, params.fullscreen )) )
-        {
-            return false;
-        }
-        RenderManagerParams renderParams;
-        renderParams.windowHandles.emplace_back( m_Window );
-        if ( !renderManager()->initGraphics( renderParams ) )
+        if ( !renderManager()->initGraphics() )
         {
             return false;
         }
@@ -137,8 +131,6 @@ namespace fv
             // Update timings
             Time::update();
         }
-
-        OSDestroyWindow( m_Window );
     }
 
 

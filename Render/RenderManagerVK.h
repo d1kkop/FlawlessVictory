@@ -7,6 +7,13 @@ namespace fv
 {
     class GraphicResource;
 
+    struct SwapChainInfoVK
+    {
+        VkSurfaceCapabilitiesKHR capabilities;
+        Vector<VkSurfaceFormatKHR> formats;
+        Vector<VkPresentModeKHR> presentModes;
+    };
+
     struct QueueFamilyIndicesVK
     {
         Optional<u32> graphics;
@@ -19,14 +26,35 @@ namespace fv
 
     struct DeviceVK
     {
-        String name;
-        VkDevice device;
-        VkPhysicalDevice physicalDevice;
+        VkDevice logical;
+        VkPhysicalDevice physical;
         VkQueue graphicsQueue;
         VkQueue computeQueue;
         VkQueue transferQueue;
         VkQueue sparseQueue;
         VkQueue presentQueue;
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceFeatures features;
+        QueueFamilyIndicesVK queueIndices;
+    };
+
+    struct SwapChainVK
+    {
+        DeviceVK* device;
+        VkSurfaceKHR surface;
+        VkSwapchainKHR swapChain;
+        VkSwapchainKHR oldSwapChain;
+        Vector<VkImage> images;
+        Vector<VkImageView> imgViews;
+    };
+
+    struct SwapChainParamsVK
+    {
+        DeviceVK* device;
+        VkSurfaceKHR surface;
+        u32 width, height;
+        u32 imageCount;
+        u32 imageArrayLayerCount;
     };
 
 
@@ -34,10 +62,10 @@ namespace fv
     {
     public:
         ~RenderManagerVK() override;
-        bool initGraphics(const RenderManagerParams& params) override;
+        bool initGraphics() override;
         void closeGraphics() override;
         GraphicResource* createGraphic() override;
-        void RenderManager::render(const class Camera* camera) override;
+        void render(const class Camera* camera) override;
 
         // Debug callback
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -47,21 +75,34 @@ namespace fv
             void* pUserData);
 
     private:
-        void obtainExtensions();
-        void obtainLayers();
-        bool createIntance();
-        bool trySetupDebugCallback();
-        bool createDevices();
-        bool createSurfaces();
-        bool isDeviceSuitable(VkPhysicalDevice device, String& deviceNames, QueueFamilyIndicesVK& queueIndices);
+        void readRenderSetup(RenderSetup& renderSetup);
+        bool createWindows(const RenderSetup& renderSetup);
+        bool createIntance(const String& name);
+        bool trySetupDebugCallback(bool includeVerbose, bool includeInfo);
+        bool createDevices(VkSurfaceKHR mainSurface);
+        bool createSurface(const void* wHandle, VkSurfaceKHR& surface);
+        bool createSwapChain(const SwapChainParamsVK& params, SwapChainVK& swapChain);
+        bool chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info, VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);
+        void storeDeviceProperties(DeviceVK& device);
+        void storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR mainSurface);
+        void querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainInfoVK& info);
+        bool checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
+        bool checkRequiredExtensions(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
+        bool validateNameList(const Vector<String>& found, const Vector<const char*>& required);
 
-        RenderManagerParams m_CreateParams{};
+        // 
+        VkImageView createImageView(VkDevice device, VkImage image, VkFormat format);
+
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
         Vector<DeviceVK> m_Devices;
-        Vector<const char*> m_Extensions;
-        Vector<const char*> m_Layers;
-        VkSurfaceKHR m_WindowSurface{};
+        Vector<const char*> m_RequiredInstanceExtensions;
+        Vector<const char*> m_RequiredInstanceLayers;
+        Vector<const char*> m_RequiredPhysicalExtensions;
+        Vector<const char*> m_RequiredPhysicalLayers;
+        SwapChainVK m_MainSwapChain{};
+        void* m_MainWindow{};
+        void* m_SecondaryWindow{};
     };
 }
 #endif

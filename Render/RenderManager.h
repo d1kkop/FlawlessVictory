@@ -6,16 +6,23 @@ namespace fv
 {
     class GraphicResource;
 
-    struct RenderManagerParams
+    struct RenderSetup
     {
-        Vector<void*> windowHandles;
+        bool createMainWindow;
+        bool creatSecondaryWindow;
+        String mainWindowName;
+        String secondaryWindowName;
+        u32 mainWindowWidth, mainWindowHeight;
+        u32 secondaryWindowWidth, secondaryWindowHeight;
+        bool mainWindowFullscreen;
+        bool secondaryWindowFullscreen;
     };
 
     class RenderManager
     {
     public:
         virtual ~RenderManager() = default;
-        virtual bool initGraphics(const RenderManagerParams& params) = 0;
+        virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
         virtual GraphicResource* createGraphic() = 0;
         virtual void render(const class Camera* camera) = 0;
@@ -23,6 +30,7 @@ namespace fv
         FV_DLL void freeGraphic(GraphicResource* graphic);
 
         template <class T> GraphicResource* createGraphic();
+
     };
 
 

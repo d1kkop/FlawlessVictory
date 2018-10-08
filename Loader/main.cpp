@@ -47,13 +47,10 @@ int main(int argc, char** argv)
     // Force cache all search directories, so that lookup is thread safe 
     resourceManager();
     
-    SystemParams params{};
-    params.moduleName = dllPath.string();
-    params.windowWidth  = 1600;
-    params.windowHeight = 900;
-    params.fullscreen   = false;
+    SystemParams sysParams{};
+    sysParams.moduleName   = dllPath.string();
 
-    if ( systemManager()->initialize( params ) )
+    if ( systemManager()->initialize( sysParams ) )
     {
     #if FV_LOAD_TEST_MODULE 
         GameComponent* c = (GameComponent*)typeManager()->typeInfo("UnitTestComponent")->createFunc(1);
