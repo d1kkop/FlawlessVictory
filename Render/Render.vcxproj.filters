@@ -20,10 +20,10 @@
     <ClInclude Include="GraphicResource.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsResourceVK.h">
+    <ClInclude Include="RenderManagerVK.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="RenderManagerVK.h">
+    <ClInclude Include="GraphicResourceVK.h">
       <Filter>Render</Filter>
     </ClInclude>
   </ItemGroup>
@@ -34,10 +34,10 @@
     <ClCompile Include="RenderManager.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicsResourceVK.cpp">
+    <ClCompile Include="RenderManagerVK.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="RenderManagerVK.cpp">
+    <ClCompile Include="GraphicResourceVK.cpp">
       <Filter>Render</Filter>
     </ClCompile>
   </ItemGroup>

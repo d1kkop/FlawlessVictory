@@ -1,5 +1,5 @@
 #include "RenderManagerVK.h"
-#include "GraphicsResourceVK.h"
+#include "GraphicResourceVK.h"
 #include "../Core/Functions.h"
 #include "../Core/ComponentManager.h"
 

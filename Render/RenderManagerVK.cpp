@@ -1,6 +1,6 @@
 #include "RenderManagerVK.h"
 #if FV_VULKAN
-#include "GraphicsResourceVK.h"
+#include "GraphicResourceVK.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
@@ -134,7 +134,8 @@ namespace fv
     GraphicResource* RenderManagerVK::createGraphic()
     {
         // Recycle GraphicResources.
-        GraphicResource* graphic = sc<GraphicResource*>(componentManager()->newComponent(GraphicResourceVK::type()));
+        GraphicResourceVK* graphic = sc<GraphicResourceVK*>(componentManager()->newComponent(GraphicResourceVK::type()));
+        //graphic->m_Device = 
         return graphic;
     }
 

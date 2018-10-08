@@ -25,6 +25,7 @@
     #define FV_STB 0
     #define FV_FREEIMAGE 1
     #define FV_VULKAN  1
+    #define FV_GLSL2SPIRV 1
 #endif
 
 // Compiler mappings

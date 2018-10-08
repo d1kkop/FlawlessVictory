@@ -3,30 +3,38 @@
 
 namespace fv
 {
+    Path g_Bin;
     Path g_Assets;
     Path g_Build;
     Path g_Intermediate;
     Path g_Log;
+    Path g_IntermediateShaders;
 
+    Path Directories::bin() { return g_Bin; }
     Path Directories::assets()  { return g_Assets; }
     Path Directories::build() { return g_Build; }
     Path Directories::intermediate() { return g_Intermediate; }
     Path Directories::log() { return g_Log; }
+    Path Directories::intermediateShaders() { return g_IntermediateShaders; }
 
     
     u32 InitDirectories()
     {
+        g_Bin = "Bin";
         g_Assets = "Assets";
         g_Build = "Build";
         g_Intermediate = "Intermediate";
         g_Log = "Log";
+        g_IntermediateShaders = g_Intermediate.append("Shaders");
 
     #if !FV_BUILD
         Path prefix = "../../";
+        g_Bin = prefix / g_Bin;
         g_Assets = prefix / g_Assets;
         g_Build = prefix / g_Build;
         g_Log = prefix / g_Log;
         g_Intermediate = prefix / g_Intermediate;
+        g_IntermediateShaders = prefix / g_IntermediateShaders;
     #endif
         return 1;
     }

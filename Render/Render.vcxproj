@@ -77,7 +77,7 @@
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="GraphicResource.h" />
-    <ClInclude Include="GraphicsResourceVK.h" />
+    <ClInclude Include="GraphicResourceVK.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="RenderManager.h" />
@@ -92,7 +92,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphicsResourceVK.cpp" />
+    <ClCompile Include="GraphicResourceVK.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderManagerVK.cpp" />
