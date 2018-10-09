@@ -10,19 +10,9 @@
 
 namespace fv
 {
-    // For testing module only. TODO change this for something more appropriate.
-    void SystemManager::callBeginForComponent(class GameComponent* gc)
-    {
-        gc->begin();
-    }
-
     bool SystemManager::initialize(const SystemParams& params)
     {
         if ( !OSInitialize() )
-        {
-            return false;
-        }
-        if ( !OSLoadLibrary( params.moduleName.c_str() ) )
         {
             return false;
         }
@@ -30,6 +20,20 @@ namespace fv
         {
             return false;
         }
+        OSHandle h = OSLoadLibrary(params.moduleName.c_str());
+        if ( !h.library )
+        {
+            return false;
+        }
+        h = OSFindFunction(h, "entry");
+        if ( !h.function )
+        {
+            LOGW("Entry function not found in %s.", params.moduleName.c_str());
+            return false;
+        }
+        using entryFunc = void (*)();
+        entryFunc entry = (entryFunc)h.function;
+        entry();
         return true;
     }
 
@@ -53,7 +57,7 @@ namespace fv
                 Vector<ComponentArray>& compArrayList = kvp.second;
                 for ( auto& compArray : compArrayList )
                 {
-                    if ( compArray.size > 0 && ((GameComponent&)compArray.elements[0]).updatable() )
+                    if ( compArray.size > 0 && ((GameComponent&)compArray.elements[0]).m_DoUpdate )
                     {
                         sortedListOfComponentArrays.emplace_back( compArray );
                     }
@@ -64,7 +68,7 @@ namespace fv
             Sort(sortedListOfComponentArrays, [](const ComponentArray& a, const ComponentArray& b)
             {
                 assert( a.size && b.size );
-                return ((GameComponent&)a.elements[0]).updatePriority() < ((GameComponent&)b.elements[0]).updatePriority();
+                return ((GameComponent&)a.elements[0]).m_UpdatePriority < ((GameComponent&)b.elements[0]).m_UpdatePriority;
             });
 
             // Call begin (ST)

@@ -3,6 +3,7 @@
 #if FV_SDL
 #include "../3rdParty/SDL/include/SDL.h"
 #endif
+#include <fstream>
 using namespace std;
 using namespace chrono;
 
@@ -133,4 +134,29 @@ namespace fv
         return c;
     }
 
+    bool LoadBinaryFile(const char* path, Vector<char>& data)
+    {
+        ifstream file(path, std::ios::ate | std::ios::binary);
+        if ( file.is_open() )
+        {
+            try 
+            {
+                u64 pos = file.tellg();
+                data.resize(pos);
+                file.seekg(0);
+                file.read(data.data(), data.size());
+                file.close();
+            }
+            catch ( ... )
+            {
+                if ( file.is_open() ) file.close();
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
 }

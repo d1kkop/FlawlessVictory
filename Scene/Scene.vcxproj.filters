@@ -1,37 +1,37 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Scene">
+    <Filter Include="Components">
       <UniqueIdentifier>{2b4acfac-a42b-42c2-91f5-d364f4b33241}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Scene.h" />
     <ClInclude Include="SceneComponent.h">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="GameObject.h">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="GameComponent.h">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameObject.cpp">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="SceneComponent.cpp">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="GameComponent.cpp">
-      <Filter>Scene</Filter>
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

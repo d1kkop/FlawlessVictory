@@ -23,6 +23,7 @@ namespace fv
         }
         c = sc<GameComponent*>(componentManager()->newComponent( type ));
         m_Components[type] = c;
+        c->m_GameObject = this;
         return c;
     }
 
@@ -65,4 +66,9 @@ namespace fv
     ObjectManager<GameObject>* g_GameObjectManager {};
     ObjectManager<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
     void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
+
+    GameObject* NewGameObject()
+    {
+        return gameObjectManager()->newObject();
+    }
 }

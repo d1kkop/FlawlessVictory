@@ -17,6 +17,8 @@ namespace fv
     #if FV_VULKAN
         auto rvk = (RenderManagerVK*)g_RenderManager;
         g_RenderManager = CreateOnce<RenderManagerVK>( rvk );
+    #else
+    #pragma error ("No implementation")
     #endif
         return g_RenderManager;
     }

@@ -31,27 +31,33 @@ namespace fv
 
     M<Resource> ResourceManager::load(u32 type, const String& name)
     {
-        scoped_lock lk(m_LoadMutex);
-        // See if resource was previously loaded
-        auto rIt = m_NameToResource.find( name );
-        if ( rIt != m_NameToResource.end() )
+        Path path;
+        M<Resource> resource;
         {
-            return rIt->second;
+            scoped_lock lk(m_LoadMutex);
+            // See if resource was previously loaded
+            auto rIt = m_NameToResource.find( name );
+            if ( rIt != m_NameToResource.end() )
+            {
+                return rIt->second;
+            }
+            auto fIt = m_FilenameToDirectory.find( name );
+            if ( fIt == m_FilenameToDirectory.end() )
+            {
+                LOGW("No resource with name %s found.", name.c_str());
+                return nullptr;
+            }
+            path = fIt->second;
+            const TypeInfo* ti = typeManager()->typeInfo(type);
+            if (!ti) return nullptr;
+            resource = M<Resource>( sc<Resource*>( ti->createFunc(1) ) );
+            if ( !resource ) return nullptr;
+            // Store already, although not loaded yet. Other requests to same resource should already obtain this handle.
+            m_NameToResource[name] = resource;
         }
-        auto fIt = m_FilenameToDirectory.find( name );
-        if ( fIt == m_FilenameToDirectory.end() )
+        jobManager()->addJob([=]() mutable
         {
-            LOGW("No resource with name %s found.", name.c_str());
-            return nullptr;
-        }
-        const TypeInfo* ti = typeManager()->typeInfo(type);
-        if (!ti) return nullptr;
-        M<Resource> resource = M<Resource>( sc<Resource*>( ti->createFunc(1) ) );
-        // Store already, although not loaded yet. Other requests to same resource should already obtain this handle.
-        m_NameToResource[name] = resource;
-        jobManager()->addJob([=, pth = fIt->second]() mutable
-        {
-            resource->load( pth / name );
+            resource->load( path / name );
         }, [=](Job* j) 
         {
             resource->onDoneOrCancelled(j);

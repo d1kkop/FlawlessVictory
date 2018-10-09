@@ -13,6 +13,8 @@ namespace fv
         FV_MO FV_DLL GameComponent* addComponent(u32 type);
         FV_MO FV_DLL bool hasComponent(u32 type);
         FV_MO FV_DLL GameComponent* getComponent(u32 type);
+
+        // Ensure that any ptr to the component is nulled or keep a Ref<ComponentType> handle.
         FV_MO FV_DLL bool removeComponent(u32 type);
 
         template <class T>
@@ -24,6 +26,7 @@ namespace fv
         template <class T>
         FV_MO bool hasComponent();
 
+        // Ensure that any ptr to the component is nulled or keep a Ref<ComponentType> handle.
         template <class T>
         FV_MO bool removeComponent();
 
@@ -38,53 +41,30 @@ namespace fv
     template <class T>
     T* GameObject::addComponent()
     {
-        FV_CHECK_MO();
-        auto cIt = m_Components.find(T::type());
-        GameComponent* pComponent;
-        if ( cIt == m_Components.end() )
-        {
-            pComponent = componentManager()->newComponent<T>();
-            pComponent->m_GameObject = this;
-            m_Components[T::type()] = pComponent;
-        }
-        else pComponent = cIt->second;
-        return sc<T*>(pComponent);
+        return sc<T*>(addComponent(T::type()));
     }
 
     template <class T>
     T* GameObject::getComponent()
     {
-        FV_CHECK_MO();
-        auto cIt = m_Components.find(T::type());
-        if ( cIt != m_Components.end() )
-        {
-            return sc<T*>(cIt->second);
-        }
-        return nullptr;
+        return sc<T*>(getComponent(T::type()));
     }
 
     template <class T>
     bool GameObject::hasComponent()
     {
-        FV_CHECK_MO();
-        return m_Components.count(T::type()) != 0;
+        return hasComponent(T::type());
     }
 
     template <class T>
     bool GameObject::removeComponent()
     {
-        FV_CHECK_MO();
-        auto cIt = m_Components.find(T::type());
-        if ( cIt != m_Components.end() )
-        {
-            componentManager()->freeComponent<T>(cIt->second);
-            m_Components.erase(cIt);
-            return true;
-        }
-        return false;
+        return removeComponent(T::type());
     }
 
 
     FV_DLL ObjectManager<GameObject>* gameObjectManager();
     FV_DLL void deleteGameObjectManager();
+
+    FV_DLL GameObject* NewGameObject();
 }

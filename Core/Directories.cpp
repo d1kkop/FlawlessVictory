@@ -10,12 +10,12 @@ namespace fv
     Path g_Log;
     Path g_IntermediateShaders;
 
-    Path Directories::bin() { return g_Bin; }
-    Path Directories::assets()  { return g_Assets; }
-    Path Directories::build() { return g_Build; }
-    Path Directories::intermediate() { return g_Intermediate; }
-    Path Directories::log() { return g_Log; }
-    Path Directories::intermediateShaders() { return g_IntermediateShaders; }
+    const Path& Directories::bin() { return g_Bin; }
+    const Path& Directories::assets()  { return g_Assets; }
+    const Path& Directories::build() { return g_Build; }
+    const Path& Directories::intermediate() { return g_Intermediate; }
+    const Path& Directories::log() { return g_Log; }
+    const Path& Directories::intermediateShaders() { return g_IntermediateShaders; }
 
     
     u32 InitDirectories()

@@ -9,7 +9,7 @@ using namespace fv;
 
 class TestComponent: public GameComponent
 {
-    FV_TYPE(TestComponent, 0, false)
+    FV_TYPE(TestComponent)
 
     TestComponent()
     {
@@ -33,9 +33,12 @@ FV_TYPE_IMPL(TestComponent)
 
 class TestUpdComponent: public TestComponent
 {
-    FV_TYPE(TestUpdComponent, 0, false)
+    FV_TYPE(TestUpdComponent)
 public:
-    bool updatable() const override { return true; }
+    TestUpdComponent()
+    {
+        m_DoUpdate = true;
+    }
 
     ~TestUpdComponent() override { }
 };

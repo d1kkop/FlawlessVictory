@@ -1,12 +1,11 @@
 #include "Shader.h"
 #include "ResourceManager.h"
 #include "ShaderCompiler.h"
+#include "../Core/Functions.h"
 #include "../Core/JobManager.h"
 #include "../Core/Directories.h"
 #include "../Render/RenderManager.h"
 #include "../Render/GraphicResource.h"
-#include <fstream>
-using namespace std;
 
 namespace fv
 {
@@ -19,18 +18,26 @@ namespace fv
 
     void Shader::load(const Path& path)
     {
-        if ( !path.has_extension() )
+        Vector<char> code;
+
+        // Check if compiled file is already there
+        Path binPath = shaderCompiler()->replaceWithBinaryExtension( Directories::intermediateShaders() / path.filename() );
+        if ( !LoadBinaryFile(binPath.string().c_str(), code))
         {
-            LOGW("Cannot load shader %s. No extension found.", path.string().c_str());
-            return;
+            // Compile from glsl
+            if ( !shaderCompiler()->compileShader(path, code) )
+            {
+                LOGW("Failed to load shader %s.", path.string().c_str());
+            }
         }
-    
-        Vector<u32> code;
-        if ( shaderCompiler()->compileShader( path, code ) )
+
+        if ( !code.empty() )
         {
             m_Graphic = renderManager()->createGraphic<Shader>();
-            m_Graphic->updateShaderCode( code );
-            m_LoadSuccesful = true;
+            if ( m_Graphic->updateShaderCode(code) )
+            {
+                m_LoadSuccesful = true;
+            }
         }
     }
 

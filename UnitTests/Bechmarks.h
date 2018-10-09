@@ -9,7 +9,7 @@ using namespace fv;
 
 class BenchComponent: public Component
 {
-    FV_TYPE(BenchComponent, 0, false)
+    FV_TYPE(BenchComponent)
 
     void multiply()
     {

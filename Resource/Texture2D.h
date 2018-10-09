@@ -13,8 +13,8 @@ namespace fv
         FV_DLL void onDoneOrCancelled(class Job* j) override;
 
         // Should only be called after this->loadDone() returns true.
-        u32 width() const { return m_Width; }
-        u32 height() const { return m_Height; }
+        FV_DLL u32 width() const { return m_Width; }
+        FV_DLL u32 height() const { return m_Height; }
 
     private:
         u32 m_Width  = 0;

@@ -11,7 +11,13 @@ namespace fv
 
     class SceneComponent: public GameComponent
     {
-        FV_TYPE(SceneComponent, FV_SCENECOMPONENT_PRIORITY, false)
+        FV_TYPE(SceneComponent)
+
+        SceneComponent()
+        {
+            m_DoUpdate = true;
+            m_UpdatePriority = FV_SCENECOMPONENT_PRIORITY;
+        }
 
     public:
         FV_DLL void move(const Vec3& translate);

@@ -11,16 +11,14 @@ using namespace std;
 using namespace UnitTest;
 using namespace fv;
 
-class UnitTestComponent: public GameComponent
+extern "C"
 {
-    FV_TYPE(UnitTestComponent, 0, false)
-
-    void begin() override
+    FV_DLL void entry()
     {
         for ( auto* ut : g_UnitTests )
         {
-       //     if ( ut->name() != "BenchLoopOverComponents3") // For testing a single unit
-       //         continue;
+            //     if ( ut->name() != "BenchLoopOverComponents3") // For testing a single unit
+            //         continue;
 
             if ( ut->run() )
             {
@@ -34,5 +32,4 @@ class UnitTestComponent: public GameComponent
         }
         system("pause");
     }
-};
-FV_TYPE_IMPL(UnitTestComponent)
+}

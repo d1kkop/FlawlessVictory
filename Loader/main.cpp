@@ -55,8 +55,6 @@ int main(int argc, char** argv)
     if ( systemManager()->initialize( sysParams ) )
     {
     #if FV_LOAD_TEST_MODULE 
-        GameComponent* c = (GameComponent*)typeManager()->typeInfo("UnitTestComponent")->createFunc(1);
-        systemManager()->callBeginForComponent( c );
         return 0;
     #endif
 

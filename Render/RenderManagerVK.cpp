@@ -52,16 +52,12 @@ namespace fv
             {
                 return false;
             }
-        }
 
-        // Create after surface in case of swap chain
-        assert( m_MainSwapChain.surface );
-        if ( !createDevices(m_MainSwapChain.surface) )
-            return false;
+            assert(m_MainSwapChain.surface);
+            if ( !createDevices(m_MainSwapChain.surface) )
+                return false;
 
-        // Find device that can present 
-        if ( m_MainWindow )
-        {
+            // Find device that can present 
             bool bSwapChainCreated = false;
             for ( auto& dv : m_Devices )
             {
@@ -80,7 +76,7 @@ namespace fv
                 scParams.imageArrayLayerCount = 1; // 2 in case of stereo 
                 scParams.imageCount = 3; // Try triple buffering
 
-                if ( !createSwapChain( scParams, m_MainSwapChain ) )
+                if ( !createSwapChain(scParams, m_MainSwapChain) )
                 {
                     return false;
                 }
@@ -96,7 +92,6 @@ namespace fv
             }
         }
 
-        
         LOG("VK Initialized succesful.");
         return true;
     }
@@ -142,7 +137,7 @@ namespace fv
     void RenderManagerVK::readRenderSetup( RenderSetup& rs )
     {
         // TODO read from config
-        rs.createMainWindow = true;
+        rs.createMainWindow = false;
         rs.mainWindowWidth = 1600;
         rs.mainWindowHeight = 900;
         rs.mainWindowName = "Main Window";
@@ -425,34 +420,40 @@ namespace fv
 
     bool RenderManagerVK::checkRequiredExtensions(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice)
     {
+        Vector<String> foundExtensions;
+        queryExtensions(foundExtensions, physicalDevice);
+        return validateNameList(foundExtensions, requiredList);
+    }
+
+    bool RenderManagerVK::checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice)
+    {
+        Vector<String> foundLayers;
+        queryLayers(foundLayers, physicalDevice);
+        return validateNameList(foundLayers, requiredList);
+    }
+
+    void RenderManagerVK::queryExtensions(Vector<String>& foundExtensions, VkPhysicalDevice physicalDevice)
+    {
         uint32_t extensionCount = 0;
         Vector<VkExtensionProperties> extensions;
-        Vector<String> foundExtensions;
         if ( !physicalDevice ) vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
         else vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
         extensions.resize(extensionCount);
         if ( !physicalDevice ) vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
         else vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensions.data());
         for ( u32 i=0; i< extensionCount; ++i ) foundExtensions.emplace_back(extensions[i].extensionName);
-        return validateNameList(foundExtensions, requiredList);
     }
 
-    bool RenderManagerVK::checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice)
+    void RenderManagerVK::queryLayers(Vector<String>& foundLayers, VkPhysicalDevice physicalDevice)
     {
-    #if !FV_DEBUG
-        return true;
-    #endif
-
         uint32_t layerCount;
         Vector<VkLayerProperties> layers;
-        Vector<String> foundLayers;
         if ( !physicalDevice ) vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
         else vkEnumerateDeviceLayerProperties(physicalDevice, &layerCount, nullptr);
         layers.resize(layerCount);
         if ( !physicalDevice ) vkEnumerateInstanceLayerProperties(&layerCount, layers.data());
         else vkEnumerateDeviceLayerProperties(physicalDevice, &layerCount, layers.data());
         for ( u32 i = 0; i < layerCount; i++ ) foundLayers.emplace_back(layers[i].layerName);
-        return validateNameList(foundLayers, requiredList);
     }
 
     bool RenderManagerVK::validateNameList(const Vector<String>& found, const Vector<const char*>& required)

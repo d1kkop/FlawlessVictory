@@ -6,9 +6,13 @@ namespace game
 {
     class PlayerComponent: public GameComponent
     {
-        FV_TYPE(PlayerComponent, 0, false)
+        FV_TYPE(PlayerComponent)
 
     public:
+        PlayerComponent()
+        {
+            m_DoUpdate = true;
+        }
         void updateMT(float t) override;
         void update(float t) override;
     };

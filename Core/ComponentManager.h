@@ -30,7 +30,7 @@ namespace fv
 
     private:
         Map<u32, Vector<ComponentArray>> m_Components;
-        HashMap<u32, HashSet<Component*>> m_FreeComponents;
+        Map<u32, Set<Component*>> m_FreeComponents;
         u32 m_NumComponents = 0;
     };
 

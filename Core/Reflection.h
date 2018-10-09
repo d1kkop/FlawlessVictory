@@ -7,13 +7,12 @@
     static FV_DLL Type* create(u32 num) { return num==1?(new name):(new name[num]); } \
     static FV_DLL void reset(Type* c) { new (sc<name*>(c))name; }
 
-#define FV_TYPE(name, upd_priority, exec_in_parallel) \
+#define FV_TYPE(name) \
     FV_TYPE_COMMON(name) \
-    static FV_DLL u32 registerType() { return fv::typeManager()->registerType(#name, sizeof(name), name::create, name::reset, (upd_priority), ""); }
+    static FV_DLL u32 registerType() { return fv::typeManager()->registerType(#name, sizeof(name), name::create, name::reset); }
 
 #define FV_RESOURCE_TYPE(name, extension) \
-    FV_TYPE_COMMON(name) \
-    static FV_DLL u32 registerType() { return fv::typeManager()->registerType(#name, sizeof(name), name::create, name::reset, 0, ""); }
+    FV_TYPE(name)
 
 #define FV_TYPE_IMPL(name) \
 static u32 name##_Initializer = name::registerType();

@@ -1,5 +1,6 @@
 #include "AIComponent.h"
 #include "PlayerComponent.h"
+#include "../Resource/ResourceManager.h"
 
 namespace game
 {
@@ -7,7 +8,8 @@ namespace game
 
     void AIComponent::begin()
     {
-        
+        m_FragShader = resourceManager()->load<Shader>( "sample.frag" );
+        m_VertShader = resourceManager()->load<Shader>( "sample.vert" );
     }
 
     void AIComponent::updateMT(float t)

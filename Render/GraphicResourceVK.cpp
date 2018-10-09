@@ -23,7 +23,7 @@ namespace fv
         return false;
     }
 
-    FV_TS bool GraphicResourceVK::updateShaderCode(Vector<u32>& code)
+    FV_TS bool GraphicResourceVK::updateShaderCode(Vector<char>& code)
     {
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

@@ -6,9 +6,6 @@ namespace fv
     class GameComponent: public Component
     {
     public:
-        u32 updatePriority() const { return m_UpdatePriority; }
-        virtual bool updatable() const { return false; }
-
         FV_DLL GameComponent* addComponent(u32 type);
         FV_DLL GameComponent* getComponent(u32 type);
         FV_DLL bool hasComponent(u32 type);
@@ -25,18 +22,16 @@ namespace fv
         virtual void physicsUpdateMT(float dt) { }
         virtual void networkUpdateMT(float dt) { }
 
+    protected:
         bool m_HasBegun = false;
-        bool m_UpdatePriority;
+        bool m_DoUpdate = false;
+        i32  m_UpdatePriority = 0;
+
+    private:
         class GameObject* m_GameObject {};
 
+        friend class GameObject;
         friend class SystemManager;
-    };
-
-
-    class UpdatableGameComponent: public GameComponent
-    {
-    public:
-        bool updatable() const override { return true; }
     };
 
 

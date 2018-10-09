@@ -88,6 +88,8 @@ namespace fv
         void querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainInfoVK& info);
         bool checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
         bool checkRequiredExtensions(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
+        void queryExtensions(Vector<String>& extensions, VkPhysicalDevice physicalDevice=nullptr);
+        void queryLayers(Vector<String>& layers, VkPhysicalDevice physicalDevice=nullptr);
         bool validateNameList(const Vector<String>& found, const Vector<const char*>& required);
 
         // 

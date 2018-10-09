@@ -34,6 +34,8 @@ namespace fv
     // Allocates a new char array and copies from srouce. Len is optional.
     FV_DLL const char* NewString( const char* src, u32 len=-1 );
 
+    FV_DLL bool LoadBinaryFile(const char* path, Vector<char>& data);
+
     template <class T, class ...Args> 
     T* CreateOnce(T*& pType, Args... args) { if (!pType) pType=new T(args...); return pType; }
 }

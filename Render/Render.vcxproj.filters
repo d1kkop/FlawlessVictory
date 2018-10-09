@@ -1,44 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Render">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Components">
+      <UniqueIdentifier>{3a0a2efd-ada8-4d5d-9851-37483575bef5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Managers">
+      <UniqueIdentifier>{9ec88728-1529-47b7-a8d8-d9f5f8822296}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Render.h" />
     <ClInclude Include="Mesh.h">
-      <Filter>Render</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Render.h" />
-    <ClInclude Include="RenderManager.h">
-      <Filter>Render</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="GraphicResource.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderManagerVK.h">
-      <Filter>Render</Filter>
+      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="GraphicResourceVK.h">
-      <Filter>Render</Filter>
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderManagerVK.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderManager.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Mesh.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderManager.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderManagerVK.cpp">
-      <Filter>Render</Filter>
+      <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="GraphicResourceVK.cpp">
-      <Filter>Render</Filter>
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderManagerVK.cpp">
+      <Filter>Managers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

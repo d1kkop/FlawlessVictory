@@ -24,18 +24,22 @@ namespace fv
     #endif
     }
 
-    bool OSLoadLibrary(const char* path)
+    OSHandle OSLoadLibrary(const char* path)
     {
     #if FV_INCLUDE_WINHDR
         HMODULE hModule = ::LoadLibrary(path);
         if ( !hModule )
         {
             LOGC( "Cannot load module %s, error code %d.", path, ::GetLastError() );
-            return false;
+            return {};
         }
-        return true;
+        OSHandle h;
+        h.library = hModule;
+        return h;
+    #else
+    #error no implementation
     #endif
-        return false;
+        return { };
     }
 
     FV_DLL void OSSetThreadName(const char* name)
@@ -96,5 +100,62 @@ namespace fv
     #endif
     }
 
+
+    OSHandle OSStartProgram(const char* path, const char* arguments, bool waitToFinish)
+    {
+    #if FV_INCLUDE_WINHDR
+        // https://docs.microsoft.com/en-us/windows/desktop/ProcThread/creating-processes
+        STARTUPINFO info = { sizeof(info) };
+        PROCESS_INFORMATION processInfo;
+        if ( CreateProcessA(path, (char*)arguments, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &info, &processInfo) )
+        {
+            if ( waitToFinish )
+            {
+                WaitForSingleObject(processInfo.hProcess, INFINITE);
+                // Order of these is correct.
+                CloseHandle(processInfo.hProcess);
+                CloseHandle(processInfo.hThread);
+                processInfo.hThread  = nullptr;
+                processInfo.hProcess = nullptr;
+            }
+        }
+        OSHandle h;
+        h.process = processInfo.hProcess;
+        h.thread = processInfo.hThread;
+        return h;
+    #else
+    #error no implementation
+    #endif
+        return {};
+    }
+
+    void OSWaitOnProgram(OSHandle handle)
+    {
+        if (!handle.process) return;
+    #if FV_INCLUDE_WINHDR
+        HANDLE hProcess = (HANDLE)handle.process;
+        HANDLE hThread = (HANDLE)handle.thread;
+        WaitForSingleObject( hProcess, INFINITE );
+        CloseHandle( hProcess );
+        CloseHandle( hThread );
+    #else
+    #error no implementation
+    #endif
+    }
+
+    OSHandle OSFindFunction(OSHandle libHandle, const char* name)
+    {
+        if ( !libHandle.library ) return { };
+    #if FV_INCLUDE_WINHDR
+        void* proc = GetProcAddress( (HMODULE) libHandle.library, name );
+        if ( !proc ) return { };
+        OSHandle h;
+        h.function = proc;
+        return h;
+    #else
+    #error no implementation
+    #endif
+        return { };
+    }
 
 }

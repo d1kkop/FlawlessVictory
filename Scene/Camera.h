@@ -2,16 +2,21 @@
 #include "GameComponent.h"
 #include "../Core/Math.h"
 #include "../Core/Reflection.h"
-#define FV_CAMERA_PRIORITY (-990)
+#define FV_CAMERA_PRIORITY (9999)
 
 namespace fv
 {
     class Camera: public GameComponent
     {
-    public:
-        FV_TYPE(Camera, FV_CAMERA_PRIORITY, false)
+        FV_TYPE(Camera)
 
     public:
+        Camera() 
+        {
+            m_DoUpdate = true;
+            m_UpdatePriority = FV_CAMERA_PRIORITY;
+        }
+
         void setFov(float degrees);
         void setAspect(float aspect);
         void setNear(float near);

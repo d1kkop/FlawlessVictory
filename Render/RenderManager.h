@@ -24,7 +24,7 @@ namespace fv
         virtual ~RenderManager() = default;
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
-        virtual GraphicResource* createGraphic() = 0;
+        virtual GraphicResource* createGraphic() = 0; // NOT THREAD SAFE TODO (Called from Resource::load)
         virtual void render(const class Camera* camera) = 0;
 
         FV_DLL void freeGraphic(GraphicResource* graphic);

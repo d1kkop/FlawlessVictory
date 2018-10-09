@@ -12,7 +12,6 @@ namespace fv
     class SystemManager
     {
     public:
-        FV_DLL void callBeginForComponent( class GameComponent* gc );
         FV_DLL bool initialize( const SystemParams& params );
         FV_DLL void mainloop();
         const SystemParams& startParams() const { return m_Params; }
