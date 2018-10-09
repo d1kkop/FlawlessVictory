@@ -1,0 +1,12 @@
+-> --- New Session ---
+-> --- Sun Oct  7 21:13:38 2018 ---
+-> -------------------
+-> WARNING: Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name. In: fv::ResourceManager::ResourceManager line: 27
+-> WARNING: VK Setup debug callback failed. In: fv::RenderManagerVK::trySetupDebugCallback line: 129
+-> ERROR VK Validation layer terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\nv_dispi.inf_amd64_f32bf428bbff8aa5\.\nvoglv64.dll vkCreateDevicecall. In: fv::RenderManagerVK::debugCallback line: 252
+-> ERROR VK Validation layer vkCreateDevice:  Failed to create device chain.. In: fv::RenderManagerVK::debugCallback line: 252
+-> WARNING: VK Failed to create logical device with queues for physical device GeForce GTX 660 Ti. In: fv::RenderManagerVK::createDevices line: 173
+-> ERROR VK Validation layer terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\nv_dispi.inf_amd64_f32bf428bbff8aa5\.\nvoglv64.dll vkCreateDevicecall. In: fv::RenderManagerVK::debugCallback line: 252
+-> ERROR VK Validation layer vkCreateDevice:  Failed to create device chain.. In: fv::RenderManagerVK::debugCallback line: 252
+-> WARNING: VK Failed to create logical device with queues for physical device GeForce GTX 660 Ti. In: fv::RenderManagerVK::createDevices line: 173
+-> ERROR VK Did not find any suitable devices. In: fv::RenderManagerVK::createDevices line: 187

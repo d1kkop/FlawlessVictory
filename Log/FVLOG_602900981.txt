@@ -1,0 +1,19 @@
+main line: 29 --- New Session ---
+main line: 30 --- Sun Oct  7 17:01:13 2018 ---
+main line: 31 -------------------
+WARNING: fv::ResourceManager::ResourceManager line: 27 Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name.
+fv::RenderManagerVK::findExtensions line: 39 VK Num supported extensions 12.
+fv::RenderManagerVK::findExtensions line: 43 VK Extensions -->
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_EXT_debug_report.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_EXT_display_surface_counter.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_get_physical_device_properties2.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_get_surface_capabilities2.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_surface.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_win32_surface.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_device_group_creation.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_external_fence_capabilities.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_external_memory_capabilities.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_KHR_external_semaphore_capabilities.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_NV_external_memory_capabilities.
+fv::RenderManagerVK::findExtensions line: 46 VK Extension: VK_EXT_debug_utils.
+fv::RenderManagerVK::initGraphics line: 24 VK Initialized succesful.
