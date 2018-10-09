@@ -5,6 +5,7 @@
 #include "../Core/Functions.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/ResourceManager.h"
+#include "../Resource/ShaderCompiler.h"
 #include "../Scene/GameObject.h"
 #include "../System/SystemManager.h"
 using namespace fv;
@@ -19,6 +20,7 @@ void shutdown()
     deleteSystemManager();
     deleteResourceManager();
     deleteRenderManager();
+    deleteShaderCompiler();
     deleteTypeManager();
     deleteLogManager();
 }

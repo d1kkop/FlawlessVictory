@@ -1,6 +1,6 @@
 #pragma once
-#if FV_GLSL2SPIRV
 #include "ShaderCompiler.h"
+#if FV_GLSL2SPIRV
 #include <shaderc/shaderc.hpp>
 
 namespace fv
@@ -14,7 +14,7 @@ namespace fv
         bool preprocessShader(const String& filename, shaderc_shader_kind kind, const String& source, String& preprocessed);
         bool compileFileToAssembly(const String& filename, shaderc_shader_kind kind, const String& source, bool optimize, String& assembly);
         bool compileFile(const String& filename, shaderc_shader_kind kind, const String& source, bool optimize, Vector<u32>& code);
-        shaderc_shader_kind shaderKindFromExtension(const char* ext, bool valid);
+        shaderc_shader_kind shaderKindFromExtension(const String& ext, bool& valid);
     };
 }
 #endif

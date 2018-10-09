@@ -1,5 +1,6 @@
 #include "ShaderCompilerGLSL2SpirV.h"
 #if FV_GLSL2SPIRV
+#include "../Core/LogManager.h"
 #include <fstream>
 using namespace std;
 using namespace shaderc;
@@ -47,7 +48,7 @@ namespace fv
         return true;
     }
 
-    bool ShaderCompiler::compileFile(const String& filename, shaderc_shader_kind kind, const String& source, bool optimize, Vector<u32>& code)
+    bool ShaderCompilerGLSL2SpirV::compileFile(const String& filename, shaderc_shader_kind kind, const String& source, bool optimize, Vector<u32>& code)
     {
         Compiler compiler;
         CompileOptions options;
@@ -64,7 +65,7 @@ namespace fv
             return false;
         }
 
-        code = { module.cbegin(), module.cend() };
+        code = { result.cbegin(), result.cend() };
         return true;
     }
 
@@ -81,22 +82,17 @@ namespace fv
         return shaderc_glsl_default_vertex_shader;
     }
 
-    String ShaderCompilerGLSL2SpirV::findBinaryFile(const Path& pathIn)
-    {
-        Path newPath = pathIn.replace_extension(".spv");
-        return resourceManager()->findBinaryFile( newPath );
-    }
-
     bool ShaderCompilerGLSL2SpirV::compileShader(const Path& path, Vector<u32>& code)
     {
         // First check if spirV equivelent is already on disk
-        ifstream file(path.replace_extension(".spv"), std::ios::ate, std::ios::binary);
+        Path pathCpy = path;
+        ifstream file(pathCpy.replace_extension(".spv"), std::ios::ate, std::ios::binary);
         if ( file.is_open() )
         {
             size_t fileSize = file.tellg();
             file.seekg(0); // Go to beginning
             code.resize((fileSize+3)/4);
-            file.read(buffer.data(), fileSize);
+            file.read((char*)code.data(), fileSize);
             file.close();
             // Loaded from binary
             return true;
@@ -106,22 +102,22 @@ namespace fv
         if ( !(ext == ".frag" || ext == ".vert" || ext == ".comp" || ext == ".geom" || ext == ".tesa" || ext == ".tesc") )
         {
             LOGW("Unknown shader extension %s.", ext.c_str());
-            return;
+            return false;
         }
 
         bool validShaderKind;
-        auto shaderKind = shaderKindFromExtension( ext, validShaderKind );
+        shaderc_shader_kind shaderKind = shaderKindFromExtension( ext, validShaderKind );
         if ( !validShaderKind )
         {
             LOGW("Cannot determine shader kind from extension %s. Failed to load shader %s.", ext.c_str(), path.string().c_str());
-            return;
+            return false;
         }
 
         file.open(path.string().c_str(), std::ios::ate); // ate: Set to end
         if ( !file.is_open() )
         {
             LOGW("Cannot load file %s.", path.string().c_str());
-            return;
+            return false;
         }
 
         size_t fileSize = file.tellg();
@@ -131,8 +127,7 @@ namespace fv
         file.read(buffer.data(), fileSize);
         file.close();
 
-        code = compileFile( path.filename(), shaderKind, buffer, true );
-        return true;
+        return compileFile( path.filename().string(), shaderKind, buffer, true, code );
     }
 }
 #endif
