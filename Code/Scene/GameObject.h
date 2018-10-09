@@ -66,5 +66,5 @@ namespace fv
     FV_DLL ObjectManager<GameObject>* gameObjectManager();
     FV_DLL void deleteGameObjectManager();
 
-    FV_DLL GameObject* NewGameObject();
+    FV_DLL GameObject* NewGameObject(bool addSceneComponent=true);
 }

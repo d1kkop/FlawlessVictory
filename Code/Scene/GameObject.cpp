@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include "SceneComponent.h"
 #include "../Core/Functions.h"
 #include "../Core/Reflection.h"
 #include "../Core/ObjectManager.h"
@@ -67,8 +68,11 @@ namespace fv
     ObjectManager<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
     void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
 
-    GameObject* NewGameObject()
+    GameObject* NewGameObject(bool addSceneComponent)
     {
-        return gameObjectManager()->newObject();
+        FV_CHECK_MO();
+        auto* go = gameObjectManager()->newObject();
+        if ( addSceneComponent ) go->addComponent<SceneComponent>();
+        return go;
     }
 }

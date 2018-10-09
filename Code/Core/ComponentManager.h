@@ -69,4 +69,17 @@ namespace fv
         Vector<ComponentArray>& components = componentManager()->components()[T::type()];
         return ComponentCollection<T>(components);
     }
+
+    template <class T, class C, class CB>
+    void ComponentFor(const C& collection, const CB& cb)
+    {
+        for ( auto& compArray : collection )
+        {
+            for ( u32 i=0; i<compArray.size; ++i )
+            {
+                T* comp = (T*) ((char*)compArray.elements + i*compArray.compSize);
+                if ( comp->inUse() ) cb( *comp );
+            }
+        }
+    }
 }

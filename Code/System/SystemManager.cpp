@@ -4,6 +4,7 @@
 #include "../Core/Thread.h"
 #include "../Core/OSLayer.h"
 #include "../Core/InputManager.h"
+#include "../Core/JobManager.h"
 #include "../Scene/GameComponent.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/ResourceManager.h"
@@ -84,63 +85,49 @@ namespace fv
             });
 
             // Call begin (Single threaded).
-            for ( auto& components : m_SortedListOfComponentArrays )
-                for ( u32 i=0; i<components.size; ++i )
+            ComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+            {
+                if ( !gc.m_HasBegun )
                 {
-                    GameComponent* c = (GameComponent*)((char*)components.elements + i*components.compSize);
-                    if ( c->inUse() && !c->m_HasBegun )
-                    {
-                        c->m_HasBegun = true;
-                        c->begin();
-                    }
+                    gc.m_HasBegun = true;
+                    gc.begin();
                 }
+            });
 
-            // Each frame, process resources after begin, so that all resources started with a load in 'begin' are loaded before the first update call.
-            resourceManager()->processResources(); // This is in parallel (Multi threaded).
+            // Each frame, process resources after begin so that all resources started with a load in 'begin' are loaded before the first update call.
+            resourceManager()->processResources();
 
             // Check to see if can update network
             if ( Time::elapsed() - lastNetworkUpdate )
             {
                 lastNetworkUpdate = Time::elapsed();
-                for ( auto& components : m_SortedListOfComponentArrays )
-                    for ( u32 i=0; i<components.size; ++i )
-                    {
-                        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                        if ( c->inUse() )
-                            c->networkUpdateMT( Time::networkDt() );
-                    }
+                ParallelComponentFor<GameComponent>( m_SortedListOfComponentArrays, []( GameComponent& gc)
+                {
+                    gc.networkUpdateMT( Time::networkDt() );
+                });
             }
 
             // Check to see if can update physics
             if ( Time::elapsed() - lastPhysicsUpdate )
             {
                 lastPhysicsUpdate = Time::elapsed();
-                for ( auto& components : m_SortedListOfComponentArrays )
-                    for ( u32 i=0; i<components.size; ++i )
-                    {
-                        GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                        if ( c->inUse() )
-                            c->physicsUpdateMT(Time::networkDt());
-                    }
+                ParallelComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+                {
+                    gc.physicsUpdateMT(Time::physicsDt());
+                });
             }
 
             // Call MT update on components
-            for ( auto& components : m_SortedListOfComponentArrays )
-                for ( u32 i=0; i<components.size; ++i )
-                {
-                    GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                    if ( c->inUse() )
-                        c->updateMT(Time::networkDt());
-                }
+            ParallelComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+            {
+                gc.updateMT( Time::networkDt() );
+            });
 
             // Call ST update on components
-            for ( auto& components : m_SortedListOfComponentArrays )
-                for ( u32 i=0; i<components.size; ++i )
-                {
-                    GameComponent* c = (GameComponent*) ((char*)components.elements + i*components.compSize);
-                    if ( c->inUse() )
-                        c->updateMT(Time::networkDt());
-                }
+            ComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+            {
+                gc.update( Time::dt() );
+            });
 
             // Update timings
             Time::update();

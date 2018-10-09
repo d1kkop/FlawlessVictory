@@ -24,7 +24,7 @@ namespace fv
         static i32 mouseY();
         static i32 mouseScroll(); // Mouse scroll value.
 
-        // Mouse change since last input query.
+        // Mouse change since last frame.
         static i32 mouseDx();
         static i32 mouseDy();
         static i32 mouseDeltaScroll();
