@@ -145,7 +145,7 @@ UTESTBEGIN(BenchLoopOverComponents3)
             componentManager()->newComponent<BenchComponent>();
         }
         s = RunTime();
-        ParallelFor<BenchComponent>( componentManager()->componentsOfType<BenchComponent>(), [](BenchComponent& bc)
+        ParallelComponentFor<BenchComponent>( componentManager()->componentsOfType<BenchComponent>(), [](BenchComponent& bc)
         {
             bc.multiply();
         });

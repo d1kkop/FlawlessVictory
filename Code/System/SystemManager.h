@@ -1,6 +1,7 @@
 #pragma once
 #include "../Core/Common.h"
 #include "../Core/Thread.h"
+#include "../Core/ComponentManager.h"
 
 namespace fv
 {
@@ -19,6 +20,7 @@ namespace fv
     private:
         bool m_Done = false;
         SystemParams m_Params {};
+        Vector<ComponentArray> m_SortedListOfComponentArrays;
     };
 
     FV_DLL class SystemManager* systemManager();

@@ -1,12 +1,15 @@
 #include "PCH.h"
 #include "InputManager.h"
 #include "Functions.h"
+#include "Thread.h"
 #include <cassert>
 
 namespace fv
 {
     bool InputManager::update()
     {
+        FV_CHECK_MO();
+
     #if FV_SDL
         SDL_Event event;
         while ( SDL_PollEvent(&event) )
@@ -37,6 +40,7 @@ namespace fv
 
     bool InputManager::keyPressed(const char* key)
     {
+        FV_CHECK_MO();
         u32 scan = keyNameToScan( key );
         if ( scan != -1 )
         {
@@ -47,6 +51,7 @@ namespace fv
 
     bool InputManager::keyDown(const char* key)
     {
+        FV_CHECK_MO();
         u32 scan = keyNameToScan(key);
         if ( scan != -1 )
         {
@@ -57,6 +62,7 @@ namespace fv
 
     bool InputManager::keyUp(const char* key)
     {
+        FV_CHECK_MO();
         u32 scan = keyNameToScan(key);
         if ( scan != -1 )
         {
@@ -67,6 +73,7 @@ namespace fv
 
     bool InputManager::mousePressed(MouseKey key)
     {
+        FV_CHECK_MO();
         u32 scan = mouseKeyToScan( key );
         if ( scan != -1 )
         {
@@ -77,6 +84,7 @@ namespace fv
 
     bool InputManager::mouseDown(MouseKey key)
     {
+        FV_CHECK_MO();
         u32 scan = mouseKeyToScan(key);
         if ( scan != -1 )
         {
@@ -87,6 +95,7 @@ namespace fv
 
     bool InputManager::mouseUp(MouseKey key)
     {
+        FV_CHECK_MO();
         u32 scan = mouseKeyToScan(key);
         if ( scan != -1 )
         {
@@ -97,31 +106,37 @@ namespace fv
 
     i32 InputManager::mouseX()
     {
+        FV_CHECK_MO();
         return m_CurMouseX;
     }
 
     i32 InputManager::mouseY()
     {
+        FV_CHECK_MO();
         return m_CurMouseY;
     }
 
     i32 InputManager::mouseScroll()
     {
+        FV_CHECK_MO();
         return m_CurMouseScroll;
     }
 
     i32 InputManager::mouseDx()
     {
+        FV_CHECK_MO();
         return m_DeltaMouseX;
     }
 
     i32 InputManager::mouseDy()
     {
+        FV_CHECK_MO();
         return m_DeltaMouzeY;
     }
 
     i32 InputManager::mouseDeltaScroll()
     {
+        FV_CHECK_MO();
         return m_DeltaMouseScroll;
     }
 

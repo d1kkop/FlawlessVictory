@@ -24,22 +24,20 @@ namespace fv
         virtual ~RenderManager() = default;
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
-        virtual GraphicResource* createGraphic() = 0; // NOT THREAD SAFE TODO (Called from Resource::load)
-        virtual void render(const class Camera* camera) = 0;
+        FV_TS virtual GraphicResource* createGraphic(u32 resourceType) = 0;
+        FV_TS virtual void freeGraphic(GraphicResource* graphic) = 0;
 
-        FV_DLL void freeGraphic(GraphicResource* graphic);
+        template <class T> 
+        FV_TS GraphicResource* createGraphic();
 
-        template <class T> GraphicResource* createGraphic();
-
+        static void setResourceType( GraphicResource* gr, u32 resourceType );
     };
 
 
     template <class T> 
     GraphicResource* RenderManager::createGraphic()
     {
-        GraphicResource* graphic = createGraphic();
-        graphic->m_ResourceType = T::type();
-        return graphic;
+        return createGraphic(T::type());
     }
 
     FV_DLL RenderManager* renderManager();

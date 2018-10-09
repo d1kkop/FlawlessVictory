@@ -31,37 +31,29 @@ namespace fv
 
     M<Resource> ResourceManager::load(u32 type, const String& name)
     {
-        Path path;
-        M<Resource> resource;
+        scoped_lock lk(m_LoadMutex);
+        // See if resource was previously loaded
+        auto rIt = m_NameToResource.find( name );
+        if ( rIt != m_NameToResource.end() )
         {
-            scoped_lock lk(m_LoadMutex);
-            // See if resource was previously loaded
-            auto rIt = m_NameToResource.find( name );
-            if ( rIt != m_NameToResource.end() )
-            {
-                return rIt->second;
-            }
-            auto fIt = m_FilenameToDirectory.find( name );
-            if ( fIt == m_FilenameToDirectory.end() )
-            {
-                LOGW("No resource with name %s found.", name.c_str());
-                return nullptr;
-            }
-            path = fIt->second;
-            const TypeInfo* ti = typeManager()->typeInfo(type);
-            if (!ti) return nullptr;
-            resource = M<Resource>( sc<Resource*>( ti->createFunc(1) ) );
-            if ( !resource ) return nullptr;
-            // Store already, although not loaded yet. Other requests to same resource should already obtain this handle.
-            m_NameToResource[name] = resource;
+            return rIt->second;
         }
-        jobManager()->addJob([=]() mutable
+        auto fIt = m_FilenameToDirectory.find( name );
+        if ( fIt == m_FilenameToDirectory.end() )
         {
-            resource->load( path / name );
-        }, [=](Job* j) 
-        {
-            resource->onDoneOrCancelled(j);
-        });
+            LOGW("No resource with name %s found.", name.c_str());
+            return nullptr;
+        }
+        // Obtaining typeInfo is thread safe. All types are registered before main entry.
+        const TypeInfo* ti = typeManager()->typeInfo(type);
+        if (!ti) return nullptr;
+        M<Resource> resource = M<Resource>( sc<Resource*>( ti->createFunc(1) ) );
+        if ( !resource ) return nullptr;
+        // Store already, although not loaded yet. Other requests to same resource should obtain this handle.
+        m_NameToResource[name] = resource;
+        // Add to list of pending resources to be loaded
+        ResourceToLoad rtl = { resource, fIt->second };
+        m_PendingResourcesToLoad[ m_PendingListToFill ].emplace_back( rtl );
         return resource;
     }
 
@@ -77,6 +69,23 @@ namespace fv
             }
             ++it;
         }
+    }
+
+    void ResourceManager::processResources()
+    {
+        FV_CHECK_MO();
+        // Do not keep lock entire time of loading resources. Copy the pending list instead.
+        {
+            scoped_lock lk(m_LoadMutex);
+            assert( m_PendingResourcesToLoad[ m_PendingListToLoad ].size()==0 );
+            m_PendingListToLoad = m_PendingListToFill;
+            m_PendingListToFill = (m_PendingListToFill+1)&1;
+        }
+        ParallelFor( m_PendingResourcesToLoad[ m_PendingListToLoad ], [](const ResourceToLoad& rsl)
+        {
+            rsl.resource->load( rsl.loadPath );
+        });
+        m_PendingResourcesToLoad[ m_PendingListToLoad ].clear();
     }
 
     ResourceManager* g_ResourceManager {};

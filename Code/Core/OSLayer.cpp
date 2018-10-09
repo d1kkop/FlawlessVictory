@@ -101,23 +101,16 @@ namespace fv
     }
 
 
-    OSHandle OSStartProgram(const char* path, const char* arguments, bool waitToFinish)
+    OSHandle OSStartProgram(const char* path, const char* arguments)
     {
     #if FV_INCLUDE_WINHDR
         // https://docs.microsoft.com/en-us/windows/desktop/ProcThread/creating-processes
         STARTUPINFO info = { sizeof(info) };
         PROCESS_INFORMATION processInfo;
-        if ( CreateProcessA(path, (char*)arguments, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &info, &processInfo) )
+        if ( !CreateProcessA(path, (char*)arguments, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &info, &processInfo) )
         {
-            if ( waitToFinish )
-            {
-                WaitForSingleObject(processInfo.hProcess, INFINITE);
-                // Order of these is correct.
-                CloseHandle(processInfo.hProcess);
-                CloseHandle(processInfo.hThread);
-                processInfo.hThread  = nullptr;
-                processInfo.hProcess = nullptr;
-            }
+            processInfo.hProcess = nullptr;
+            processInfo.hThread = nullptr;
         }
         OSHandle h;
         h.process = processInfo.hProcess;

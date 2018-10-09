@@ -5,10 +5,10 @@
 
 namespace fv
 {
-    void RenderManager::freeGraphic(GraphicResource* graphic)
+    void RenderManager::setResourceType(GraphicResource* gr, u32 resourceType)
     {
-        if (!graphic) return;
-        componentManager()->freeComponent( graphic );
+        assert( gr );
+        gr->m_ResourceType = resourceType;
     }
 
     RenderManager* g_RenderManager {};

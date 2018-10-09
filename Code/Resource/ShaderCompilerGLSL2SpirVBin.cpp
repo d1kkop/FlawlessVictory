@@ -27,9 +27,19 @@ namespace fv
         // https://vulkan.lunarg.com/doc/view/1.0.8.0/windows/spirv_toolchain.html
         String args;
         args += " -V"; // Create spirV binary Vulkan output
+        args += " " + path.string();
         args += " -o " + output.string(); // Output file
         args += " -t"; // Multithreaded compilation
-        OSStartProgram( (Directories::bin() / Path("glslangValidator.exe")).string().c_str(), args.c_str(), true );
+        OSHandle hProgram = OSStartProgram( (Directories::bin() / Path("glslangValidator.exe")).string().c_str(), args.c_str() );
+        if ( hProgram.process )
+        {
+            OSWaitOnProgram( hProgram );
+        }
+        else 
+        {
+            LOGW("Failed to execute glsl to spirv binary.");
+            return false;
+        }
 
         return LoadBinaryFile(path.string().c_str(), code);
     }

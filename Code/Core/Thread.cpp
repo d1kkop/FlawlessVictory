@@ -3,7 +3,10 @@
 
 namespace fv
 {
-    bool g_IsExecutingParallel = false;
-    FV_DLL bool isExecutingParallel() { return g_IsExecutingParallel; }
-    FV_DLL void setExecutingParallel(bool isParallel) { g_IsExecutingParallel=isParallel; }
+    std::thread::id g_MainThreadId = std::this_thread::get_id();
+
+    std::thread::id MainThreadId()
+    {
+        return g_MainThreadId;
+    }
 }

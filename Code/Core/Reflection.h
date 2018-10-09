@@ -11,7 +11,7 @@
     FV_TYPE_COMMON(name) \
     static FV_DLL u32 registerType() { return fv::typeManager()->registerType(#name, sizeof(name), name::create, name::reset); }
 
-#define FV_RESOURCE_TYPE(name, extension) \
+#define FV_RESOURCE_TYPE(name) \
     FV_TYPE(name)
 
 #define FV_TYPE_IMPL(name) \

@@ -126,15 +126,22 @@ namespace fv
         }
     }
 
-    GraphicResource* RenderManagerVK::createGraphic()
+    GraphicResource* RenderManagerVK::createGraphic(u32 resourceType)
     {
-        // Recycle GraphicResources.
-        GraphicResourceVK* graphic = sc<GraphicResourceVK*>(componentManager()->newComponent(GraphicResourceVK::type()));
-        //graphic->m_Device = 
-        return graphic;
+        scoped_lock lk(m_GraphicsMutex);
+        GraphicResourceVK* gr = m_Graphics.newObject();
+        RenderManager::setResourceType( gr, resourceType );
+        return gr;
     }
 
-    void RenderManagerVK::readRenderSetup( RenderSetup& rs )
+    FV_TS void RenderManagerVK::freeGraphic(GraphicResource* resource)
+    {
+        if (!resource) return;
+        scoped_lock lk(m_GraphicsMutex);
+        m_Graphics.freeObject( sc<GraphicResourceVK*>(resource) );
+    }
+
+    void RenderManagerVK::readRenderSetup(RenderSetup& rs)
     {
         // TODO read from config
         rs.createMainWindow = false;
@@ -571,11 +578,6 @@ namespace fv
             extend.height = Clamp(extend.height, info.capabilities.minImageExtent.height, info.capabilities.maxImageExtent.height);
         }
         return true;
-    }
-
-    void RenderManagerVK::render(const class Camera* camera)
-    {
-
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(

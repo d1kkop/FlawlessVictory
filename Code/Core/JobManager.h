@@ -2,6 +2,7 @@
 #include "PCH.h"
 #include "Common.h"
 #include "Thread.h"
+#include "Functions.h"
 #include "ObjectManager.h"
 
 namespace fv
@@ -73,14 +74,27 @@ namespace fv
     FV_DLL JobManager* jobManager();
     FV_DLL void deleteJobManager();
 
+    inline void ParallelForPrepare(i32 size, i32&s, i32& nt, i32& pt, i32& ofs)
+    {
+        s  = size;
+        nt = jobManager()->numThreads();
+        pt = (s+(nt-1)) / nt;
+        ofs = 0;
+    }
+
+    inline void ParallelForFinish(Job** jobs, i32 i)
+    {
+        for ( ; i>=0; --i )
+        {
+            jobs[i]->waitAndFree();
+        }
+    }
 
     template <class T, class C, class CB>
-    void ParallelFor(const C& collection, const CB& cb)
+    void ParallelComponentFor(const C& collection, const CB& cb)
     {
-        i32 s  = (i32)collection.size();
-        i32 nt = jobManager()->numThreads();
-        i32 pt = (s+(nt-1)) / nt;
-        i32 ofs = 0;
+        i32 s, nt, pt, ofs;
+        ParallelForPrepare( (i32)collection.size(), s, nt, pt, ofs );
         Job* jobs[64];
         assert(nt<=64);
         i32 i;
@@ -104,10 +118,32 @@ namespace fv
             ofs += pt;
         }
         i--;
-        for ( ; i>=0; --i )
-        {
-            jobs[i]->waitAndFree();
-        }
+        ParallelForFinish(jobs, i);
     }
 
+
+    template <class C, class CB>
+    void ParallelFor(const C& collection, const CB& cb)
+    {
+        i32 s, nt, pt, ofs;
+        ParallelForPrepare((i32)collection.size(), s, nt, pt, ofs);
+        Job* jobs[64];
+        assert(nt<=64);
+        i32 i;
+        for ( i=0; i<nt && s>0; ++i )
+        {
+            u32 count = Min(s, pt);
+            jobs[i] = jobManager()->addJob([=]()
+            {
+                for ( u32 j=ofs; j<ofs+count; ++j )
+                {
+                    cb( collection[j] );
+                }
+            });
+            s -= pt;
+            ofs += pt;
+        }
+        i--;
+        ParallelForFinish(jobs, i);
+    }
 }

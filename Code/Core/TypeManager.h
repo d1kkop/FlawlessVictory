@@ -28,6 +28,8 @@ namespace fv
         const String* name;
     };
 
+    /*  Retrieving type info from typemanager is thread safe as it is initialized upon static object initialization. No further changes
+        are then made to the registered types anymore. */
     class TypeManager
     {
     public:

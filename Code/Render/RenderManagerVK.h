@@ -1,6 +1,8 @@
 #pragma once
 #include "RenderManager.h"
 #if FV_VULKAN
+#include "../Core/ObjectManager.h"
+#include "GraphicResourceVK.h"
 #include "vulkan/vulkan.h"
 
 namespace fv
@@ -64,8 +66,8 @@ namespace fv
         ~RenderManagerVK() override;
         bool initGraphics() override;
         void closeGraphics() override;
-        GraphicResource* createGraphic() override;
-        void render(const class Camera* camera) override;
+        FV_TS GraphicResource* createGraphic(u32 resourceType) override;
+        FV_TS void freeGraphic(GraphicResource* resource) override;
 
         // Debug callback
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -105,6 +107,9 @@ namespace fv
         SwapChainVK m_MainSwapChain{};
         void* m_MainWindow{};
         void* m_SecondaryWindow{};
+
+        Mutex m_GraphicsMutex;
+        ObjectManager<GraphicResourceVK> m_Graphics;
     };
 }
 #endif

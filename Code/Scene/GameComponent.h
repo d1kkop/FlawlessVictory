@@ -16,8 +16,8 @@ namespace fv
         template <class T> bool removeComponent();
 
     private:
-        FV_MO virtual void begin() { }
-        FV_MO virtual void update(float dt) { }
+        virtual void begin() { }
+        virtual void update(float dt) { }
         virtual void updateMT(float dt) { }
         virtual void physicsUpdateMT(float dt) { }
         virtual void networkUpdateMT(float dt) { }

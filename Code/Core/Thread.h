@@ -5,7 +5,7 @@
 
 #if FV_DEBUG
     #define FV_CHECK_MO() \
-    if ( fv::isExecutingParallel() ) \
+    if ( std::this_thread::get_id() != MainThreadId() ) \
     { \
         LOGC( "Executing singlethreaded function in parallel. Undefined behaviour!" ); \
         assert( false && "Executing singlethreaded function in parallel. Undefined behaviour!" ); \
@@ -16,6 +16,5 @@
 
 namespace fv
 {
-    FV_DLL bool isExecutingParallel();
-    FV_DLL void setExecutingParallel(bool isParallel);
+    FV_DLL std::thread::id MainThreadId();
 }
