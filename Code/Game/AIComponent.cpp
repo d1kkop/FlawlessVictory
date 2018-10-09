@@ -40,7 +40,7 @@ namespace game
 
         if ( m_TargetPlayer )
         {
-            m_TargetPlayer->addComponent<PlayerComponent>();
+           
         }
     }
 

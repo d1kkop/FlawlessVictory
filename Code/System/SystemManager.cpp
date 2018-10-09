@@ -94,6 +94,7 @@ namespace fv
                 }
             });
 
+            // TODO : perhaps change for apply changes from async update in bg
             // Each frame, process resources after begin so that all resources started with a load in 'begin' are loaded before the first update call.
             resourceManager()->processResources();
 

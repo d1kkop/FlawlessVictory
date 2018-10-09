@@ -66,7 +66,7 @@ namespace fv
         ~RenderManagerVK() override;
         bool initGraphics() override;
         void closeGraphics() override;
-        FV_TS GraphicResource* createGraphic(u32 resourceType) override;
+        FV_TS GraphicResource* createGraphic(u32 resourceType, u32 deviceIdx=0) override;
         FV_TS void freeGraphic(GraphicResource* resource) override;
 
         // Debug callback

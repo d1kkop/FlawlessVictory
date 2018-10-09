@@ -52,7 +52,7 @@ namespace fv
         // Store already, although not loaded yet. Other requests to same resource should obtain this handle.
         m_NameToResource[name] = resource;
         // Add to list of pending resources to be loaded
-        ResourceToLoad rtl = { resource, fIt->second };
+        ResourceToLoad rtl = { resource, fIt->second / name };
         m_PendingResourcesToLoad[ m_PendingListToFill ].emplace_back( rtl );
         return resource;
     }
@@ -74,12 +74,11 @@ namespace fv
     void ResourceManager::processResources()
     {
         FV_CHECK_MO();
-        // Do not keep lock entire time of loading resources. Copy the pending list instead.
+        // Do not keep lock entire time of loading resources. Copy the pending list instead. But because of 2 lists, only swap indices.
         {
             scoped_lock lk(m_LoadMutex);
             assert( m_PendingResourcesToLoad[ m_PendingListToLoad ].size()==0 );
-            m_PendingListToLoad = m_PendingListToFill;
-            m_PendingListToFill = (m_PendingListToFill+1)&1;
+            std::swap( m_PendingListToLoad, m_PendingListToFill );
         }
         ParallelFor( m_PendingResourcesToLoad[ m_PendingListToLoad ], [](const ResourceToLoad& rsl)
         {

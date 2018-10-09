@@ -85,6 +85,14 @@ namespace fv
             FreeImage_Unload(dibConverted);
             return;
         }
+
+        // Release old
+        if ( m_Graphic )
+        {
+            renderManager()->freeGraphic( m_Graphic );
+            m_Graphic = nullptr;
+        }
+
         m_Graphic = renderManager()->createGraphic<Texture2D>();
         graphicUpdated = m_Graphic->updateImage( m_Width, m_Height, bits, m_Width*m_Height*bpp, imgFormat );
         FreeImage_Unload(dibConverted);

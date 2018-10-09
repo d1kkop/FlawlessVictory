@@ -126,15 +126,17 @@ namespace fv
         }
     }
 
-    GraphicResource* RenderManagerVK::createGraphic(u32 resourceType)
+    GraphicResource* RenderManagerVK::createGraphic(u32 resourceType, u32 deviceIdx)
     {
         scoped_lock lk(m_GraphicsMutex);
         GraphicResourceVK* gr = m_Graphics.newObject();
         RenderManager::setResourceType( gr, resourceType );
+        assert( m_Devices[deviceIdx].logical );
+        gr->m_Device = m_Devices[deviceIdx].logical;
         return gr;
     }
 
-    FV_TS void RenderManagerVK::freeGraphic(GraphicResource* resource)
+    void RenderManagerVK::freeGraphic(GraphicResource* resource)
     {
         if (!resource) return;
         scoped_lock lk(m_GraphicsMutex);

@@ -24,18 +24,18 @@ namespace fv
         virtual ~RenderManager() = default;
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
-        FV_TS virtual GraphicResource* createGraphic(u32 resourceType) = 0;
+        FV_TS virtual GraphicResource* createGraphic(u32 resourceType, u32 deviceIdx=0) = 0;
         FV_TS virtual void freeGraphic(GraphicResource* graphic) = 0;
 
         template <class T> 
-        FV_TS GraphicResource* createGraphic();
+        FV_TS GraphicResource* createGraphic(u32 deviceIdx=0);
 
         static void setResourceType( GraphicResource* gr, u32 resourceType );
     };
 
 
     template <class T> 
-    GraphicResource* RenderManager::createGraphic()
+    GraphicResource* RenderManager::createGraphic(u32 deviceIdx)
     {
         return createGraphic(T::type());
     }

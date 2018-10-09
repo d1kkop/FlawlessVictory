@@ -21,6 +21,8 @@ namespace fv
             VkBuffer m_Buffer;
             VkShaderModule m_Shader;
         };
+
+        friend class RenderManagerVK;
     };
 }
 #endif
