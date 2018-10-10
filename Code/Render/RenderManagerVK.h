@@ -83,7 +83,7 @@ namespace fv
         bool createWindows(const RenderConfig& renderSetup);
         bool createIntance(const String& name);
         bool trySetupDebugCallback(bool includeVerbose, bool includeInfo);
-        bool createDevices(VkSurfaceKHR surface);
+        bool createDevices(VkSurfaceKHR mainSurface);
         bool createSurface(const void* wHandle, VkSurfaceKHR& surface);
         bool createSwapChain(const SwapChainParamsVK& params, SwapChainVK& swapChain);
         bool chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info, VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);

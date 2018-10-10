@@ -9,6 +9,33 @@
 #if FV_VULKAN
 namespace fv
 {
+
+    GraphicResourceVK::~GraphicResourceVK()
+    {
+        freeResource();
+    }
+
+    void GraphicResourceVK::init(GraphicType type)
+    {
+        switch ( type )
+        {
+        case GraphicType::Texture2D:
+        case GraphicType::Texture3D:
+        case GraphicType::TextureCube:
+            m_Image = nullptr;
+            break;
+        case GraphicType::Buffer:
+            m_Buffer = nullptr;
+            break;
+        case GraphicType::Shader:
+            m_Shader = nullptr;
+            break;
+        default:
+            assert(false);
+            break;
+        }
+    }
+
     void GraphicResourceVK::freeResource()
     {
         switch ( m_Type )
@@ -16,15 +43,19 @@ namespace fv
         case GraphicType::Texture2D:
         case GraphicType::Texture3D:
         case GraphicType::TextureCube:
-            vkDestroyImage(m_Device, m_Image, nullptr);
+            if ( m_Device && m_Image ) vkDestroyImage(m_Device, m_Image, nullptr);
+            m_Image = nullptr;
             break;
         case GraphicType::Buffer:
-            vkDestroyBuffer(m_Device, m_Buffer, nullptr);
+            if ( m_Device && m_Buffer ) vkDestroyBuffer(m_Device, m_Buffer, nullptr);
+            m_Buffer = nullptr;
             break;
         case GraphicType::Shader:
-            vkDestroyShaderModule(m_Device, m_Shader, nullptr);
+            if ( m_Device && m_Shader ) vkDestroyShaderModule(m_Device, m_Shader, nullptr);
+            m_Shader = nullptr;
             break;
         }
+        m_Device = nullptr;
     }
 
     bool GraphicResourceVK::updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format)

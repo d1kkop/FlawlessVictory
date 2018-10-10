@@ -3,18 +3,19 @@
 
 namespace fv
 {
+    class GraphicResource;
+
     class Shader: public Resource
     {
-        FV_RESOURCE_TYPE(Shader)
+        FV_TYPE(Shader)
 
     public:
         FV_DLL ~Shader() override;
+        FV_MO void applyPatch( GraphicResource* graphic );
 
     private:
         FV_DLL void load(const ResourceToLoad& rtl) override;
 
-        class GraphicResource* m_Graphic;
-
-        friend class ResourceManager;
+        GraphicResource* m_Graphic{};
     };
 }

@@ -13,17 +13,17 @@ namespace fv
 
         T* newObject();
         void freeObject(T* object);
+        void freeAll();
 
     private:
         void growObjects();
         u32 m_ObjectBufferSize;
-        Vector<ObjectArray> m_Objects;
+        Vector<ObjectArray> m_ObjectArrays;
         Set<T*> m_FreeObjects;
         u32 m_NumObjects = 0;
         bool m_ThreadSafe = false;
-        Mutex m_ObjectsMutex;
+        RMutex m_ObjectsMutex;
     };
-
 
     template <class T>
     ObjectManager<T>::ObjectManager(u32 objBufferSize, bool threadSafe):
@@ -35,8 +35,11 @@ namespace fv
     template <class T>
     ObjectManager<T>::~ObjectManager()
     {
-        for ( auto& objArray : m_Objects )
-            delete [] objArray.elements;
+        for ( auto& objArray : m_ObjectArrays )
+            if ( m_ObjectBufferSize != 1 )
+                delete [] (T*)objArray.elements;
+            else
+                delete (T*)objArray.elements;
     }
 
     template <class T>
@@ -60,31 +63,27 @@ namespace fv
                 m_FreeObjects.insert( objs + i );
             }
             ObjectArray objArray = { objs, m_ObjectBufferSize };
-            m_Objects.emplace_back( objArray );
+            m_ObjectArrays.emplace_back( objArray );
         }
         T* o = *m_FreeObjects.begin();
         m_FreeObjects.erase(m_FreeObjects.begin());
+        m_NumObjects++;
         if ( m_ThreadSafe )
         {
             m_ObjectsMutex.unlock();
         }
-        u32 oldVersion = o->m_Version;
-        if ( o->m_Freed ) new (o)T; // Only call if object was recycled.
-        o->m_Active = true;
-        o->m_Version = oldVersion+1;
-        m_NumObjects++;
+        o->m_Freed = false;
         return o;
     }
 
     template <class T>
-    void ObjectManager<T>::freeObject(T* object)
+    void ObjectManager<T>::freeObject(T* o)
     {
-        if (!object) return;
-        if ( !object->m_Freed && object->m_Active ) // Allow multiple calls to freeObject
+        if ( !o->m_Freed )
         {
-            // assert( !object->m_Freed && object->m_Active );
-            object->m_Freed  = true; // Do not remove from objectList to avoid fragmentation.
-            object->m_Active = false;
+            u32 oldVersion = o->m_Version;
+            new (o)T; // Resets object (placement new)
+            o->m_Version = oldVersion+1;  // Increment version immediately so tat refs to this component will return null ptr from now on.
             if ( m_ThreadSafe )
             {
                 m_ObjectsMutex.lock();
@@ -95,14 +94,42 @@ namespace fv
                 FV_CHECK_MO();
             }
         #endif
-            assert( m_FreeObjects.count(object) == 0 );
-            m_FreeObjects.insert(object);
+            assert( m_FreeObjects.count(o) == 0 );
+            m_FreeObjects.insert(o);
             m_NumObjects--;
             if ( m_ThreadSafe )
             {
                 m_ObjectsMutex.unlock();
             }
         }
+        else
+        {
+            LOGW("Tried to free an object that was already freed. Call ignored.");
+        }
     }
 
+    template <class T>
+    void ObjectManager<T>::freeAll()
+    {
+        if ( m_ThreadSafe )
+        {
+            m_ObjectsMutex.lock();
+        }
+        else
+        {
+            FV_CHECK_MO();
+        }
+        for ( auto& objArray : m_ObjectArrays )
+        {
+            for ( u32 i=0; i<objArray.size; ++i )
+            {
+                T* obj = (T*)objArray.elements + i*sizeof(T);
+                if ( !obj->m_Freed ) freeObject( obj );
+            }
+        }
+        if ( m_ThreadSafe )
+        {
+            m_ObjectsMutex.unlock();
+        }
+    }
 }

@@ -103,6 +103,8 @@ namespace fv
         {
             if ( t.joinable() ) t.join();
         }
+        // If still had jobs in queue, process them ST
+        processQueue();
     }
 
     Job* JobManager::addJob(const Function<void ()>& cb, bool autoFree, const Function<void (Job*)>& onDoneOrCancelled)

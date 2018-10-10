@@ -17,6 +17,16 @@ namespace fv
         renderManager()->freeGraphic(m_Graphic, true);
     }
 
+    void Shader::applyPatch(GraphicResource* graphic)
+    {
+        FV_CHECK_MO();
+
+        if ( m_Graphic )
+            renderManager()->freeGraphic( m_Graphic );
+
+        m_Graphic = graphic;
+    }
+
     void Shader::load(const ResourceToLoad& rtl)
     {
         Vector<char> code;
@@ -40,7 +50,7 @@ namespace fv
             {
                 if ( graphic->updateShaderCode( code ) )
                 {
-                    Patch* p = patchManager()->createPatch(PatchType::Shader);
+                    Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
                     p->graphic  = graphic;
                     p->resource = rtl.resource;
                     patchManager()->submitPatch( p );

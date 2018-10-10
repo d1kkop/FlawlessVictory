@@ -7,12 +7,16 @@ namespace fv
 {
     class GraphicResourceVK: public GraphicResource
     {
+    public:
+        virtual ~GraphicResourceVK() override;
+
+    public:
+        void init(GraphicType type) override;
         void freeResource() override;
         bool updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format) override;
         bool updateBuffer(const byte* data, u32 size, BufferFormat format) override;
         bool updateShaderCode(Vector<char>& code) override;
 
-    private:
         VkDevice m_Device{};
         union
         {

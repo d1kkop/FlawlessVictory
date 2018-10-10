@@ -48,15 +48,7 @@ namespace fv
         }
         M<Component> c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
-        u32 oldVersion = c->m_Version;
-        if ( c->m_Freed ) 
-        {
-            // Only call placement new when object is recycled. 
-            // Resets user variables for recycled object.
-            ti->resetFunc( c.get() ); 
-        }
-        c->m_Active = true;
-        c->m_Version = oldVersion+1;
+        c->m_Freed = false;
         TypeManager::setType( type, *c );
         m_NumComponents++;
         return c;
@@ -65,15 +57,26 @@ namespace fv
     void ComponentManager2::freeComponent(const M<Component>& c)
     {
         FV_CHECK_MO();
-        if ( !c->m_Freed && c->m_Active ) // Allow multiple calls to freeComponent
+        if ( !c->m_Freed )
         {
-            // assert( !c->m_Freed && c->m_Active );
+            const TypeInfo* ti = typeManager()->typeInfo(c->type());
+            if ( !ti )
+            {
+                LOGW("Invalid type %d, component NOT freed.", c->type());
+                return;
+            }
+            assert(ti->hash == c->type());
             auto& freeComps = m_FreeComponents[c->type()];
-            assert( freeComps.count(c)==0 );
-            c->m_Freed  = true; // NOTE: Do not remove from components list to avoid fragmentation.
-            c->m_Active = false;
-            freeComps.insert( c );
+            assert(freeComps.count(c)==0);
+            u32 oldVersion = c->m_Version;
+            ti->resetFunc(c.get()); // Resets object (placement new)
+            c->m_Version = oldVersion+1; // Increment version immediately so tat refs to this component will return null ptr from now on.
+            freeComps.insert(c);
             m_NumComponents--;
+        }
+        else
+        {
+            LOGW("Tried to free a component that was already freed. Call ignored.");
         }
     }
 
@@ -86,7 +89,7 @@ namespace fv
             for ( u32 i = 0; i < compArray.size; i++ )
             {
                 M<Component>& c = compArray.elements[i];
-                freeComponent(c);
+                if ( !c->m_Freed ) freeComponent(c);
             }
         }
     }

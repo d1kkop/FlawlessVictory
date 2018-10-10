@@ -19,6 +19,7 @@ namespace fv
 
     RenderManagerVK::~RenderManagerVK()
     {
+        m_Graphics.freeAll();
         closeGraphics();
     }
 
@@ -27,8 +28,8 @@ namespace fv
         // Setup layers and extensions for instance and devices
         m_RequiredInstanceExtensions = { "VK_EXT_debug_report", "VK_EXT_debug_utils" };
         m_RequiredInstanceLayers = { "VK_LAYER_LUNARG_standard_validation" };
-        m_RequiredPhysicalExtensions.clear();
-        m_RequiredPhysicalLayers.clear();
+        m_RequiredPhysicalExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        m_RequiredPhysicalLayers = { "VK_LAYER_LUNARG_standard_validation" };
 
         RenderConfig rs{};
         readRenderConfig( rs );
@@ -72,13 +73,6 @@ namespace fv
             bool bSwapChainCreated = false;
             for ( auto& dv : m_Devices )
             {
-                // Device for swap chain must have swap chain extension
-                Vector<const char*> swapChainExtension = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-                if ( !checkRequiredExtensions(swapChainExtension, dv.physical) )
-                {
-                    continue;
-                }
-
                 SwapChainParamsVK scParams {};
                 scParams.device = &dv;
                 scParams.surface = m_MainSwapChain.surface;
@@ -93,7 +87,7 @@ namespace fv
                 }
                 bSwapChainCreated = true;
                 m_MainSwapChain.device = &dv;
-                break;
+                break; // Only pick a single device for mainWindow
             }
 
             if ( !bSwapChainCreated )
@@ -142,6 +136,7 @@ namespace fv
         GraphicResourceVK* gr = m_Graphics.newObject(); // Is thread safe
         RenderManager::setGraphicType( gr, type );
         assert( m_Devices[deviceIdx].logical );
+        gr->init(type);
         gr->m_Device = m_Devices[deviceIdx].logical;
         return gr;
     }
@@ -149,14 +144,16 @@ namespace fv
     void RenderManagerVK::freeGraphic(GraphicResource* resource, bool async)
     {
         if (!resource) return;
-        if ( !async )
+        if ( !async || IsEngineClosing() )
         {
+            resource->freeResource();
             m_Graphics.freeObject( sc<GraphicResourceVK*>(resource) );
         }
         else
         {
             jobManager()->addJob( [=]()
             {
+                resource->freeResource();
                 m_Graphics.freeObject(sc<GraphicResourceVK*>(resource));
             }, true /*auto free job*/);
         }
@@ -165,7 +162,7 @@ namespace fv
     void RenderManagerVK::readRenderConfig(RenderConfig& rs)
     {
         // TODO read from config
-        rs.createMainWindow = false;
+        rs.createMainWindow = true;
         rs.mainWindowWidth = 1600;
         rs.mainWindowHeight = 900;
         rs.mainWindowName = "Main Window";
@@ -203,7 +200,7 @@ namespace fv
         appInfo.applicationVersion = 1;
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = 1;
-        appInfo.apiVersion = VK_API_VERSION_1_1;
+        appInfo.apiVersion = VK_API_VERSION_1_0; // VK_API_VERSION_1_1;
 
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -297,8 +294,10 @@ namespace fv
             createInfo.pQueueCreateInfos = queueCreateInfos.data();
             createInfo.queueCreateInfoCount = (u32)uniqueQueueIndices.size();
             createInfo.pEnabledFeatures  = &deviceFeatures;
-            createInfo.enabledLayerCount = (u32)m_RequiredInstanceLayers.size();
-            createInfo.ppEnabledLayerNames = m_RequiredInstanceLayers.data();
+            createInfo.enabledLayerCount = (u32)m_RequiredPhysicalLayers.size();
+            createInfo.ppEnabledLayerNames = m_RequiredPhysicalLayers.data();
+            createInfo.enabledExtensionCount = (u32)m_RequiredPhysicalExtensions.size();
+            createInfo.ppEnabledExtensionNames = m_RequiredPhysicalExtensions.data();
 
             auto res = vkCreateDevice( dv.physical, &createInfo, nullptr, &dv.logical );
             if ( res != VK_SUCCESS )
@@ -393,7 +392,7 @@ namespace fv
             return false;
         }
     
-        // Retreive swap chain images
+        // Retrieve swap chain images
         assert( swapChain.swapChain );
         uint32_t swapChainImgCount;
         vkGetSwapchainImagesKHR(p.device->logical, swapChain.swapChain, &swapChainImgCount, nullptr);

@@ -13,22 +13,28 @@
 #include "../System/SystemManager.h"
 using namespace fv;
 
-#define FV_LOAD_TEST_MODULE 0
+#define FV_LOAD_TEST_MODULE 1
+
 
 void shutdown()
 {
+    SetEngineClosing();
+    // delete all managers
+    deleteJobManager();      
     deleteResourceManager();
-    deleteRenderManager();
-    deleteJobManager();
-    deleteInputManager();
+    deletePatchManager();
+    // Delete components and game object manager so that refcount of resources is deduced.
     deleteComponentManager();
     deleteComponentManager2();
     deleteGameObjectManager();
-    deleteSystemManager();
     deleteShaderCompiler();
     deleteTextureImporter();
-    deletePatchManager();
+    deleteRenderManager();
+    // Do jobManager after render manager as graphics may be async deleted.
+    deleteInputManager();
+    deleteSystemManager();
     deleteTypeManager();
+    // At last log manager when there is no logging required anymore.
     deleteLogManager();
 }
 
@@ -61,11 +67,9 @@ int main(int argc, char** argv)
 
     if ( systemManager()->initialize( sysParams ) )
     {
-    #if FV_LOAD_TEST_MODULE 
-        return 0;
-    #endif
-
+    #if !FV_LOAD_TEST_MODULE 
         systemManager()->mainloop();
+    #endif
     }
 
     shutdown();

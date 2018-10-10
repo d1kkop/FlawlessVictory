@@ -29,12 +29,20 @@ namespace fv
     // Sleeps the thread for seconds.
     FV_DLL void Suspend(double seconds);
 
+    // Wrapper around strcpy or strcpy_s.
     FV_DLL void StringCopy(char* dst, u32 dstSize, const char* src);
 
     // Allocates a new char array and copies from srouce. Len is optional.
     FV_DLL const char* NewString( const char* src, u32 len=-1 );
 
+    // Read at once contents of file as binary.
     FV_DLL bool LoadBinaryFile(const char* path, Vector<char>& data);
+
+    // Useful for destructors that depend on manager that may not exist anymore.
+    FV_DLL bool IsEngineClosing();
+
+    // Private function! Only to be called from engine.
+    FV_DLL void SetEngineClosing(); 
 
     template <class T, class ...Args> 
     T* CreateOnce(T*& pType, Args... args) { if (!pType) pType=new T(args...); return pType; }

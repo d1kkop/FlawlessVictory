@@ -6,6 +6,7 @@
 #include "../Render/RenderManager.h"
 #include "../Resource/PatchManager.h"
 #include "../Resource/ResourceManager.h"
+#include "../Resource/Texture2D.h"
 
 namespace fv
 {
@@ -87,7 +88,7 @@ namespace fv
             return;
         }
 
-        graphic = nullptr; // renderManager()->createGraphic<Texture2D>(0 /*device idx*/);
+        graphic = renderManager()->createGraphic(GraphicType::Texture2D, 0 /*device idx*/);
         if ( !graphic )
         {
             LOGW("Cannot create graphic resource for texture 2D. Loading failed.", filename);
@@ -107,7 +108,7 @@ namespace fv
     #endif
 
         assert( width && height && graphic );
-        Patch* patch    = patchManager()->createPatch(PatchType::Texture2D);
+        Patch* patch    = patchManager()->createPatch(PatchType::Texture2DData);
         patch->width    = width;
         patch->height   = height;
         patch->graphic  = graphic;

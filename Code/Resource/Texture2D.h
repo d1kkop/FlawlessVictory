@@ -21,8 +21,6 @@ namespace fv
         u32 m_Width  = 0;
         u32 m_Height = 0;
         ImageFormat m_Format {};
-
-        // Never return ptr to resource directly. Always work from managed resource.
-        class GraphicResource* m_Graphic{};
+        GraphicResource* m_Graphic{};
     };
 }

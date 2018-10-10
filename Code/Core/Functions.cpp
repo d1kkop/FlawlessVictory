@@ -9,7 +9,8 @@ using namespace chrono;
 
 namespace fv
 {
-    double s_StartTime = EpochTime();
+    double g_StartTime = EpochTime();
+    bool g_EngineClosing = false;
 
     String LocalTime()
     {
@@ -57,7 +58,7 @@ namespace fv
 
     float RunTime()
     {
-        return (float)(EpochTime()-s_StartTime);
+        return (float)(EpochTime()-g_StartTime);
     }
 
     u32 Hash32(const char* key, u32 len)
@@ -159,4 +160,15 @@ namespace fv
         }
         return true;
     }
+
+    bool IsEngineClosing()
+    {
+        return g_EngineClosing;
+    }
+
+    void SetEngineClosing()
+    {
+        g_EngineClosing = true;
+    }
+
 }

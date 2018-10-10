@@ -9,13 +9,12 @@ namespace fv
     class Object
     {
     public:
-        bool inUse() const { return m_Active; }
+        bool inUse() const { return !m_Freed; }
         u32 version() const { return m_Version; }
 
     private:
         u32 m_Version = 0;
-        bool m_Freed  = false;
-        bool m_Active = false;
+        bool m_Freed  = true;
 
         template <class T>
         friend class ObjectManager;
