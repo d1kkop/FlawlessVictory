@@ -2,10 +2,11 @@
 #include "ResourceManager.h"
 #include "ShaderCompiler.h"
 #include "../Core/Functions.h"
-#include "../Core/JobManager.h"
 #include "../Core/Directories.h"
+#include "../Core/LogManager.h"
 #include "../Render/RenderManager.h"
 #include "../Render/GraphicResource.h"
+#include "../Resource/PatchManager.h"
 
 namespace fv
 {
@@ -13,7 +14,7 @@ namespace fv
 
     Shader::~Shader()
     {
-        renderManager()->freeGraphic(m_Graphic);
+        renderManager()->freeGraphic(m_Graphic, true);
     }
 
     void Shader::load(const ResourceToLoad& rtl)
@@ -22,8 +23,9 @@ namespace fv
 
         // Check if compiled file is already there
         Path binPath = shaderCompiler()->replaceWithBinaryExtension( Directories::intermediateShaders() / rtl.loadPath.filename() );
-        if ( !LoadBinaryFile(binPath.string().c_str(), code))
+        if ( rtl.reload || !LoadBinaryFile(binPath.string().c_str(), code) )
         {
+            code.clear(); // In case binary load partially succeeded
             // Compile from glsl
             if ( !shaderCompiler()->compileShader(rtl.loadPath, code) )
             {
@@ -33,11 +35,21 @@ namespace fv
 
         if ( !code.empty() )
         {
-            //m_Graphic = renderManager()->createGraphic<Shader>();
-            //if ( m_Graphic->updateShaderCode(code) )
-            //{
-            //    m_LoadSuccesful = true;
-            //}
+            GraphicResource* graphic = renderManager()->createGraphic(GraphicType::Shader);
+            if ( graphic )
+            {
+                if ( graphic->updateShaderCode( code ) )
+                {
+                    Patch* p = patchManager()->createPatch(PatchType::Shader);
+                    p->graphic  = graphic;
+                    p->resource = rtl.resource;
+                    patchManager()->submitPatch( p );
+                }
+                else
+                {
+                    renderManager()->freeGraphic( graphic, true );
+                }
+            }
         }
     }
 

@@ -16,7 +16,7 @@ namespace fv
 
             // While Name does not resolve to an existing ID, keep adding dummy characters until unique ID is found.
             u32 hash = Hash32(sName.c_str(), (u32)sName.size());
-            while ( m_HashToType.count(hash) != 0 )
+            while ( m_HashToType.count(hash) != 0 || hash == -1/*Invalid hash value*/ )
             {
                 sName += "a"; // Add dummy character so that it will resolve to different ID.
                 hash = Hash32(sName.c_str(), (u32)sName.size());

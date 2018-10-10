@@ -41,7 +41,7 @@ namespace fv
             return false;
         }
 
-        return LoadBinaryFile(path.string().c_str(), code);
+        return LoadBinaryFile(output.string().c_str(), code);
     }
 }
 #endif

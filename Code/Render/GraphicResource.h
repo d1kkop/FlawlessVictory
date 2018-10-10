@@ -1,17 +1,17 @@
 #pragma once
 #include "../Core/Common.h"
-#include "../Core/Component.h"
+#include "../Core/Object.h"
 
 
 namespace fv
 {
-    enum BufferFormat
+    enum class BufferFormat
     {
         Default,
         Optimized
     };
 
-    enum ImageFormat
+    enum class ImageFormat
     {
         RGBA8,
         RGB8,
@@ -24,7 +24,16 @@ namespace fv
         RGB565
     };
 
-    class GraphicResource: public Component
+    enum class GraphicType
+    {
+        Texture2D,
+        Texture3D,
+        TextureCube,
+        Buffer,
+        Shader
+    };
+
+    class GraphicResource: public Object
     {
     public:
         virtual void freeResource() = 0;
@@ -34,7 +43,7 @@ namespace fv
          
 
     protected:
-        u32 m_ResourceType;
+        GraphicType m_Type;
 
         friend class RenderManager;
     };

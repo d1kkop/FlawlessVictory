@@ -8,6 +8,7 @@
 namespace fv
 {
     class GraphicResource;
+    enum class GraphicType;
 
     struct SwapChainInfoVK
     {
@@ -67,7 +68,7 @@ namespace fv
         ~RenderManagerVK() override;
         bool initGraphics() override;
         void closeGraphics() override;
-        FV_TS GraphicResource* createGraphic(u32 resourceType, u32 deviceIdx=0) override;
+        FV_TS GraphicResource* createGraphic(GraphicType type, u32 deviceIdx=0) override;
         FV_TS void freeGraphic(GraphicResource* resource, bool async=false) override;
 
         // Debug callback
@@ -82,7 +83,7 @@ namespace fv
         bool createWindows(const RenderConfig& renderSetup);
         bool createIntance(const String& name);
         bool trySetupDebugCallback(bool includeVerbose, bool includeInfo);
-        bool createDevices(VkSurfaceKHR mainSurface);
+        bool createDevices(VkSurfaceKHR surface);
         bool createSurface(const void* wHandle, VkSurfaceKHR& surface);
         bool createSwapChain(const SwapChainParamsVK& params, SwapChainVK& swapChain);
         bool chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info, VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);

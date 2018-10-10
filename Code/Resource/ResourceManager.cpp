@@ -68,7 +68,7 @@ namespace fv
         // Store already, although not loaded yet. Other requests to same resource should obtain this handle.
         m_NameToResource[name] = resource;
         // Add to list of pending resources to be loaded
-        ResourceToLoad rtl = { resource, fIt->second / name };
+        ResourceToLoad rtl = { resource, fIt->second / name, false };
         m_PendingResourcesToLoad[ m_ListToFill ].emplace_back( rtl );
         return resource;
     }
@@ -110,7 +110,7 @@ namespace fv
             }
             m_PendingResourcesToLoad[ m_StuffedList ].clear();
             // Wait for next iteration
-            Suspend( m_Config.loadThreadSleepTimeMs*1000 );
+            Suspend( m_Config.loadThreadSleepTimeMs *.001 );
         }
     }
 

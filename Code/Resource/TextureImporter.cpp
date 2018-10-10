@@ -107,7 +107,7 @@ namespace fv
     #endif
 
         assert( width && height && graphic );
-        Patch* patch      = patchManager()->createPatch(PatchType::Texture2DLoad);
+        Patch* patch    = patchManager()->createPatch(PatchType::Texture2D);
         patch->width    = width;
         patch->height   = height;
         patch->graphic  = graphic;

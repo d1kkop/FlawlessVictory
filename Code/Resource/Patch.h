@@ -9,7 +9,8 @@ namespace fv
 
     enum class PatchType
     {
-        Texture2DLoad
+        Texture2D,
+        Shader
     };
 
     // Instead of subclassing this. Make one 'big' patch object to avoid massive memory fragmentation by different types.

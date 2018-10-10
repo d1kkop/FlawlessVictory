@@ -7,8 +7,6 @@ namespace fv
 {
     class GraphicResourceVK: public GraphicResource
     {
-        FV_TYPE(GraphicResourceVK)
-
         void freeResource() override;
         bool updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format) override;
         bool updateBuffer(const byte* data, u32 size, BufferFormat format) override;

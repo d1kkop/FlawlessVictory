@@ -5,10 +5,10 @@
 
 namespace fv
 {
-    void RenderManager::setResourceType(GraphicResource* gr, u32 resourceType)
+    void RenderManager::setGraphicType( GraphicResource* gr, GraphicType graphicType )
     {
         assert( gr );
-        gr->m_ResourceType = resourceType;
+        gr->m_Type = graphicType;
     }
 
     RenderManager* g_RenderManager {};

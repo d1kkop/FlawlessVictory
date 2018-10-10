@@ -29,7 +29,10 @@ namespace fv
     };
 
     /*  Retrieving type info from typemanager is thread safe as it is initialized upon static object initialization. No further changes
-        are then made to the registered types anymore. */
+        are then made to the registered types anymore. 
+        The TypeManager is designed for unknown types that are to be created in different user DLL's. As such, the type can be mapped from 
+        integer to a static create and placement new operator.
+        Using an enum would not suffice as the types need to be known beforehand. */
     class TypeManager
     {
     public:

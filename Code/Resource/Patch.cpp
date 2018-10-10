@@ -8,7 +8,7 @@ namespace fv
     {
         switch ( patchType )
         {
-        case PatchType::Texture2DLoad:
+        case PatchType::Texture2D:
             applyTexture2DLoad();
             break;
         }

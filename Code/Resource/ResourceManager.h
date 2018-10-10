@@ -14,6 +14,7 @@ namespace fv
     {
         M<Resource> resource;
         Path loadPath;
+        bool reload;
     };
 
     class ResourceManager

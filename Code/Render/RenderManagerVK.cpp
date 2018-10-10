@@ -51,7 +51,7 @@ namespace fv
         if ( !createIntance("First App")) 
             return false;
 
-        trySetupDebugCallback( false, false );
+        trySetupDebugCallback( false, true );
 
         // In case of main swap chain
         if ( m_MainWindow )
@@ -60,11 +60,14 @@ namespace fv
             {
                 return false;
             }
+        }
 
-            assert(m_MainSwapChain.surface);
-            if ( !createDevices(m_MainSwapChain.surface) )
-                return false;
+        // Note, surface can null in case there is no mainWindow.
+        if ( !createDevices(m_MainSwapChain.surface) )
+            return false;
 
+        if ( m_MainWindow )
+        {
             // Find device that can present 
             bool bSwapChainCreated = false;
             for ( auto& dv : m_Devices )
@@ -134,10 +137,10 @@ namespace fv
         }
     }
 
-    GraphicResource* RenderManagerVK::createGraphic(u32 resourceType, u32 deviceIdx)
+    GraphicResource* RenderManagerVK::createGraphic(GraphicType type, u32 deviceIdx)
     {
         GraphicResourceVK* gr = m_Graphics.newObject(); // Is thread safe
-        RenderManager::setResourceType( gr, resourceType );
+        RenderManager::setGraphicType( gr, type );
         assert( m_Devices[deviceIdx].logical );
         gr->m_Device = m_Devices[deviceIdx].logical;
         return gr;
@@ -248,7 +251,7 @@ namespace fv
         return true;
     }
 
-    bool RenderManagerVK::createDevices(VkSurfaceKHR mainSurface)
+    bool RenderManagerVK::createDevices(VkSurfaceKHR surface)
     {
         uint32_t deviceCount = 0;
         Vector<VkPhysicalDevice> physicalDevices;
@@ -268,7 +271,7 @@ namespace fv
             }
 
             storeDeviceProperties( dv );
-            storeDeviceQueueFamilies( dv, mainSurface );
+            storeDeviceQueueFamilies( dv, surface );
 
             if ( !(dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && dv.features.geometryShader) )
             {
@@ -419,7 +422,7 @@ namespace fv
         vkGetPhysicalDeviceFeatures(device.physical, &device.features);
     }
 
-    void RenderManagerVK::storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR mainSurface)
+    void RenderManagerVK::storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR surface)
     {
         assert( device.physical );
         uint32_t queueFamilyCount;
@@ -438,8 +441,11 @@ namespace fv
                 if ( (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) device.queueIndices.sparse = i;
             }
             VkBool32 presentSupported = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device.physical, i, mainSurface, &presentSupported);
-            if ( presentSupported ) device.queueIndices.present = i;
+            if ( surface )
+            {
+                vkGetPhysicalDeviceSurfaceSupportKHR(device.physical, i, surface, &presentSupported);
+                if ( presentSupported ) device.queueIndices.present = i;
+            }
         }
     }
 
