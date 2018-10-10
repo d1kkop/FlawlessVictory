@@ -2,8 +2,7 @@
 #include "LogManager.h"
 #include "Functions.h"
 #include "Directories.h"
-#include <cstdlib>
-#include <cstdarg>
+using namespace std;
 
 namespace fv
 {
@@ -68,23 +67,26 @@ namespace fv
         if ( !m_LogToFile ) return;
 
         // (Re)open file
-        FILE* f;
-    #if FV_SECURE_CRT
-        fopen_s(&f, m_Filename.c_str(), "a");
-    #else
-        f = fopen(m_Filename.c_str(), "a");
-    #endif
-
-        if ( !f ) return;
-
-        fprintf(f, msg);
-        fclose(f);
+        ofstream file( m_Filename.c_str() );
+        if ( file.is_open() )
+        {
+            try
+            {
+                file << msg;
+                file.close();
+            }
+            catch (...)
+            {
+                if ( file.is_open() )
+                    file.close();
+            }
+        }
     }
 
     void LogManager::logToIde(const char* msg)
     {
         if ( !m_LogToIde ) return;
-    #if FV_INCLUDE_WINHDR
+    #if (FV_INCLUDE_WINHDR && _MSC_VER)
         ::OutputDebugString(msg);
     #endif
     }

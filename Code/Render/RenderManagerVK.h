@@ -39,6 +39,8 @@ namespace fv
         VkPhysicalDeviceProperties properties;
         VkPhysicalDeviceFeatures features;
         QueueFamilyIndicesVK queueIndices;
+        VkPipeline opaquePipeline;
+        VkPipelineLayout opaquePipelineLayout;
     };
 
     struct SwapChainVK
@@ -95,7 +97,8 @@ namespace fv
         void queryExtensions(Vector<String>& extensions, VkPhysicalDevice physicalDevice=nullptr);
         void queryLayers(Vector<String>& layers, VkPhysicalDevice physicalDevice=nullptr);
         bool validateNameList(const Vector<String>& found, const Vector<const char*>& required);
-
+        bool createBasePipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass, 
+                                VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
         // 
         VkImageView createImageView(VkDevice device, VkImage image, VkFormat format);
 
