@@ -6,6 +6,7 @@
 #include "../Core/LogManager.h"
 #include "../Core/ComponentManager.h"
 #include "../Core/OSLayer.h"
+#include "../Core/JobManager.h"
 
 namespace fv
 {
@@ -22,8 +23,8 @@ namespace fv
         m_RequiredPhysicalExtensions.clear();
         m_RequiredPhysicalLayers.clear();
 
-        RenderSetup rs{};
-        readRenderSetup( rs );
+        RenderConfig rs{};
+        readRenderConfig( rs );
         if (!createWindows( rs ))
         {
             return false;
@@ -136,14 +137,25 @@ namespace fv
         return gr;
     }
 
-    void RenderManagerVK::freeGraphic(GraphicResource* resource)
+    void RenderManagerVK::freeGraphic(GraphicResource* resource, bool async)
     {
         if (!resource) return;
-        scoped_lock lk(m_GraphicsMutex);
-        m_Graphics.freeObject( sc<GraphicResourceVK*>(resource) );
+        if ( !async )
+        {
+            scoped_lock lk(m_GraphicsMutex);
+            m_Graphics.freeObject( sc<GraphicResourceVK*>(resource) );
+        }
+        else
+        {
+            jobManager()->addJob( [=]()
+            {
+                scoped_lock lk(m_GraphicsMutex);
+                m_Graphics.freeObject(sc<GraphicResourceVK*>(resource));
+            }, true /*auto free job*/);
+        }
     }
 
-    void RenderManagerVK::readRenderSetup(RenderSetup& rs)
+    void RenderManagerVK::readRenderConfig(RenderConfig& rs)
     {
         // TODO read from config
         rs.createMainWindow = false;
@@ -153,7 +165,7 @@ namespace fv
         rs.mainWindowFullscreen = false;
     }
 
-    bool RenderManagerVK::createWindows(const RenderSetup& rs)
+    bool RenderManagerVK::createWindows(const RenderConfig& rs)
     {
         if ( rs.createMainWindow )
         {

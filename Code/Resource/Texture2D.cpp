@@ -1,8 +1,8 @@
 #include "Texture2D.h"
+#include "../Core/Thread.h"
 #include "../Core/JobManager.h"
-#include "../Core/Directories.h"
+#include "../Resource/TextureImporter.h"
 #include "../Render/RenderManager.h"
-#include "../Render/GraphicResource.h"
 
 namespace fv
 {
@@ -10,105 +10,25 @@ namespace fv
 
     Texture2D::~Texture2D()
     {
-        renderManager()->freeGraphic(m_Graphic);
+        renderManager()->freeGraphic(m_Graphic, true);
     }
 
-    void Texture2D::load(const Path& path)
+    void Texture2D::applyPatch(u32 width, u32 height, ImageFormat format, GraphicResource* resource)
     {
-        bool graphicUpdated = false;
+        FV_CHECK_MO();
 
-    #if FV_FREEIMAGE
-    
-        String sPath = path.generic_string();
-        const char* filename = sPath.c_str();
-        FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(filename, 0);
-        if ( fif == FIF_UNKNOWN ) fif = FreeImage_GetFIFFromFilename(filename);
-        if ( fif == FIF_UNKNOWN )
-        {
-            LOGW("Cannot obtain file type from texture %s.", filename);
-            return;
-        }
-        if ( !FreeImage_FIFSupportsReading(fif) )
-        {
-            LOGW("FreeImage does not support loading %s", filename);
-            return;
-        }
-        FIBITMAP* dib = FreeImage_Load(fif, filename);
-        if ( !dib )
-        {
-            LOGW("Loading of %s failed.", filename);
-            return;
-        }
-        // Convert to easy format
-        u32 bpp = FreeImage_GetBPP(dib);
-        FIBITMAP* dibConverted;
-        ImageFormat imgFormat;
-        switch ( bpp )
-        {
-        case 8:
-            dibConverted = FreeImage_ConvertTo8Bits(dib);
-            imgFormat = ImageFormat::Single8;
-            break;
-        case 15:
-            dibConverted = FreeImage_ConvertTo16Bits555(dib);
-            imgFormat = ImageFormat::RGB555;
-            break;
-        case 16:
-            dibConverted = FreeImage_ConvertTo16Bits565(dib);
-            imgFormat = ImageFormat::RGB565;
-            break;
+        if ( m_Graphic ) 
+            renderManager()->freeGraphic(m_Graphic, true);
 
-        case 24:
-            dibConverted = FreeImage_ConvertTo24Bits(dib);
-            imgFormat = ImageFormat::RGB8;
-            break;
-
-        default:
-        case 32:
-            dibConverted = FreeImage_ConvertTo32Bits(dib);
-            imgFormat = ImageFormat::RGBA8;
-            break;
-        }
-        FreeImage_Unload(dib);
-        if ( !dibConverted )
-        {
-            LOGW("Could not convert %s to usuable format.", filename);
-            return;
-        }
-        byte* bits = FreeImage_GetBits(dibConverted);
-        m_Width    = FreeImage_GetWidth(dibConverted);
-        m_Height   = FreeImage_GetHeight(dibConverted);
-        // Sanity checks
-        if ( (bits == nullptr) || (m_Width == 0) || (m_Width == 0) )
-        {
-            LOGW("Texture %s has invalid data. Loading failed.", filename);
-            FreeImage_Unload(dibConverted);
-            return;
-        }
-
-        // Release old
-        if ( m_Graphic )
-        {
-            renderManager()->freeGraphic( m_Graphic );
-            m_Graphic = nullptr;
-        }
-
-        m_Graphic = renderManager()->createGraphic<Texture2D>();
-        graphicUpdated = m_Graphic->updateImage( m_Width, m_Height, bits, m_Width*m_Height*bpp, imgFormat );
-        FreeImage_Unload(dibConverted);
-
-    #endif
-
-        if ( graphicUpdated )
-        {
-            m_LoadSuccesful = true;
-        }
+        m_Width = width;
+        m_Height = height;
+        m_Format = format;
+        m_Graphic = resource;
     }
 
-    void Texture2D::onDoneOrCancelled(class Job* j)
+    void Texture2D::load(const ResourceToLoad& rtl)
     {
-        j->waitAndFree();
-        m_LoadDone = true;
+        textureImporter()->load( rtl );
     }
 
 }

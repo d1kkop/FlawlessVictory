@@ -6,7 +6,11 @@ namespace fv
 {
     FV_TYPE_IMPL(GraphicResourceVK)
 
-    FV_TS bool GraphicResourceVK::updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format)
+    void GraphicResourceVK::freeResource()
+    {
+    }
+
+    bool GraphicResourceVK::updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format)
     {
         if ((width==0||height==0||data==nullptr||size==0))
         {
@@ -17,13 +21,13 @@ namespace fv
         return true;
     }
 
-    FV_TS bool GraphicResourceVK::updateBuffer(const byte* data, u32 size, BufferFormat format)
+    bool GraphicResourceVK::updateBuffer(const byte* data, u32 size, BufferFormat format)
     {
 
         return false;
     }
 
-    FV_TS bool GraphicResourceVK::updateShaderCode(Vector<char>& code)
+    bool GraphicResourceVK::updateShaderCode(Vector<char>& code)
     {
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

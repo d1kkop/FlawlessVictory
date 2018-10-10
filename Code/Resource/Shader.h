@@ -11,8 +11,7 @@ namespace fv
         FV_DLL ~Shader() override;
 
     private:
-        FV_DLL void load(const Path& path) override;
-        FV_DLL void onDoneOrCancelled(class Job* j) override;
+        FV_DLL void load(const ResourceToLoad& rtl) override;
 
         class GraphicResource* m_Graphic;
 

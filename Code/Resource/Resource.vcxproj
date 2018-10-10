@@ -70,6 +70,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Resources.h" />
+    <ClCompile Include="Patch.cpp" />
+    <ClCompile Include="PatchManager.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -77,8 +79,11 @@
     <ClCompile Include="ShaderCompilerGLSL2SpirVBin.cpp" />
     <ClCompile Include="ShaderCompilerGLSL2SpirVLib.cpp" />
     <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="TextureImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Patch.h" />
+    <ClInclude Include="PatchManager.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Shader.h" />
@@ -86,6 +91,7 @@
     <ClInclude Include="ShaderCompilerGLSL2SpirVBin.h" />
     <ClInclude Include="ShaderCompilerGLSL2SpirVLib.h" />
     <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="TextureImporter.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

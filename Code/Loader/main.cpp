@@ -3,9 +3,12 @@
 #include "../Core/JobManager.h"
 #include "../Core/InputManager.h"
 #include "../Core/Functions.h"
+#include "../Core/ComponentManager2.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/ResourceManager.h"
 #include "../Resource/ShaderCompiler.h"
+#include "../Resource/TextureImporter.h"
+#include "../Resource/PatchManager.h"
 #include "../Scene/GameObject.h"
 #include "../System/SystemManager.h"
 using namespace fv;
@@ -14,13 +17,17 @@ using namespace fv;
 
 void shutdown()
 {
-    deleteJobManager();
-    deleteInputManager();
-    deleteGameObjectManager();
-    deleteSystemManager();
     deleteResourceManager();
     deleteRenderManager();
+    deleteJobManager();
+    deleteInputManager();
+    deleteComponentManager();
+    deleteComponentManager2();
+    deleteGameObjectManager();
+    deleteSystemManager();
     deleteShaderCompiler();
+    deleteTextureImporter();
+    deletePatchManager();
     deleteTypeManager();
     deleteLogManager();
 }

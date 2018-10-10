@@ -7,7 +7,7 @@
 #include "../Core/JobManager.h"
 #include "../Scene/GameComponent.h"
 #include "../Render/RenderManager.h"
-#include "../Resource/ResourceManager.h"
+#include "../Resource/PatchManager.h"
 
 namespace fv
 {
@@ -59,6 +59,9 @@ namespace fv
 
         while ( !m_Done )
         {
+            // Apply patches from background processing onto main thread.
+            patchManager()->applyPatches();
+
             if (!inputManager()->update())
                 break;
 
@@ -94,9 +97,6 @@ namespace fv
                 }
             });
 
-            // TODO : perhaps change for apply changes from async update in bg
-            // Each frame, process resources after begin so that all resources started with a load in 'begin' are loaded before the first update call.
-            resourceManager()->processResources();
 
             // Check to see if can update network
             if ( Time::elapsed() - lastNetworkUpdate )

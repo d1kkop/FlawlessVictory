@@ -16,35 +16,29 @@ namespace fv
         renderManager()->freeGraphic(m_Graphic);
     }
 
-    void Shader::load(const Path& path)
+    void Shader::load(const ResourceToLoad& rtl)
     {
         Vector<char> code;
 
         // Check if compiled file is already there
-        Path binPath = shaderCompiler()->replaceWithBinaryExtension( Directories::intermediateShaders() / path.filename() );
+        Path binPath = shaderCompiler()->replaceWithBinaryExtension( Directories::intermediateShaders() / rtl.loadPath.filename() );
         if ( !LoadBinaryFile(binPath.string().c_str(), code))
         {
             // Compile from glsl
-            if ( !shaderCompiler()->compileShader(path, code) )
+            if ( !shaderCompiler()->compileShader(rtl.loadPath, code) )
             {
-                LOGW("Failed to load shader %s.", path.string().c_str());
+                LOGW("Failed to load shader %s.", rtl.loadPath.string().c_str());
             }
         }
 
         if ( !code.empty() )
         {
-            m_Graphic = renderManager()->createGraphic<Shader>();
-            if ( m_Graphic->updateShaderCode(code) )
-            {
-                m_LoadSuccesful = true;
-            }
+            //m_Graphic = renderManager()->createGraphic<Shader>();
+            //if ( m_Graphic->updateShaderCode(code) )
+            //{
+            //    m_LoadSuccesful = true;
+            //}
         }
-    }
-
-    void Shader::onDoneOrCancelled(class Job* j)
-    {
-        j->waitAndFree();
-        m_LoadDone = true;
     }
 
 }

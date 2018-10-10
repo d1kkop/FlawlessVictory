@@ -12,6 +12,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Patches">
+      <UniqueIdentifier>{08c76a1d-9160-493b-ac4a-812d86d707d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ResourceManager.cpp">
@@ -20,9 +23,6 @@
     <ClCompile Include="..\Resources.h" />
     <ClCompile Include="ShaderCompiler.cpp">
       <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderCompilerGLSL2SpirV.cpp">
-      <Filter>3rdParty</Filter>
     </ClCompile>
     <ClCompile Include="Texture2D.cpp">
       <Filter>Resources</Filter>
@@ -39,6 +39,15 @@
     <ClCompile Include="ShaderCompilerGLSL2SpirVLib.cpp">
       <Filter>3rdParty</Filter>
     </ClCompile>
+    <ClCompile Include="PatchManager.cpp">
+      <Filter>Patches</Filter>
+    </ClCompile>
+    <ClCompile Include="Patch.cpp">
+      <Filter>Patches</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureImporter.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ResourceManager.h">
@@ -46,9 +55,6 @@
     </ClInclude>
     <ClInclude Include="ShaderCompiler.h">
       <Filter>Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderCompilerGLSL2SpirV.h">
-      <Filter>3rdParty</Filter>
     </ClInclude>
     <ClInclude Include="Texture2D.h">
       <Filter>Resources</Filter>
@@ -64,6 +70,15 @@
     </ClInclude>
     <ClInclude Include="ShaderCompilerGLSL2SpirVLib.h">
       <Filter>3rdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="Patch.h">
+      <Filter>Patches</Filter>
+    </ClInclude>
+    <ClInclude Include="PatchManager.h">
+      <Filter>Patches</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureImporter.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

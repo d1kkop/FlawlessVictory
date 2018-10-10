@@ -8,13 +8,19 @@
 
 namespace fv
 {
+
+    ComponentManager::ComponentManager(u32 componentBufferSize):
+        m_ComponentBufferSize(componentBufferSize)
+    {
+    }
+
     ComponentManager::~ComponentManager()
     {
         for ( auto& kvp : m_Components ) 
         {
             Vector<ComponentArray>& objs = kvp.second;
             for ( auto& ar : objs )
-                if ( ComponentBufferSize != 1 )
+                if ( m_ComponentBufferSize != 1 )
                     delete [] ar.elements;
                 else
                     delete ar.elements;
@@ -34,15 +40,15 @@ namespace fv
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
-            Component* newComps = sc<Component*>(typeManager()->createTypes( *ti, ComponentBufferSize )); // Allocates contiguous array
+            Component* newComps = sc<Component*>(typeManager()->createTypes( *ti, m_ComponentBufferSize )); // Allocates contiguous array
             assert( newComps && freeComps.size() == 0 );
-            for ( u32 i=0; i<ComponentBufferSize; ++i )
+            for ( u32 i=0; i<m_ComponentBufferSize; ++i )
             {
                 Component* c = (Component*)( (char*)newComps + i*ti->size );
                 freeComps.insert( c );
             }
             auto& comps = m_Components[type];
-            ComponentArray ca = { newComps, ComponentBufferSize, ti->size };
+            ComponentArray ca = { newComps, m_ComponentBufferSize, ti->size };
             comps.emplace_back( ca ); 
         }
         Component* c = *freeComps.begin();

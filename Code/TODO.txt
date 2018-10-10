@@ -1,3 +1,4 @@
 
  - Check FV_ST if this is a working solution
  - CreateGraphic Resource is not thread safe
+ - Load configs from file.

@@ -4,19 +4,14 @@
 
 namespace fv
 {
+    struct ResourceToLoad;
+
     class Resource: public Type
     {
     public:
         virtual ~Resource() = default;
 
-        // Called from different thread.
-        virtual void load(const Path& path) { };
-        virtual void onDoneOrCancelled(class Job* loadJob) { };
-
-        bool loadDone() const { return m_LoadDone; }
-
-    protected:
-        Atomic<bool> m_LoadDone = false;
-        Atomic<bool> m_LoadSuccesful = false;
+        // Called from different reseource load thread.
+        virtual void load(const ResourceToLoad& path) { };
     };
 }

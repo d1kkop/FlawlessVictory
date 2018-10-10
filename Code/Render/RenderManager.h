@@ -6,7 +6,7 @@ namespace fv
 {
     class GraphicResource;
 
-    struct RenderSetup
+    struct RenderConfig
     {
         bool createMainWindow;
         bool creatSecondaryWindow;
@@ -25,7 +25,7 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
         FV_TS virtual GraphicResource* createGraphic(u32 resourceType, u32 deviceIdx=0) = 0;
-        FV_TS virtual void freeGraphic(GraphicResource* graphic) = 0;
+        FV_TS virtual void freeGraphic(GraphicResource* graphic, bool async=false) = 0;
 
         template <class T> 
         FV_TS GraphicResource* createGraphic(u32 deviceIdx=0);

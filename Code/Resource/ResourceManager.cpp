@@ -27,6 +27,22 @@ namespace fv
                      filename.string().c_str(), dir.string().c_str(), m_FilenameToDirectory[ filename ].string().c_str() );
             }
         }
+
+        readResourceConfig( m_Config );
+
+        m_ResourceThread = Thread( [this]()
+        {
+            loadThread();
+        });
+    }
+
+    ResourceManager::~ResourceManager()
+    {
+        m_Closing = true;
+        if ( m_ResourceThread.joinable() )
+        {
+            m_ResourceThread.join();
+        }
     }
 
     M<Resource> ResourceManager::load(u32 type, const String& name)
@@ -53,8 +69,14 @@ namespace fv
         m_NameToResource[name] = resource;
         // Add to list of pending resources to be loaded
         ResourceToLoad rtl = { resource, fIt->second / name };
-        m_PendingResourcesToLoad[ m_PendingListToFill ].emplace_back( rtl );
+        m_PendingResourcesToLoad[ m_ListToFill ].emplace_back( rtl );
         return resource;
+    }
+
+    void ResourceManager::readResourceConfig(ResourceConfig& config)
+    {
+        // TODO actually read from config
+        config.loadThreadSleepTimeMs = 10;
     }
 
     void ResourceManager::cleanupResourcesWithoutReferences()
@@ -71,20 +93,25 @@ namespace fv
         }
     }
 
-    void ResourceManager::processResources()
+    void ResourceManager::loadThread()
     {
-        FV_CHECK_MO();
-        // Do not keep lock entire time of loading resources. Copy the pending list instead. But because of 2 lists, only swap indices.
+        while ( !m_Closing )
         {
-            scoped_lock lk(m_LoadMutex);
-            assert( m_PendingResourcesToLoad[ m_PendingListToLoad ].size()==0 );
-            std::swap( m_PendingListToLoad, m_PendingListToFill );
+            // Swap list of pending resources with empty list.
+            {
+                scoped_lock lk(m_LoadMutex);
+                assert( m_PendingResourcesToLoad[ m_StuffedList ].size()==0 );
+                std::swap( m_StuffedList, m_ListToFill );
+            }
+            // Do not load in parallel as that could mix up the requested loading order. load as requested.
+            for ( auto& rsl : m_PendingResourcesToLoad[m_StuffedList] )
+            {
+                rsl.resource->load( rsl );
+            }
+            m_PendingResourcesToLoad[ m_StuffedList ].clear();
+            // Wait for next iteration
+            Suspend( m_Config.loadThreadSleepTimeMs*1000 );
         }
-        ParallelFor( m_PendingResourcesToLoad[ m_PendingListToLoad ], [](const ResourceToLoad& rsl)
-        {
-            rsl.resource->load( rsl.loadPath );
-        });
-        m_PendingResourcesToLoad[ m_PendingListToLoad ].clear();
     }
 
     ResourceManager* g_ResourceManager {};

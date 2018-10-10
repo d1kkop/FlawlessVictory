@@ -1,5 +1,6 @@
 #pragma once
 #include "Resource.h"
+#include "../Render/GraphicResource.h"
 
 namespace fv
 {
@@ -12,16 +13,16 @@ namespace fv
         FV_DLL u32 width() const { return m_Width; }
         FV_DLL u32 height() const { return m_Height; }
 
+        void applyPatch( u32 width, u32 height, ImageFormat format, GraphicResource* resource );
+
     private:
-        FV_DLL void load(const Path& path) override;
-        FV_DLL void onDoneOrCancelled(class Job* j) override;
+        FV_DLL void load(const ResourceToLoad& rtl) override;
 
         u32 m_Width  = 0;
         u32 m_Height = 0;
+        ImageFormat m_Format {};
 
         // Never return ptr to resource directly. Always work from managed resource.
         class GraphicResource* m_Graphic{};
-
-        friend class ResourceManager;
     };
 }

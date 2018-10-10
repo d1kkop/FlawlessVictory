@@ -35,7 +35,7 @@ namespace fv
     void Job::waitAndFree()
     {
         wait();
-        m_Jm->freeJob(this);
+        doFree();
     }
 
     bool Job::cancel()
@@ -61,6 +61,12 @@ namespace fv
             }
         }
         if  ( m_OnDoneOrCancelled ) m_OnDoneOrCancelled( this );
+        if ( m_AutoFree ) doFree();
+    }
+
+    void Job::doFree()
+    {
+        m_Jm->freeJob(this);
     }
 
     // ------------- JobManager ------------------------------------------------------------------------------------------------------
@@ -84,7 +90,21 @@ namespace fv
         }
     }
 
-    Job* JobManager::addJob(const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled)
+    JobManager::~JobManager()
+    {
+        {
+            scoped_lock lk(m_QueueMutex);
+            m_IsClosing = true;
+            m_NumThreadsSuspended = 0;
+            m_ThreadSuspendSignal.notify_all();
+        }
+        for ( auto& t : m_Threads )
+        {
+            if ( t.joinable() ) t.join();
+        }
+    }
+
+    Job* JobManager::addJob(const Function<void ()>& cb, bool autoFree, const Function<void (Job*)>& onDoneOrCancelled)
     {
         assert( cb );
 
@@ -100,6 +120,7 @@ namespace fv
         job->m_Cb = cb;
         job->m_OnDoneOrCancelled = onDoneOrCancelled;
         job->m_NumWaiters = 0;
+        job->m_AutoFree = autoFree;
 
     #if FV_USEJOBSYSTEM
         scoped_lock lk(m_QueueMutex);
@@ -107,7 +128,7 @@ namespace fv
         if ( m_NumThreadsSuspended > 0 )
         {
             m_NumThreadsSuspended--;
-            m_ThreadSuspendSignal.notify_all();
+            m_ThreadSuspendSignal.notify_one();
         }
     #else
         if ( cb ) cb();

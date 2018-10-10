@@ -32,6 +32,7 @@ namespace fv
 
     private:
         FV_TS void finishWith(JobState newState);
+        FV_TS void doFree();
 
         class JobManager* m_Jm;
         Function<void ()> m_Cb;
@@ -40,6 +41,7 @@ namespace fv
         Mutex m_StateMutex;
         CondVar m_StateSignal;
         u32 m_NumWaiters = 0;
+        bool m_AutoFree  = false;
 
         friend class JobManager;
         friend class ObjectManager<Job>;
@@ -49,7 +51,8 @@ namespace fv
     {
     public:
         FV_DLL JobManager();
-        FV_TS FV_DLL Job* addJob( const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
+        FV_DLL ~JobManager();
+        FV_TS FV_DLL Job* addJob( const Function<void ()>& cb, bool autoFree = false, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
         FV_TS FV_DLL u32 numThreads() const;
 
     private:

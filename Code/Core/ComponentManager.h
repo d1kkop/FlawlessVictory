@@ -8,11 +8,8 @@ namespace fv
     class ComponentManager
     {
     public:
-        static const u32 ComponentBufferSize = 128;
-
-    public:
-        ComponentManager() = default;
-        ~ComponentManager();
+        FV_DLL ComponentManager(u32 componentBufferSize=128);
+        FV_DLL ~ComponentManager();
 
         FV_MO FV_DLL Component* newComponent(u32 type);
         FV_MO FV_DLL void growComponents(u32 type);
@@ -32,6 +29,7 @@ namespace fv
         Map<u32, Vector<ComponentArray>> m_Components;
         Map<u32, Set<Component*>> m_FreeComponents;
         u32 m_NumComponents = 0;
+        u32 m_ComponentBufferSize = 128;
     };
 
 

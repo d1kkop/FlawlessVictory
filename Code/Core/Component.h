@@ -37,7 +37,7 @@ namespace fv
             {
                 do
                 {
-                    if ( ++m_Cur == ComponentManager::ComponentBufferSize )
+                    if ( ++m_Cur == m_ArrayLength )
                     {
                         if ( ++m_VecCur == (u32)m_Components->size() ) { m_Components=nullptr; return; }
                         else { m_Cur = 0; m_ElemArray = (*m_Components)[m_VecCur].elements; }
@@ -47,11 +47,21 @@ namespace fv
 
             const Vector<ComponentArray>* m_Components;
             Component* m_ElemArray;
+            u32 m_ArrayLength;
             u32 m_Cur = 0;
             u32 m_VecCur = 0;
         };
 
-        iterator<T> begin() { return iterator<T>{ m_Components.size()?&m_Components:nullptr, m_Components.size()?m_Components[0].elements:nullptr }; }
+        iterator<T> begin() 
+        { 
+            bool b = m_Components.size()!=0;
+            return iterator<T>
+            { 
+                b?&m_Components:nullptr, 
+                b?m_Components[0].elements:nullptr,
+                b?m_Components[0].size:0
+            };
+        }
         iterator<T>& end() { static iterator<T> et{}; return et; }
 
     private:
