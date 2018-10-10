@@ -9,7 +9,6 @@
 #if FV_VULKAN
 namespace fv
 {
-
     GraphicResourceVK::~GraphicResourceVK()
     {
         freeResource();
@@ -88,8 +87,10 @@ namespace fv
         createInfo.pCode = (const uint32_t*) code.data();
         if ( vkCreateShaderModule(m_Device, &createInfo, nullptr, &m_Shader) != VK_SUCCESS )
         {
-            throw std::runtime_error("failed to create shader module!");
+            LOGW("Failed to create shader module.");
+            return false;
         }
+
         return true;
     }
 

@@ -10,10 +10,10 @@ namespace fv
     public:
         ObjectManager(u32 objBufferSize=128, bool threadSafe=false);
         ~ObjectManager();
+        void purge();
 
         T* newObject();
         void freeObject(T* object);
-        void freeAll();
 
     private:
         void growObjects();
@@ -25,6 +25,7 @@ namespace fv
         RMutex m_ObjectsMutex;
     };
 
+
     template <class T>
     ObjectManager<T>::ObjectManager(u32 objBufferSize, bool threadSafe):
         m_ObjectBufferSize(objBufferSize),
@@ -35,11 +36,20 @@ namespace fv
     template <class T>
     ObjectManager<T>::~ObjectManager()
     {
+        purge();
+    }
+
+    template <class T>
+    void fv::ObjectManager<T>::purge()
+    {
         for ( auto& objArray : m_ObjectArrays )
+        {
             if ( m_ObjectBufferSize != 1 )
                 delete [] (T*)objArray.elements;
             else
                 delete (T*)objArray.elements;
+        }
+        m_ObjectArrays.clear();
     }
 
     template <class T>
@@ -105,31 +115,6 @@ namespace fv
         else
         {
             LOGW("Tried to free an object that was already freed. Call ignored.");
-        }
-    }
-
-    template <class T>
-    void ObjectManager<T>::freeAll()
-    {
-        if ( m_ThreadSafe )
-        {
-            m_ObjectsMutex.lock();
-        }
-        else
-        {
-            FV_CHECK_MO();
-        }
-        for ( auto& objArray : m_ObjectArrays )
-        {
-            for ( u32 i=0; i<objArray.size; ++i )
-            {
-                T* obj = (T*)objArray.elements + i*sizeof(T);
-                if ( !obj->m_Freed ) freeObject( obj );
-            }
-        }
-        if ( m_ThreadSafe )
-        {
-            m_ObjectsMutex.unlock();
         }
     }
 }

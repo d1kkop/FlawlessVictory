@@ -8,7 +8,8 @@ namespace fv
 {
     Patch::~Patch()
     {
-        // TODOD this should not be necessary?
+        // Graphic is only valid ptr if patch was not applied. Eg at end of application.
+        // RenderManager will also clean up this graphic if not cleaned from here.
         if ( graphic )
         {
             renderManager()->freeGraphic( graphic );
@@ -33,6 +34,7 @@ namespace fv
         FV_CHECK_MO();
         M<Texture2D> tex = std::static_pointer_cast<Texture2D>( resource );
         tex->applyPatch( width, height, imgFormat, graphic );
+        graphic = nullptr; // Ownership transfered.
     }
 
     FV_MO void Patch::applyShaderCode()
@@ -40,6 +42,7 @@ namespace fv
         FV_CHECK_MO();
         M<Shader> shader = std::static_pointer_cast<Shader>(resource);
         shader->applyPatch( graphic );
+        graphic = nullptr; // Ownership transfered.
     }
 
 }

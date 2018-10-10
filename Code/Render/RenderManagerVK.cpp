@@ -14,12 +14,11 @@ namespace fv
     RenderManagerVK::RenderManagerVK():
         m_Graphics(32, true)
     {
-
     }
 
     RenderManagerVK::~RenderManagerVK()
     {
-        m_Graphics.freeAll();
+        m_Graphics.purge(); // Ensures that graphic child resources are deleted before device is destroyed.
         closeGraphics();
     }
 
@@ -123,6 +122,14 @@ namespace fv
         if ( m_Instance && m_MainSwapChain.surface )
         {
             vkDestroySurfaceKHR( m_Instance, m_MainSwapChain.surface, nullptr);
+        }
+        for ( auto& dv : m_Devices )
+        {
+            if ( dv.logical )
+            {
+                vkDestroyDevice( dv.logical, nullptr );
+                dv.logical = nullptr;
+            }
         }
         if ( m_Instance )
         {
@@ -270,7 +277,9 @@ namespace fv
             storeDeviceProperties( dv );
             storeDeviceQueueFamilies( dv, surface );
 
-            if ( !(dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && dv.features.geometryShader) )
+            if ( !((dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+                   dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) &&
+                   dv.features.geometryShader) )
             {
                 continue; // Not suitable
             }
@@ -352,7 +361,11 @@ namespace fv
             return false;
         }
 
-        u32 imageCount = Clamp<u32>(p.imageCount, (u32)chainInfo.capabilities.minImageCount, chainInfo.capabilities.maxImageCount);
+        u32 imageCount = Max<u32>( p.imageCount, chainInfo.capabilities.minImageCount );
+        if ( chainInfo.capabilities.maxImageCount != 0 ) // Only clamp to max if specified. Some GPU's do not specify.
+        {
+            imageCount = Min<u32>( imageCount, chainInfo.capabilities.maxImageCount );
+        }
         u32 imageArrayLayers = Clamp<u32>(p.imageArrayLayerCount, 1U, (u32)chainInfo.capabilities.maxImageArrayLayers);
 
         VkSwapchainCreateInfoKHR createInfo = {};

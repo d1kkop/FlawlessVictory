@@ -27,6 +27,7 @@
     #define FV_VULKAN  1
     #define FV_GLSL2SPIRVLIB 0
     #define FV_GLSL2SPIRVBIN 1
+    #define FV_VLD 0
 #endif
 
 // Compiler mappings
@@ -61,4 +62,9 @@
 #if _MSC_VER
 #pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
 #endif
+#endif
+
+#if FV_VLD
+#include "../3rdParty/Visual Leak Detector/include/vld.h"
+#pragma comment(lib, "../3rdParty/Visual Leak Detector/lib/Win64/vld.lib")
 #endif
