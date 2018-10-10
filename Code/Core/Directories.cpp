@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "Directories.h"
+namespace fs = std::experimental::filesystem;
 
 namespace fv
 {
@@ -36,6 +37,14 @@ namespace fv
         g_Intermediate = prefix / g_Intermediate;
         g_IntermediateShaders = prefix / g_IntermediateShaders;
     #endif
+
+        fs::create_directory( g_Bin );
+        fs::create_directory( g_Assets );
+        fs::create_directory( g_Build );
+        fs::create_directory( g_Log );
+        fs::create_directory( g_Intermediate );
+        fs::create_directory( g_IntermediateShaders );
+
         return 1;
     }
 
