@@ -1,4 +1,0 @@
-main line: 29 --- New Session ---
-main line: 30 --- Fri Oct  5 13:42:28 2018 ---
-main line: 31 -------------------
- WARNING: fv::ResourceManager::ResourceManager line: 27 Multiple resource with the name h found. In . and .. All must have unique name.

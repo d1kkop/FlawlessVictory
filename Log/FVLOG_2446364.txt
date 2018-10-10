@@ -1,7 +1,0 @@
--> --- New Session ---
--> --- Mon Oct  8 10:58:10 2018 ---
--> -------------------
--> WARNING: Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name. In: fv::ResourceManager::ResourceManager line: 27
--> WARNING: VK Cannot find requested extension VK_KHR_swapchain. In: fv::RenderManagerVK::checkRequiredExtensions line: 72
--> WARNING: VK Cannot find requested layer VK_LAYER_LUNARG_standard_validation. In: fv::RenderManagerVK::checkRequiredLayers line: 104
--> ERROR VK Create instance failed. In: fv::RenderManagerVK::createIntance line: 132

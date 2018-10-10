@@ -1,6 +1,0 @@
--> --- New Session ---
--> --- Tue Oct  9 13:33:53 2018 ---
--> -------------------
--> WARNING: Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name. In: fv::ResourceManager::ResourceManager line: 27
--> VK Initialized succesful.
--> WARNING: Entry function not found in D:\_Programming\2018\FlawlessVictory\Code\Loader\..\..\Build\Debug\GameTest. In: fv::SystemManager::initialize line: 31

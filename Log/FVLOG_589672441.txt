@@ -1,4 +1,0 @@
-main line: 30 --- New Session ---
-main line: 31 --- Sun Oct  7 13:20:44 2018 ---
-main line: 32 -------------------
- WARNING: fv::ResourceManager::ResourceManager line: 27 Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name.

@@ -1,6 +1,0 @@
--> --- New Session ---
--> --- Tue Oct  9 13:12:58 2018 ---
--> -------------------
--> WARNING: Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name. In: fv::ResourceManager::ResourceManager line: 27
--> ERROR VK Cannot find requested VK_LAYER_LUNARG_standard_validation. In: fv::RenderManagerVK::validateNameList line: 470
--> ERROR VK Required instance layers not available. In: fv::RenderManagerVK::initGraphics line: 39

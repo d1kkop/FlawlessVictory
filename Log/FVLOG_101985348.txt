@@ -1,5 +1,0 @@
--> --- New Session ---
--> --- Tue Oct  9 14:37:06 2018 ---
--> -------------------
--> WARNING: Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name. In: fv::ResourceManager::ResourceManager line: 27
--> VK Initialized succesful.

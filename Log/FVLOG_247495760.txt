@@ -1,3 +1,0 @@
-main line: 21 --- New Session ---
-main line: 22 --- Wed Oct  3 14:17:57 2018 ---
-main line: 23 -------------------

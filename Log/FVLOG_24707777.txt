@@ -1,5 +1,0 @@
--> --- New Session ---
--> --- Mon Oct  8 17:09:11 2018 ---
--> -------------------
--> WARNING: Multiple resource with the name 'horse.jpg' found. In '..\..\Assets\Textures\MoreTextures' and '..\..\Assets\Textures'. All must have unique name. In: fv::ResourceManager::ResourceManager line: 27
--> WARNING: SDL_VK Failed to create vulkan window surface for window First Window. In: fv::RenderManagerVK::createSurface line: 258
