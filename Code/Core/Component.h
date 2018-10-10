@@ -2,10 +2,11 @@
 #include "PCH.h"
 #include "Common.h"
 #include "Object.h"
+#include "Reflection.h"
 
 namespace fv
 {
-    class Component: public Object
+    class Component: public Object, public Type
     {
     public:
         virtual ~Component() = default;

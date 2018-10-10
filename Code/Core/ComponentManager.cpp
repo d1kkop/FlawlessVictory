@@ -33,7 +33,7 @@ namespace fv
         const TypeInfo* ti = typeManager()->typeInfo(type);
         if (!ti) 
         {
-            LOGC("Invalid type %d, component NOT created.", type);
+            LOGW("Invalid type %d, component NOT created.", type);
             return nullptr;
         }
         assert( ti->hash == type );

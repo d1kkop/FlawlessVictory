@@ -63,6 +63,7 @@ namespace fv
     class RenderManagerVK : public RenderManager
     {
     public:
+        RenderManagerVK();
         ~RenderManagerVK() override;
         bool initGraphics() override;
         void closeGraphics() override;
@@ -108,7 +109,6 @@ namespace fv
         void* m_MainWindow{};
         void* m_SecondaryWindow{};
 
-        Mutex m_GraphicsMutex;
         ObjectManager<GraphicResourceVK> m_Graphics;
     };
 }

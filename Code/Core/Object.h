@@ -1,13 +1,12 @@
 #pragma once
 #include "PCH.h"
 #include "Common.h"
-#include "Reflection.h"
 
 namespace fv
 {
     // ------------ Object ----------------------------------------------------------------------------------------
 
-    class Object: public Type
+    class Object
     {
     public:
         bool inUse() const { return m_Active; }

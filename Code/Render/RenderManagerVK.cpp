@@ -10,6 +10,13 @@
 
 namespace fv
 {
+
+    RenderManagerVK::RenderManagerVK():
+        m_Graphics(32, true)
+    {
+
+    }
+
     RenderManagerVK::~RenderManagerVK()
     {
         closeGraphics();
@@ -129,8 +136,7 @@ namespace fv
 
     GraphicResource* RenderManagerVK::createGraphic(u32 resourceType, u32 deviceIdx)
     {
-        scoped_lock lk(m_GraphicsMutex);
-        GraphicResourceVK* gr = m_Graphics.newObject();
+        GraphicResourceVK* gr = m_Graphics.newObject(); // Is thread safe
         RenderManager::setResourceType( gr, resourceType );
         assert( m_Devices[deviceIdx].logical );
         gr->m_Device = m_Devices[deviceIdx].logical;
@@ -142,14 +148,12 @@ namespace fv
         if (!resource) return;
         if ( !async )
         {
-            scoped_lock lk(m_GraphicsMutex);
             m_Graphics.freeObject( sc<GraphicResourceVK*>(resource) );
         }
         else
         {
             jobManager()->addJob( [=]()
             {
-                scoped_lock lk(m_GraphicsMutex);
                 m_Graphics.freeObject(sc<GraphicResourceVK*>(resource));
             }, true /*auto free job*/);
         }

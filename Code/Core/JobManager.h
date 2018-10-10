@@ -63,7 +63,6 @@ namespace fv
         FV_TS void popAndProcessJob(std::unique_lock<Mutex>& lk);
 
         bool m_IsClosing = false;
-        Mutex m_ObjectManagerMutex;
         Mutex m_QueueMutex;
         Deck<Job*> m_GlobalQueue;
         Vector<Thread> m_Threads;

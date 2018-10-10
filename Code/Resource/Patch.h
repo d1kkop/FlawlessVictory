@@ -7,7 +7,7 @@ namespace fv
 {
     class Resource;
 
-    enum PatchType
+    enum class PatchType
     {
         Texture2DLoad
     };
@@ -32,6 +32,6 @@ namespace fv
         };
 
     private:
-        void applyTexture2DLoad();
+        FV_MO void applyTexture2DLoad();
     };
 }

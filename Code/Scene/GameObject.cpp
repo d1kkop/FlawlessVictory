@@ -23,8 +23,11 @@ namespace fv
             return c;
         }
         c = sc<GameComponent*>(componentManager()->newComponent( type ));
-        m_Components[type] = c;
-        c->m_GameObject = this;
+        if ( c )
+        { // Is null if type no longer exists
+            m_Components[type] = c;
+            c->m_GameObject = this;
+        }
         return c;
     }
 

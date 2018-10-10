@@ -8,12 +8,11 @@ namespace fv
     class ObjectManager
     {
     public:
-        ObjectManager(u32 objBufferSize=128);
+        ObjectManager(u32 objBufferSize=128, bool threadSafe=false);
         ~ObjectManager();
 
-        FV_MO T* newObject();
-        FV_MO void freeObject(T* object);
-        FV_MO u32 numObjects() const;
+        T* newObject();
+        void freeObject(T* object);
 
     private:
         void growObjects();
@@ -21,12 +20,15 @@ namespace fv
         Vector<ObjectArray> m_Objects;
         Set<T*> m_FreeObjects;
         u32 m_NumObjects = 0;
+        bool m_ThreadSafe = false;
+        Mutex m_ObjectsMutex;
     };
 
 
     template <class T>
-    ObjectManager<T>::ObjectManager(u32 objBufferSize):
-        m_ObjectBufferSize(objBufferSize)
+    ObjectManager<T>::ObjectManager(u32 objBufferSize, bool threadSafe):
+        m_ObjectBufferSize(objBufferSize),
+        m_ThreadSafe(threadSafe)
     {
     }
 
@@ -40,7 +42,16 @@ namespace fv
     template <class T>
     T* ObjectManager<T>::newObject()
     {
-        FV_CHECK_MO();
+        if ( m_ThreadSafe )
+        {
+            m_ObjectsMutex.lock();
+        }
+    #if FV_DEBUG
+        else
+        {
+             FV_CHECK_MO(); 
+        }
+    #endif
         if ( m_FreeObjects.empty() )
         {
             T* objs = new T[m_ObjectBufferSize];
@@ -53,6 +64,10 @@ namespace fv
         }
         T* o = *m_FreeObjects.begin();
         m_FreeObjects.erase(m_FreeObjects.begin());
+        if ( m_ThreadSafe )
+        {
+            m_ObjectsMutex.unlock();
+        }
         u32 oldVersion = o->m_Version;
         if ( o->m_Freed ) new (o)T; // Only call if object was recycled.
         o->m_Active = true;
@@ -64,22 +79,30 @@ namespace fv
     template <class T>
     void ObjectManager<T>::freeObject(T* object)
     {
-        FV_CHECK_MO();
+        if (!object) return;
         if ( !object->m_Freed && object->m_Active ) // Allow multiple calls to freeObject
         {
             // assert( !object->m_Freed && object->m_Active );
-            assert( m_FreeObjects.count(object) == 0 );
             object->m_Freed  = true; // Do not remove from objectList to avoid fragmentation.
             object->m_Active = false;
+            if ( m_ThreadSafe )
+            {
+                m_ObjectsMutex.lock();
+            }
+        #if FV_DEBUG
+            else
+            {
+                FV_CHECK_MO();
+            }
+        #endif
+            assert( m_FreeObjects.count(object) == 0 );
             m_FreeObjects.insert(object);
             m_NumObjects--;
+            if ( m_ThreadSafe )
+            {
+                m_ObjectsMutex.unlock();
+            }
         }
-    }
-
-    template <class T>
-    u32 ObjectManager<T>::numObjects() const
-    {
-        return m_NumObjects;
     }
 
 }

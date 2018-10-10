@@ -5,13 +5,13 @@
 
 namespace fv
 {
-    PatchManager::PatchManager()
+    PatchManager::PatchManager():
+        m_PatchPool(16, true)
     {
     }
 
     Patch* PatchManager::createPatch(PatchType type)
     {
-        scoped_lock lk(m_PatchPoolMutex);
         Patch* p = m_PatchPool.newObject();
         p->patchType = type;
         return p;
@@ -21,7 +21,6 @@ namespace fv
     {
         assert(p);
         if ( !p ) return;
-        scoped_lock lk(m_PatchPoolMutex);
         m_PatchPool.freeObject(p);
     }
 

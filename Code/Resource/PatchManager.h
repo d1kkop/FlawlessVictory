@@ -10,7 +10,6 @@ namespace fv
     {
     public:
         PatchManager();
-
         FV_TS Patch* createPatch(PatchType patchType);
         FV_TS void freePatch(Patch* p);
 
@@ -18,7 +17,6 @@ namespace fv
         FV_MO FV_DLL void applyPatches();
 
     private:
-        Mutex m_PatchPoolMutex;
         Mutex m_PatchSubmitMutex;
         Vector<Patch*> m_PatchSubmitList;
         ObjectManager<Patch> m_PatchPool;

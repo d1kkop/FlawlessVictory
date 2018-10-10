@@ -71,7 +71,8 @@ namespace fv
 
     // ------------- JobManager ------------------------------------------------------------------------------------------------------
 
-    JobManager::JobManager()
+    JobManager::JobManager():
+        ObjectManager<Job>(16, true)
     {
         u32 numThreads = std::thread::hardware_concurrency();
         m_Threads.resize( numThreads );
@@ -108,12 +109,8 @@ namespace fv
     {
         assert( cb );
 
-        // ObjectManager is not thread safe
-        Job* job;
-        {
-            scoped_lock lk(m_ObjectManagerMutex);
-            job = newObject();
-        }
+        // ObjectManager IS thread safe created
+        Job* job = newObject();
         
         job->m_Jm = this;
         job->m_State = JobState::Scheduled;
@@ -150,11 +147,8 @@ namespace fv
         job->wait();
         job->m_Cb = nullptr; // Set these to null to ensure shared embedded resources are unreffed.
         job->m_OnDoneOrCancelled = nullptr; 
-        // ObjectManager is not thread safe
-        {
-            scoped_lock lk(m_ObjectManagerMutex);
-            freeObject(job);
-        }
+        // ObjectManager is thread safe created
+        freeObject(job);
     }
 
     bool JobManager::cancelJob(Job* job)
