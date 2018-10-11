@@ -178,6 +178,18 @@ namespace fv
             swapChain.imgViews.emplace_back(imgView);
         }
 
+        // For each image, there is a framebuffer and ascociated img views.
+        for ( auto& img : swapChain.images )
+        {
+            VkFramebuffer frameBuffer;
+            if ( !createFramebuffer(p.device->logical, swapChain.extend, p.renderPass, swapChain.imgViews, frameBuffer) )
+            {
+                LOGC("VK Cannot create all frame buffers for swap chain. Render setup failed.");
+                return false;
+            }
+            swapChain.frameBuffers.emplace_back(frameBuffer);
+        }
+
         swapChain.surface = p.surface;
         swapChain.device = p.device;
 
@@ -398,6 +410,26 @@ namespace fv
             return false;
         }
 
+        return true;
+    }
+
+    bool HelperVK::createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, 
+                                     const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer)
+    {
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.attachmentCount = (u32)attachments.size();
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width  = size.width;
+        framebufferInfo.height = size.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS) 
+        {
+            LOGW("VK Failed to create framebuffer.");
+            return false;
+        }
         return true;
     }
 

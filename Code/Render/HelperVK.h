@@ -52,6 +52,7 @@ namespace fv
         VkSwapchainKHR oldSwapChain;
         Vector<VkImage> images;
         Vector<VkImageView> imgViews;
+        Vector<VkFramebuffer> frameBuffers;
     };
 
     struct SwapChainParamsVK
@@ -61,6 +62,7 @@ namespace fv
         u32 width, height;
         u32 imageCount;
         u32 imageArrayLayerCount;
+        VkRenderPass renderPass;
     };
 
     using DebugCallbackVK = VKAPI_ATTR VkBool32 (VKAPI_CALL*)
@@ -83,6 +85,7 @@ namespace fv
         static bool createRenderPass(VkDevice device, VkFormat format, VkRenderPass& renderPass);
         static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass,
                                    VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
+        static bool createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer);
 
         // Checks and validation.
         static void queryRequiredWindowsExtensions(void* pWindow, Vector<const char*>& listToFill);

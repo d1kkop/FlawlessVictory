@@ -86,38 +86,6 @@ namespace fv
         if ( !createDevices(m_MainSwapChain.surface) )
             return false;
 
-        VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
-        if ( m_MainWindow )
-        {
-            // Find device that can present 
-            bool bSwapChainCreated = false;
-            for ( auto& dv : m_Devices )
-            {
-                SwapChainParamsVK scParams {};
-                scParams.device = &dv;
-                scParams.surface = m_MainSwapChain.surface;
-                scParams.width  = rs.mainWindowWidth;
-                scParams.height = rs.mainWindowHeight;
-                scParams.imageArrayLayerCount = 1; // 2 in case of stereo 
-                scParams.imageCount = 3; // Try triple buffering
-
-                if ( !HelperVK::createSwapChain(scParams, m_MainSwapChain) )
-                {
-                    return false;
-                }
-                bSwapChainCreated = true;
-                format = m_MainSwapChain.surfaceFormat.format;
-                m_MainSwapChain.device = &dv;
-                break; // Only pick a single device for mainWindow
-            }
-
-            if ( !bSwapChainCreated )
-            {
-                LOGC("VK Failed to create swap chain. No device found that supports it.");
-                return false;
-            }
-        }
-
         // Create pipelines
         for ( auto& dv : m_Devices )
         {
@@ -141,6 +109,40 @@ namespace fv
             }
         }
 
+        // See if want swap chain
+        VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+        if ( m_MainWindow )
+        {
+            // Find device that can present 
+            bool bSwapChainCreated = false;
+            for ( auto& dv : m_Devices )
+            {
+                SwapChainParamsVK scParams {};
+                scParams.device = &dv;
+                scParams.surface = m_MainSwapChain.surface;
+                scParams.width  = rs.mainWindowWidth;
+                scParams.height = rs.mainWindowHeight;
+                scParams.imageArrayLayerCount = 1; // 2 in case of stereo 
+                scParams.imageCount = 3; // Try triple buffering
+                scParams.renderPass = dv.clearPass;
+
+                if ( !HelperVK::createSwapChain(scParams, m_MainSwapChain) )
+                {
+                    return false;
+                }
+                bSwapChainCreated = true;
+                format = m_MainSwapChain.surfaceFormat.format;
+                m_MainSwapChain.device = &dv;
+                break; // Only pick a single device for mainWindow
+            }
+
+            if ( !bSwapChainCreated )
+            {
+                LOGC("VK Failed to create swap chain. No device found that supports it.");
+                return false;
+            }
+        }
+
         LOG("VK Initialized succesful.");
         return true;
     }
@@ -155,9 +157,16 @@ namespace fv
         }
         for ( auto& imgView : m_MainSwapChain.imgViews )
         {
-            if ( imgView && m_MainSwapChain.device->logical )
+            if ( imgView && m_MainSwapChain.device && m_MainSwapChain.device->logical )
             {
                 vkDestroyImageView( m_MainSwapChain.device->logical, imgView, nullptr );
+            }
+        }
+        for ( auto& frameBuffer : m_MainSwapChain.frameBuffers )
+        {
+            if ( frameBuffer && m_MainSwapChain.device && m_MainSwapChain.device->logical )
+            {
+                vkDestroyFramebuffer( m_MainSwapChain.device->logical, frameBuffer, nullptr );
             }
         }
         if ( m_MainSwapChain.device && m_MainSwapChain.device->logical && m_MainSwapChain.swapChain )
@@ -172,6 +181,9 @@ namespace fv
         {
             if ( dv.logical )
             {
+                if ( dv.standardFrag ) vkDestroyShaderModule( dv.logical, dv.standardFrag, nullptr );
+                if ( dv.standardVert ) vkDestroyShaderModule( dv.logical, dv.standardVert, nullptr );
+                if ( dv.clearPass ) vkDestroyRenderPass( dv.logical, dv.clearPass, nullptr );
                 if ( dv.opaquePipelineLayout ) vkDestroyPipelineLayout( dv.logical, dv.opaquePipelineLayout, nullptr );
                 if ( dv.opaquePipeline) vkDestroyPipeline( dv.logical, dv.opaquePipeline, nullptr );
                 vkDestroyDevice( dv.logical, nullptr );
@@ -214,7 +226,7 @@ namespace fv
     void RenderManagerVK::readRenderConfig(RenderConfig& rs)
     {
         // TODO read from config
-        rs.createMainWindow = false;
+        rs.createMainWindow = true;
         rs.mainWindowWidth = 1600;
         rs.mainWindowHeight = 900;
         rs.mainWindowName = "Main Window";
