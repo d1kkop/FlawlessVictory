@@ -67,7 +67,7 @@ namespace fv
         if ( !m_LogToFile ) return;
 
         // (Re)open file
-        ofstream file( m_Filename.c_str() );
+        ofstream file( m_Filename.c_str(), ios::app );
         if ( file.is_open() )
         {
             try

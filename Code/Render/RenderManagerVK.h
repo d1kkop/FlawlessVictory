@@ -31,7 +31,7 @@ namespace fv
     private:
         void readRenderConfig(RenderConfig& renderSetup);
         bool createDevices(VkSurfaceKHR mainSurface);
-        bool createStandardShaders();
+        bool createStandardShaders(DeviceVK& device);
 
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};

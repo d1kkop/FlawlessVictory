@@ -507,6 +507,7 @@ namespace fv
         }
     }
 
+    // TODO these two store functions must be rearranged and not store direclty in DeviceVK.
     void HelperVK::storeDevicePropertiesAndFeatures(DeviceVK& device)
     {
         assert(device.physical);

@@ -4,6 +4,7 @@
 #include "GraphicResourceVK.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
+#include "../Core/Directories.h"
 #include "../Core/OSLayer.h"
 #include "../Core/JobManager.h"
 
@@ -50,6 +51,7 @@ namespace fv
             LOGC("VK Required instance extensions not available.");
             return false;
         }
+
         if (!HelperVK::checkRequiredLayers(m_RequiredInstanceLayers))
         {
             LOGC("VK Required instance layers not available.");
@@ -63,7 +65,7 @@ namespace fv
         }
 
     #if FV_DEBUG
-        if ( !HelperVK::createDebugCallback( m_Instance, false, true, debugCallback, m_DebugCallback ) )
+        if ( !HelperVK::createDebugCallback( m_Instance, false, false, debugCallback, m_DebugCallback ) )
         {
             LOGC("VK Failed to create debug callback.");
             return false;
@@ -114,14 +116,17 @@ namespace fv
             }
         }
 
-        // Standard default shaders necessary to set up a pipeline
-        createStandardShaders();
-
         // Create pipelines
         for ( auto& dv : m_Devices )
         {
+            // Standard default shaders necessary to set up a pipeline
+            if ( !createStandardShaders( dv ) )
+            {
+                return false;
+            }
+
             VkExtent2D vpSize = { rs.mainWindowWidth, rs.mainWindowHeight };
-            if ( !HelperVK::createBasePipeline( dv.logical, nullptr, nullptr, nullptr, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
+            if ( !HelperVK::createBasePipeline( dv.logical, dv.standardVert, dv.standardFrag, nullptr, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
             {
                 return false;
             }
@@ -272,8 +277,18 @@ namespace fv
         return true;
     }
 
-    bool RenderManagerVK::createStandardShaders()
+    bool RenderManagerVK::createStandardShaders(DeviceVK& dv)
     {
+        if ( !HelperVK::createShaderFromBinary( dv.logical, Directories::standard() / "standard.frag.spv", dv.standardFrag) )
+        {
+            LOGC("VK Cannot create standard frag shader. Render setup failed.");
+            return false;
+        }
+        if ( !HelperVK::createShaderFromBinary(dv.logical, Directories::standard() / "standard.vert.spv", dv.standardVert) )
+        {
+            LOGC("VK Cannot create standard vert shader. Render setup failed.");
+            return false;
+        }
         return true;
     }
 

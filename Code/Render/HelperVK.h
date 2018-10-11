@@ -36,6 +36,8 @@ namespace fv
         QueueFamilyIndicesVK queueIndices;
         VkPipeline opaquePipeline;
         VkPipelineLayout opaquePipelineLayout;
+        VkShaderModule standardFrag {};
+        VkShaderModule standardVert {};
     };
 
     struct SwapChainVK
