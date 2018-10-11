@@ -433,6 +433,76 @@ namespace fv
         return true;
     }
 
+    bool HelperVK::createCommandPool(VkDevice device, u32 familyQueueIndex, VkCommandPool& commandPool)
+    {
+        assert( device );
+        VkCommandPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.queueFamilyIndex = familyQueueIndex;
+        if ( vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to create command pool.");
+            return false;
+        }
+        return true;
+    }
+
+    bool HelperVK::allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers)
+    {
+        assert(device && commandPool);
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = commandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = numCommandBuffers;
+        commandBuffers.resize(numCommandBuffers);
+        if ( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to allocate command buffer.");
+            return false;
+        }
+        return true;
+    }
+
+    bool HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer,
+                                            const VkRect2D& renderArea, const VkClearValue* clearValue)
+    {
+        assert( device && commandBuffer && renderPass && frameBuffer );
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        VkRenderPassBeginInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass  = renderPass;
+        renderPassInfo.framebuffer = frameBuffer;
+        renderPassInfo.renderArea.offset = renderArea.offset;
+        renderPassInfo.renderArea.extent = renderArea.extent;
+
+        renderPassInfo.clearValueCount = clearValue ? 1 : 0;
+        renderPassInfo.pClearValues = clearValue;
+
+        if ( vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to begin command buffer.");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool HelperVK::stopRecordCommandBuffer(VkCommandBuffer commandBuffer)
+    {
+        assert( commandBuffer );
+        if ( vkEndCommandBuffer(commandBuffer) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to end command buffer.");
+            return false;
+        }
+        return true;
+    }
+
     void HelperVK::queryRequiredWindowsExtensions(void* pWindow, Vector<const char*>& extensions)
     {
         assert( pWindow );

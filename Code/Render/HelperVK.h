@@ -86,7 +86,14 @@ namespace fv
         static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass,
                                    VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
         static bool createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer);
+        static bool createCommandPool(VkDevice device, u32 familyQueueIndex, VkCommandPool& pool);
 
+        // Command buffers
+        static bool allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
+        static bool startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, 
+                                             const VkClearValue* clearValue=nullptr);
+        static bool stopRecordCommandBuffer(VkCommandBuffer commandBuffer);
+       
         // Checks and validation.
         static void queryRequiredWindowsExtensions(void* pWindow, Vector<const char*>& listToFill);
         static bool checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
