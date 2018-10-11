@@ -86,6 +86,7 @@ namespace fv
         if ( !createDevices(m_MainSwapChain.surface) )
             return false;
 
+        VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
         if ( m_MainWindow )
         {
             // Find device that can present 
@@ -105,6 +106,7 @@ namespace fv
                     return false;
                 }
                 bSwapChainCreated = true;
+                format = m_MainSwapChain.surfaceFormat.format;
                 m_MainSwapChain.device = &dv;
                 break; // Only pick a single device for mainWindow
             }
@@ -125,9 +127,16 @@ namespace fv
                 return false;
             }
 
-            VkExtent2D vpSize = { rs.mainWindowWidth, rs.mainWindowHeight };
-            if ( !HelperVK::createBasePipeline( dv.logical, dv.standardVert, dv.standardFrag, nullptr, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
+            if ( !HelperVK::createRenderPass( dv.logical, m_MainSwapChain.surfaceFormat.format, dv.clearPass) )
             {
+                LOGC("Cannot create main render pass. Render setup failed.");
+                return false;
+            }
+
+            VkExtent2D vpSize = { rs.mainWindowWidth, rs.mainWindowHeight };
+            if ( !HelperVK::createPipeline( dv.logical, dv.standardVert, dv.standardFrag, dv.clearPass, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
+            {
+                LOGC("Cannot create standard pipeline. Render setup failed.");
                 return false;
             }
         }
@@ -205,7 +214,7 @@ namespace fv
     void RenderManagerVK::readRenderConfig(RenderConfig& rs)
     {
         // TODO read from config
-        rs.createMainWindow = true;
+        rs.createMainWindow = false;
         rs.mainWindowWidth = 1600;
         rs.mainWindowHeight = 900;
         rs.mainWindowName = "Main Window";

@@ -110,10 +110,7 @@ namespace fv
         SwapChainInfoVK chainInfo;
         querySwapChainInfo(p.device->physical, p.surface, chainInfo);
 
-        VkSurfaceFormatKHR surfaceFormat;
-        VkPresentModeKHR presentMode;
-        VkExtent2D extend;
-        if ( !chooseSwapChain(p.width, p.height, chainInfo, surfaceFormat, presentMode, extend) )
+        if ( !chooseSwapChain(p.width, p.height, chainInfo, swapChain.surfaceFormat, swapChain.presentMode, swapChain.extend) )
         {
             return false;
         }
@@ -129,9 +126,9 @@ namespace fv
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = p.surface;
         createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = surfaceFormat.format;
-        createInfo.imageColorSpace = surfaceFormat.colorSpace;
-        createInfo.imageExtent = extend;
+        createInfo.imageFormat = swapChain.surfaceFormat.format;
+        createInfo.imageColorSpace = swapChain.surfaceFormat.colorSpace;
+        createInfo.imageExtent = swapChain.extend;
         createInfo.imageArrayLayers = imageArrayLayers; // In case of 3d stereo rendering must be 2
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -152,7 +149,7 @@ namespace fv
 
         createInfo.preTransform = chainInfo.capabilities.currentTransform;   // Pre transform the image (eg flip horizontal)
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;  // If want to blend with other windows in system
-        createInfo.presentMode = presentMode;
+        createInfo.presentMode = swapChain.presentMode;
         createInfo.clipped = VK_TRUE; // Whether hidden pixels by other windows are obscured
         createInfo.oldSwapchain = VK_NULL_HANDLE; // TODO fix later
 
@@ -173,7 +170,7 @@ namespace fv
         for ( auto& img : swapChain.images )
         {
             VkImageView imgView;
-            if ( !createImageView(p.device->logical, img, surfaceFormat.format, imgView) )
+            if ( !createImageView(p.device->logical, img, swapChain.surfaceFormat.format, imgView) )
             {
                 LOGC("VK Cannot create all images for swap chain. Render setup failed.");
                 return false;
@@ -249,13 +246,49 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::createBasePipeline(VkDevice device,
-                                      VkShaderModule vertShader,
-                                      VkShaderModule fragShader,
-                                      VkRenderPass renderPass,
-                                      VkExtent2D vpSize,
-                                      VkPipelineLayout& pipelineLayout,
-                                      VkPipeline& pipeline)
+    bool HelperVK::createRenderPass(VkDevice device, VkFormat colorFormat, VkRenderPass& renderPass)
+    {
+        VkAttachmentDescription colorAttachment = {};
+        colorAttachment.format  = colorFormat;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorAttachmentRef = {};
+        colorAttachmentRef.attachment = 0;
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentRef;
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+
+        if ( vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to create render pass.");
+            return false;
+        }
+        return true;
+    }
+
+    bool HelperVK::createPipeline(VkDevice device,
+                                  VkShaderModule vertShader,
+                                  VkShaderModule fragShader,
+                                  VkRenderPass renderPass,
+                                  VkExtent2D vpSize,
+                                  VkPipelineLayout& pipelineLayout,
+                                  VkPipeline& pipeline)
     {
         assert(device && vertShader && fragShader && renderPass);
 

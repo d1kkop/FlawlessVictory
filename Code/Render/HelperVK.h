@@ -38,12 +38,16 @@ namespace fv
         VkPipelineLayout opaquePipelineLayout;
         VkShaderModule standardFrag {};
         VkShaderModule standardVert {};
+        VkRenderPass clearPass{};
     };
 
     struct SwapChainVK
     {
         DeviceVK* device;
         VkSurfaceKHR surface;
+        VkPresentModeKHR presentMode;
+        VkSurfaceFormatKHR surfaceFormat;
+        VkExtent2D extend;
         VkSwapchainKHR swapChain;
         VkSwapchainKHR oldSwapChain;
         Vector<VkImage> images;
@@ -76,8 +80,9 @@ namespace fv
         static bool createImageView(VkDevice device, VkImage image, VkFormat format, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
-        static bool createBasePipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass,
-                                       VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
+        static bool createRenderPass(VkDevice device, VkFormat format, VkRenderPass& renderPass);
+        static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass,
+                                   VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
 
         // Checks and validation.
         static void queryRequiredWindowsExtensions(void* pWindow, Vector<const char*>& listToFill);
