@@ -28,6 +28,9 @@
     <ClInclude Include="RenderManager.h">
       <Filter>Managers</Filter>
     </ClInclude>
+    <ClInclude Include="HelperVK.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Mesh.cpp">
@@ -40,6 +43,9 @@
       <Filter>Managers</Filter>
     </ClCompile>
     <ClCompile Include="RenderManagerVK.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="HelperVK.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
   </ItemGroup>

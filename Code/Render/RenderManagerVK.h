@@ -1,66 +1,14 @@
 #pragma once
 #include "RenderManager.h"
 #if FV_VULKAN
-#include "../Core/ObjectManager.h"
+#include "HelperVK.h"
 #include "GraphicResourceVK.h"
-#include "vulkan/vulkan.h"
+#include "../Core/ObjectManager.h"
 
 namespace fv
 {
     class GraphicResource;
     enum class GraphicType;
-
-    struct SwapChainInfoVK
-    {
-        VkSurfaceCapabilitiesKHR capabilities;
-        Vector<VkSurfaceFormatKHR> formats;
-        Vector<VkPresentModeKHR> presentModes;
-    };
-
-    struct QueueFamilyIndicesVK
-    {
-        Optional<u32> graphics;
-        Optional<u32> compute;
-        Optional<u32> transfer;
-        Optional<u32> sparse;
-        Optional<u32> present;
-        bool complete() const { return graphics.has_value() && compute.has_value() && transfer.has_value() && sparse.has_value() && present.has_value(); }
-    };
-
-    struct DeviceVK
-    {
-        VkDevice logical;
-        VkPhysicalDevice physical;
-        VkQueue graphicsQueue;
-        VkQueue computeQueue;
-        VkQueue transferQueue;
-        VkQueue sparseQueue;
-        VkQueue presentQueue;
-        VkPhysicalDeviceProperties properties;
-        VkPhysicalDeviceFeatures features;
-        QueueFamilyIndicesVK queueIndices;
-        VkPipeline opaquePipeline;
-        VkPipelineLayout opaquePipelineLayout;
-    };
-
-    struct SwapChainVK
-    {
-        DeviceVK* device;
-        VkSurfaceKHR surface;
-        VkSwapchainKHR swapChain;
-        VkSwapchainKHR oldSwapChain;
-        Vector<VkImage> images;
-        Vector<VkImageView> imgViews;
-    };
-
-    struct SwapChainParamsVK
-    {
-        DeviceVK* device;
-        VkSurfaceKHR surface;
-        u32 width, height;
-        u32 imageCount;
-        u32 imageArrayLayerCount;
-    };
 
 
     class RenderManagerVK : public RenderManager
@@ -82,25 +30,8 @@ namespace fv
 
     private:
         void readRenderConfig(RenderConfig& renderSetup);
-        bool createWindows(const RenderConfig& renderSetup);
-        bool createIntance(const String& name);
-        bool trySetupDebugCallback(bool includeVerbose, bool includeInfo);
         bool createDevices(VkSurfaceKHR mainSurface);
-        bool createSurface(const void* wHandle, VkSurfaceKHR& surface);
-        bool createSwapChain(const SwapChainParamsVK& params, SwapChainVK& swapChain);
-        bool chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info, VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);
-        void storeDeviceProperties(DeviceVK& device);
-        void storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR mainSurface);
-        void querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainInfoVK& info);
-        bool checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
-        bool checkRequiredExtensions(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice=nullptr);
-        void queryExtensions(Vector<String>& extensions, VkPhysicalDevice physicalDevice=nullptr);
-        void queryLayers(Vector<String>& layers, VkPhysicalDevice physicalDevice=nullptr);
-        bool validateNameList(const Vector<String>& found, const Vector<const char*>& required);
-        bool createBasePipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass, 
-                                VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
-        // 
-        VkImageView createImageView(VkDevice device, VkImage image, VkFormat format);
+        bool createStandardShaders();
 
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};

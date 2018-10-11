@@ -1,10 +1,9 @@
 #include "RenderManagerVK.h"
 #if FV_VULKAN
+#include "HelperVK.h"
 #include "GraphicResourceVK.h"
-#include "../Core/Algorithm.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
-#include "../Core/ComponentManager.h"
 #include "../Core/OSLayer.h"
 #include "../Core/JobManager.h"
 
@@ -24,39 +23,59 @@ namespace fv
     bool RenderManagerVK::initGraphics()
     {
         // Setup layers and extensions for instance and devices
+    #if FV_DEBUG
         m_RequiredInstanceExtensions = { "VK_EXT_debug_report", "VK_EXT_debug_utils" };
         m_RequiredInstanceLayers = { "VK_LAYER_LUNARG_standard_validation" };
-        m_RequiredPhysicalExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
         m_RequiredPhysicalLayers = { "VK_LAYER_LUNARG_standard_validation" };
+    #endif
+        m_RequiredPhysicalExtensions = { };
 
         RenderConfig rs{};
         readRenderConfig( rs );
-        if (!createWindows( rs ))
+
+        if ( rs.createMainWindow )
         {
-            return false;
+            m_MainWindow = OSCreateWindow(rs.mainWindowName.c_str(), 100, 100, rs.mainWindowWidth, rs.mainWindowHeight, rs.mainWindowFullscreen, true, false);
+            if ( !m_MainWindow )
+            {
+                LOGC("Failed to create main window %s.", rs.mainWindowName.c_str());
+                return false;
+            }
+            m_RequiredPhysicalExtensions.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
+            HelperVK::queryRequiredWindowsExtensions( m_MainWindow, m_RequiredInstanceExtensions );
         }
 
-        if (!checkRequiredExtensions(m_RequiredInstanceExtensions))
+        if (!HelperVK::checkRequiredExtensions(m_RequiredInstanceExtensions))
         {
             LOGC("VK Required instance extensions not available.");
             return false;
         }
-        if (!checkRequiredLayers(m_RequiredInstanceLayers))
+        if (!HelperVK::checkRequiredLayers(m_RequiredInstanceLayers))
         {
             LOGC("VK Required instance layers not available.");
             return false;
         }
 
-        if ( !createIntance("First App")) 
+        if ( !HelperVK::createInstance("First App", m_RequiredInstanceExtensions, m_RequiredInstanceLayers, m_Instance) )
+        {
+            LOGC("VK Failed to create instance.");
             return false;
+        }
 
-        trySetupDebugCallback( false, true );
+    #if FV_DEBUG
+        if ( !HelperVK::createDebugCallback( m_Instance, false, true, debugCallback, m_DebugCallback ) )
+        {
+            LOGC("VK Failed to create debug callback.");
+            return false;
+        }
+    #endif
 
         // In case of main swap chain
         if ( m_MainWindow )
         {
-            if ( !createSurface(m_MainWindow, m_MainSwapChain.surface) )
+            if ( !HelperVK::createSurface(m_Instance, m_MainWindow, m_MainSwapChain.surface) )
             {
+                LOGC("VK Failed to create main window surface.");
                 return false;
             }
         }
@@ -79,7 +98,7 @@ namespace fv
                 scParams.imageArrayLayerCount = 1; // 2 in case of stereo 
                 scParams.imageCount = 3; // Try triple buffering
 
-                if ( !createSwapChain(scParams, m_MainSwapChain) )
+                if ( !HelperVK::createSwapChain(scParams, m_MainSwapChain) )
                 {
                     return false;
                 }
@@ -95,11 +114,14 @@ namespace fv
             }
         }
 
+        // Standard default shaders necessary to set up a pipeline
+        createStandardShaders();
+
         // Create pipelines
         for ( auto& dv : m_Devices )
         {
             VkExtent2D vpSize = { rs.mainWindowWidth, rs.mainWindowHeight };
-            if ( !createBasePipeline( dv.logical, nullptr, nullptr, nullptr, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
+            if ( !HelperVK::createBasePipeline( dv.logical, nullptr, nullptr, nullptr, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
             {
                 return false;
             }
@@ -185,85 +207,6 @@ namespace fv
         rs.mainWindowFullscreen = false;
     }
 
-    bool RenderManagerVK::createWindows(const RenderConfig& rs)
-    {
-        if ( rs.createMainWindow )
-        {
-            m_MainWindow = OSCreateWindow(rs.mainWindowName.c_str(), 100, 100, rs.mainWindowWidth, rs.mainWindowHeight, rs.mainWindowFullscreen, true, false);
-            if (!m_MainWindow) return false;
-
-        #if FV_SDL
-            uint32_t extension_count;
-            Vector<const char*> extensions;
-            SDL_Vulkan_GetInstanceExtensions((SDL_Window*)m_MainWindow, &extension_count, nullptr);
-            extensions.resize(extension_count);
-            SDL_Vulkan_GetInstanceExtensions((SDL_Window*)m_MainWindow, &extension_count, extensions.data());
-            for ( auto* c : extensions )
-            {
-                m_RequiredInstanceExtensions.emplace_back(c);
-            }
-        #endif
-        }
-
-        return true;
-    }
-
-    bool RenderManagerVK::createIntance(const String& appName)
-    {
-        VkApplicationInfo appInfo = {};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = appName.c_str();
-        appInfo.applicationVersion = 1;
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = 1;
-        appInfo.apiVersion = VK_API_VERSION_1_0; // VK_API_VERSION_1_1;
-
-        VkInstanceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = (u32)m_RequiredInstanceExtensions.size();
-        createInfo.ppEnabledExtensionNames = m_RequiredInstanceExtensions.data();
-        createInfo.enabledLayerCount = (u32)m_RequiredInstanceLayers.size();
-        createInfo.ppEnabledLayerNames = m_RequiredInstanceLayers.data();
-
-        VkResult res = vkCreateInstance( &createInfo, nullptr, &m_Instance );
-        if (res != VK_SUCCESS )
-        {
-            LOGC("VK Create instance failed.");
-            return false;
-        }
-
-        return true;
-    }
-
-    bool RenderManagerVK::trySetupDebugCallback(bool includeVerbose, bool includeInfo)
-    {
-    #if !FV_DEBUG
-        return false;
-    #endif
-        VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        createInfo.messageSeverity = 
-            (includeVerbose?VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:0) |
-            (includeInfo?VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:0) |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        createInfo.messageType =
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
-            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        createInfo.pfnUserCallback = debugCallback;
-        createInfo.pUserData = nullptr; // Optional
-        auto createDebugUtilsMesgenger = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT");
-        if ( !createDebugUtilsMesgenger || 
-             createDebugUtilsMesgenger( m_Instance, &createInfo, nullptr, &m_DebugCallback ) != VK_SUCCESS )
-        {
-            LOGW( "VK Setup debug callback failed." );
-            return false;
-        }
-        return true;
-    }
-
     bool RenderManagerVK::createDevices(VkSurfaceKHR surface)
     {
         uint32_t deviceCount = 0;
@@ -277,14 +220,14 @@ namespace fv
             DeviceVK dv {};
             dv.physical = physical;
 
-            if ( !checkRequiredExtensions(m_RequiredPhysicalExtensions, physical) ||
-                 !checkRequiredLayers(m_RequiredPhysicalLayers, physical) )
+            if ( !HelperVK::checkRequiredExtensions(m_RequiredPhysicalExtensions, physical) ||
+                 !HelperVK::checkRequiredLayers(m_RequiredPhysicalLayers, physical) )
             {
                 continue; // not suitable
             }
 
-            storeDeviceProperties( dv );
-            storeDeviceQueueFamilies( dv, surface );
+            HelperVK::storeDevicePropertiesAndFeatures( dv );
+            HelperVK::storeDeviceQueueFamilies( dv, surface );
 
             if ( !((dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
                    dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) &&
@@ -306,21 +249,9 @@ namespace fv
                 queueCreateInfos.emplace_back( dqci );
             }
 
-            VkPhysicalDeviceFeatures deviceFeatures = {};
-            VkDeviceCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-            createInfo.pQueueCreateInfos = queueCreateInfos.data();
-            createInfo.queueCreateInfoCount = (u32)uniqueQueueIndices.size();
-            createInfo.pEnabledFeatures  = &deviceFeatures;
-            createInfo.enabledLayerCount = (u32)m_RequiredPhysicalLayers.size();
-            createInfo.ppEnabledLayerNames = m_RequiredPhysicalLayers.data();
-            createInfo.enabledExtensionCount = (u32)m_RequiredPhysicalExtensions.size();
-            createInfo.ppEnabledExtensionNames = m_RequiredPhysicalExtensions.data();
-
-            auto res = vkCreateDevice( dv.physical, &createInfo, nullptr, &dv.logical );
-            if ( res != VK_SUCCESS )
+            if ( !HelperVK::createDevice( m_Instance, dv.physical, queueCreateInfos, m_RequiredPhysicalExtensions, m_RequiredPhysicalLayers, dv.logical ) )
             {
-                LOGC( "VK Failed to create logical device for %s.", dv.properties.deviceName );
+                LOGC( "VK Failed to create logical devices." );
                 return false;
             }
 
@@ -341,414 +272,15 @@ namespace fv
         return true;
     }
 
-    bool RenderManagerVK::createSurface(const void* wHandle, VkSurfaceKHR& surface)
+    bool RenderManagerVK::createStandardShaders()
     {
-    #if FV_SDL
-        bool bResult = SDL_Vulkan_CreateSurface((SDL_Window*)wHandle, m_Instance, &surface);
-        if ( !bResult )
-        {
-            LOGW("SDL_VK Failed to create vulkan window surface.");
-            return false;
-        }
-        return true;
-    #endif
-        return false;
-    }
-
-    bool RenderManagerVK::createSwapChain(const SwapChainParamsVK& p, SwapChainVK& swapChain)
-    {
-        assert( p.device && p.surface && p.width != 0 && p.height != 0 );
-
-        SwapChainInfoVK chainInfo;
-        querySwapChainInfo(p.device->physical, p.surface, chainInfo);
-
-        VkSurfaceFormatKHR surfaceFormat;
-        VkPresentModeKHR presentMode;
-        VkExtent2D extend;
-        if ( !chooseSwapChain( p.width, p.height, chainInfo, surfaceFormat, presentMode, extend ) )
-        {
-            return false;
-        }
-
-        u32 imageCount = Max<u32>( p.imageCount, chainInfo.capabilities.minImageCount );
-        if ( chainInfo.capabilities.maxImageCount != 0 ) // Only clamp to max if specified. Some GPU's do not specify.
-        {
-            imageCount = Min<u32>( imageCount, chainInfo.capabilities.maxImageCount );
-        }
-        u32 imageArrayLayers = Clamp<u32>(p.imageArrayLayerCount, 1U, (u32)chainInfo.capabilities.maxImageArrayLayers);
-
-        VkSwapchainCreateInfoKHR createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = p.surface;
-        createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = surfaceFormat.format;
-        createInfo.imageColorSpace = surfaceFormat.colorSpace;
-        createInfo.imageExtent = extend;
-        createInfo.imageArrayLayers = imageArrayLayers; // In case of 3d stereo rendering must be 2
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        assert( p.device->queueIndices.graphics.has_value() && p.device->queueIndices.present.has_value() );
-        uint32_t queueFamilyIndices[] = { p.device->queueIndices.graphics.value(), p.device->queueIndices.present.value() };
-        if ( queueFamilyIndices[0] != queueFamilyIndices[1] )
-        {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
-            createInfo.pQueueFamilyIndices = queueFamilyIndices;
-        }
-        else
-        {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            createInfo.queueFamilyIndexCount = 0; // Optional
-            createInfo.pQueueFamilyIndices = nullptr; // Optional
-        }
-
-        createInfo.preTransform = chainInfo.capabilities.currentTransform;   // Pre transform the image (eg flip horizontal)
-        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;  // If want to blend with other windows in system
-        createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_TRUE; // Whether hidden pixels by other windows are obscured
-        createInfo.oldSwapchain = VK_NULL_HANDLE; // TODO fix later
-
-        if (vkCreateSwapchainKHR(p.device->logical, &createInfo, nullptr, &swapChain.swapChain) != VK_SUCCESS) 
-        {
-            LOGC( "VK Failed to create swap chain for device." );
-            return false;
-        }
-    
-        // Retrieve swap chain images
-        assert( swapChain.swapChain );
-        uint32_t swapChainImgCount;
-        vkGetSwapchainImagesKHR(p.device->logical, swapChain.swapChain, &swapChainImgCount, nullptr);
-        swapChain.images.resize(swapChainImgCount);
-        vkGetSwapchainImagesKHR(p.device->logical, swapChain.swapChain, &swapChainImgCount, swapChain.images.data());
-
-        // Create image views on images in swap chain
-        for ( auto& img : swapChain.images )
-        {
-            VkImageView imgView = createImageView( p.device->logical, img, surfaceFormat.format );
-            if ( !imgView ) return false;
-            swapChain.imgViews.emplace_back( imgView );
-        }
-
-        swapChain.surface = p.surface;
-        swapChain.device = p.device;
-
-        assert( swapChain.imgViews.size() == swapChain.images.size() );
         return true;
     }
 
-    void RenderManagerVK::storeDeviceProperties(DeviceVK& device)
-    {
-        assert( device.physical );
-        vkGetPhysicalDeviceProperties(device.physical, &device.properties);
-        vkGetPhysicalDeviceFeatures(device.physical, &device.features);
-    }
-
-    void RenderManagerVK::storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR surface)
-    {
-        assert( device.physical );
-        uint32_t queueFamilyCount;
-        Vector<VkQueueFamilyProperties> queueFamilies;
-        vkGetPhysicalDeviceQueueFamilyProperties(device.physical, &queueFamilyCount, nullptr);
-        queueFamilies.resize(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device.physical, &queueFamilyCount, queueFamilies.data());
-        for ( u32 i=0; i<queueFamilyCount; ++i )
-        {
-            auto& queueFam = queueFamilies[i];
-            if ( queueFam.queueCount > 0 )
-            {
-                if ( (queueFam.queueFlags & VK_QUEUE_GRAPHICS_BIT) ) device.queueIndices.graphics = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_COMPUTE_BIT) )  device.queueIndices.compute = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_TRANSFER_BIT) ) device.queueIndices.transfer = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) device.queueIndices.sparse = i;
-            }
-            VkBool32 presentSupported = false;
-            if ( surface )
-            {
-                vkGetPhysicalDeviceSurfaceSupportKHR(device.physical, i, surface, &presentSupported);
-                if ( presentSupported ) device.queueIndices.present = i;
-            }
-        }
-    }
-
-    bool RenderManagerVK::checkRequiredExtensions(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice)
-    {
-        Vector<String> foundExtensions;
-        queryExtensions(foundExtensions, physicalDevice);
-        return validateNameList(foundExtensions, requiredList);
-    }
-
-    bool RenderManagerVK::checkRequiredLayers(const Vector<const char*>& requiredList, VkPhysicalDevice physicalDevice)
-    {
-        Vector<String> foundLayers;
-        queryLayers(foundLayers, physicalDevice);
-        return validateNameList(foundLayers, requiredList);
-    }
-
-    void RenderManagerVK::queryExtensions(Vector<String>& foundExtensions, VkPhysicalDevice physicalDevice)
-    {
-        uint32_t extensionCount = 0;
-        Vector<VkExtensionProperties> extensions;
-        if ( !physicalDevice ) vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-        else vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
-        extensions.resize(extensionCount);
-        if ( !physicalDevice ) vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-        else vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensions.data());
-        for ( u32 i=0; i< extensionCount; ++i ) foundExtensions.emplace_back(extensions[i].extensionName);
-    }
-
-    void RenderManagerVK::queryLayers(Vector<String>& foundLayers, VkPhysicalDevice physicalDevice)
-    {
-        uint32_t layerCount;
-        Vector<VkLayerProperties> layers;
-        if ( !physicalDevice ) vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-        else vkEnumerateDeviceLayerProperties(physicalDevice, &layerCount, nullptr);
-        layers.resize(layerCount);
-        if ( !physicalDevice ) vkEnumerateInstanceLayerProperties(&layerCount, layers.data());
-        else vkEnumerateDeviceLayerProperties(physicalDevice, &layerCount, layers.data());
-        for ( u32 i = 0; i < layerCount; i++ ) foundLayers.emplace_back(layers[i].layerName);
-    }
-
-    bool RenderManagerVK::validateNameList(const Vector<String>& found, const Vector<const char*>& required)
-    {
-        for ( auto* e : required )
-        {
-            if ( !Contains(found, e) )
-            {
-                LOGC("VK Cannot find requested %s.", e);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool RenderManagerVK::createBasePipeline(VkDevice device,
-                                             VkShaderModule vertShader, 
-                                             VkShaderModule fragShader, 
-                                             VkRenderPass renderPass, 
-                                             VkExtent2D vpSize,
-                                             VkPipelineLayout& pipelineLayout,
-                                             VkPipeline& pipeline)
-    {
-        assert(device && vertShader && fragShader && renderPass);
-
-        VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
-        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = vertShader;
-        vertShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShader;
-        fragShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
-        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-
-        VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
-        inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float) vpSize.width;
-        viewport.height = (float) vpSize.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        VkRect2D scissor = {};
-        scissor.offset = {0, 0};
-        scissor.extent = vpSize;
-
-        VkPipelineViewportStateCreateInfo viewportState = {};
-        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
-        viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
-
-        VkPipelineRasterizationStateCreateInfo rasterizer = {};
-        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE;
-        rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-        rasterizer.depthBiasEnable = VK_FALSE;
-
-        VkPipelineMultisampleStateCreateInfo multisampling = {};
-        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-        VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachment.blendEnable = VK_FALSE;
-
-        VkPipelineColorBlendStateCreateInfo colorBlending = {};
-        colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        colorBlending.logicOpEnable = VK_FALSE;
-        colorBlending.logicOp = VK_LOGIC_OP_COPY;
-        colorBlending.attachmentCount = 1;
-        colorBlending.pAttachments = &colorBlendAttachment;
-        colorBlending.blendConstants[0] = 0.0f;
-        colorBlending.blendConstants[1] = 0.0f;
-        colorBlending.blendConstants[2] = 0.0f;
-        colorBlending.blendConstants[3] = 0.0f;
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-        {
-            LOGC("VK Failed to create base pipeline layout");
-            return false;
-        }
-
-        VkGraphicsPipelineCreateInfo pipelineInfo = {};
-        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages; // vertex and fragment (minimum)
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pViewportState = &viewportState;
-        pipelineInfo.pRasterizationState = &rasterizer;
-        pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = renderPass;
-        pipelineInfo.subpass = 0;
-        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-        pipelineInfo.basePipelineIndex = -1;
-
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) 
-        {
-            LOGC("VK Failed to create base graphics pipeline.");
-            return false;
-        }
-
-        return true;
-    }
-
-    VkImageView RenderManagerVK::createImageView(VkDevice device, VkImage image, VkFormat format)
-    {
-        assert( device && image && format );
-
-        VkImageViewCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = image;
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = format;
-
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-
-        VkImageView imageView;
-        if ( vkCreateImageView(device, &createInfo, nullptr, &imageView) != VK_SUCCESS )
-        {
-            LOGC( "VK failed to create image view." );
-            return nullptr;
-        }
-        return imageView;
-    }
-
-    void RenderManagerVK::querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainInfoVK& info)
-    {
-        uint32_t formatCount;
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &info.capabilities);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-        if ( formatCount > 0 )
-        {
-            info.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, info.formats.data());
-        }
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-        if ( presentModeCount > 0 )
-        {
-            info.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, info.presentModes.data());
-        }
-    }
-
-    bool RenderManagerVK::chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info, 
-                                          VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend)
-    {
-        bool found = false;
-        if ( info.formats.size() > 0 )
-        {
-            if ( info.formats[0].format == VK_FORMAT_UNDEFINED )
-            {
-                format = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
-                found = true;
-            }
-            else
-            {
-                for ( const auto& f : info.formats )
-                {
-                    if ( f.format == VK_FORMAT_B8G8R8A8_UNORM  && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR )
-                    {
-                        format = f;
-                        found = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if ( !found )
-        {
-            LOGC("VK Could not find suitable surface format for swap chain.");
-            return false;
-        }
-        mode  = VK_PRESENT_MODE_FIFO_KHR;
-        for ( const auto& presentMode : info.presentModes )
-        {
-            if ( presentMode == VK_PRESENT_MODE_MAILBOX_KHR )
-            {
-                mode = presentMode;
-                break;
-            }
-            else if ( presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR )
-            {
-                mode = presentMode;
-            }
-        }
-        if ( info.capabilities.currentExtent.width != UINT_MAX )
-        {
-            extend = info.capabilities.currentExtent;
-        }
-        else
-        {
-            extend = { width, height };
-            extend.width  = Clamp(extend.width, info.capabilities.minImageExtent.width, info.capabilities.maxImageExtent.width);
-            extend.height = Clamp(extend.height, info.capabilities.minImageExtent.height, info.capabilities.maxImageExtent.height);
-        }
-        return true;
-    }
-
-    VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType, 
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData)
+    VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                                  void* pUserData)
     {
         switch( messageSeverity )
         {

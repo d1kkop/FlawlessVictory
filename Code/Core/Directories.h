@@ -10,6 +10,7 @@ namespace fv
         static const Path& build();
         static const Path& intermediate();
         static const Path& log();
+        static const Path& standard();
         static const Path& intermediateShaders();
     };
 }

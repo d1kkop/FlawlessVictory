@@ -1,4 +1,6 @@
 #include "GraphicResourceVK.h"
+#if FV_VULKAN
+#include "HelperVK.h"
 #include "../Core/LogManager.h"
 
 #define FV_CHECK_GRAPHIC_TYPE(type) \
@@ -6,7 +8,6 @@
     assert( m_Type == (type) );
     
 
-#if FV_VULKAN
 namespace fv
 {
     GraphicResourceVK::~GraphicResourceVK()
@@ -80,18 +81,7 @@ namespace fv
     bool GraphicResourceVK::updateShaderCode(Vector<char>& code)
     {
         FV_CHECK_GRAPHIC_TYPE(GraphicType::Shader);
-
-        VkShaderModuleCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = (const uint32_t*) code.data();
-        if ( vkCreateShaderModule(m_Device, &createInfo, nullptr, &m_Shader) != VK_SUCCESS )
-        {
-            LOGW("Failed to create shader module.");
-            return false;
-        }
-
-        return true;
+        return HelperVK::createShaderModule( m_Device, code, m_Shader );
     }
 
 }
