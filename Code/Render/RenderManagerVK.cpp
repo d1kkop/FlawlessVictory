@@ -31,8 +31,8 @@ namespace fv
     #endif
         m_RequiredPhysicalExtensions = { };
 
-        RenderConfig rc{};
-        readRenderConfig( rc );
+        readRenderConfig();
+        auto& rc = m_RenderConfig;
 
         if ( rc.createWindow )
         {
@@ -147,6 +147,11 @@ namespace fv
             {
                 return false;
             }
+
+            if ( !createFrameSyncObjects( dv, rc.numFramesBehind ) )
+            {
+                return false;
+            }
         }
 
         // Temp command buffers
@@ -195,14 +200,6 @@ namespace fv
         {
             destroyDebugUtilMessenger( m_Instance, m_DebugCallback, nullptr );
         }
-        if ( m_MainSwapChain.device && m_MainSwapChain.device->logical && m_MainSwapChain.swapChain )
-        {
-            vkDestroySwapchainKHR( m_MainSwapChain.device->logical, m_MainSwapChain.swapChain, nullptr );
-        }
-        if ( m_Instance && m_MainSwapChain.surface )
-        {
-            vkDestroySurfaceKHR( m_Instance, m_MainSwapChain.surface, nullptr);
-        }
         for ( auto& dv : m_Devices )
         {
             if ( dv.logical )
@@ -212,25 +209,40 @@ namespace fv
                 if ( dv.clearPass ) vkDestroyRenderPass( dv.logical, dv.clearPass, nullptr );
                 if ( dv.opaquePipelineLayout ) vkDestroyPipelineLayout( dv.logical, dv.opaquePipelineLayout, nullptr );
                 if ( dv.opaquePipeline) vkDestroyPipeline( dv.logical, dv.opaquePipeline, nullptr );
-                if ( dv.commandPool )
-                {
-                    for ( auto& cb : dv.commandBuffers )
-                    {
-                        if ( cb ) vkFreeCommandBuffers( dv.logical, dv.commandPool, (u32)dv.commandBuffers.size(), dv.commandBuffers.data() );
-                    }
-                    vkDestroyCommandPool( dv.logical, dv.commandPool, nullptr );
-                }
-                for ( auto& imgView : dv.imgViews )
+                for ( auto imgView : dv.imgViews )
                 {
                     if ( imgView ) vkDestroyImageView( dv.logical, imgView, nullptr );
                 }
-                for ( auto& img : dv.images )
+                if ( !dv.swapChain ) // Otherwise destroyed when swap chain is destroyed.
                 {
-                    if ( img ) vkDestroyImage( dv.logical, img, nullptr );
+                    for ( auto img : dv.images )
+                    {
+                        if ( img ) vkDestroyImage(dv.logical, img, nullptr);
+                    }
                 }
-                for ( auto& frameBuffer : dv.frameBuffers )
+                for ( auto frameBuffer : dv.frameBuffers )
                 {
                     if ( frameBuffer ) vkDestroyFramebuffer( dv.logical, frameBuffer, nullptr );
+                }
+                if ( dv.commandPool )
+                {
+                    // apperently, no need to free command buffers.
+                    //for ( auto cb : dv.commandBuffers )
+                    //{
+                    //    if ( cb ) vkFreeCommandBuffers(dv.logical, dv.commandPool, (u32)dv.commandBuffers.size(), dv.commandBuffers.data());
+                    //}
+                    vkDestroyCommandPool(dv.logical, dv.commandPool, nullptr);
+                }
+                for ( auto s : dv.imageAvailableSemaphores ) if ( s ) vkDestroySemaphore( dv.logical, s, nullptr );
+                for ( auto s : dv.imageFinishedSemaphores ) if ( s ) vkDestroySemaphore( dv.logical, s, nullptr );
+                for ( auto f : dv.frameFences ) if ( f ) vkDestroyFence( dv.logical, f, nullptr );
+                if ( m_MainSwapChain.device && m_MainSwapChain.device->logical && m_MainSwapChain.swapChain )
+                {
+                    vkDestroySwapchainKHR(m_MainSwapChain.device->logical, m_MainSwapChain.swapChain, nullptr);
+                }
+                if ( m_Instance && m_MainSwapChain.surface )
+                {
+                    vkDestroySurfaceKHR(m_Instance, m_MainSwapChain.surface, nullptr);
                 }
                 vkDestroyDevice( dv.logical, nullptr );
             }
@@ -269,24 +281,70 @@ namespace fv
         }
     }
 
-    void RenderManagerVK::drawTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3)
+    void RenderManagerVK::drawFrame()
     {
-        //vkCmdDraw(
+        for ( auto& dv : m_Devices )
+        {
+            vkWaitForFences(dv.logical, 1, &dv.frameFences[m_FrameImageIdx], VK_TRUE, (u64)-1);
+            vkResetFences(dv.logical, 1, &dv.frameFences[m_FrameImageIdx]);
+
+            uint32_t imageIndex; // Iterates from 0 to numImages-1 in swap chain.
+            if ( dv.swapChain )
+            {
+                vkAcquireNextImageKHR(dv.logical, m_MainSwapChain.swapChain, (u64)-1, dv.imageAvailableSemaphores[m_FrameImageIdx], VK_NULL_HANDLE, &imageIndex);
+            }
+            else
+            {
+                imageIndex = m_CurrentDrawImage;
+            }
+
+            VkSubmitInfo submitInfo = {};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+            VkSemaphore waitSemaphores[] = { dv.imageAvailableSemaphores[m_FrameImageIdx] };
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = waitSemaphores;
+            submitInfo.pWaitDstStageMask = waitStages;
+
+            // Execute command buffers
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &dv.commandBuffers[imageIndex];
+
+            VkSemaphore signalSemaphores[] = { dv.imageFinishedSemaphores[m_FrameImageIdx] };
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = signalSemaphores;
+
+            vkQueueSubmit(dv.graphicsQueue, 1, &submitInfo, dv.frameFences[m_FrameImageIdx]);
+
+            if ( dv.swapChain )
+            {
+                VkPresentInfoKHR presentInfo = {};
+                presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+                presentInfo.waitSemaphoreCount = 1;
+                presentInfo.pWaitSemaphores = signalSemaphores;
+
+                VkSwapchainKHR swapChains[] = { m_MainSwapChain.swapChain };
+                presentInfo.swapchainCount = 1;
+                presentInfo.pSwapchains = swapChains;
+                presentInfo.pImageIndices = &imageIndex;
+
+                vkQueuePresentKHR(dv.presentQueue, &presentInfo);
+            }
+        }
+
+        // Device indepentent variables
+        m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
+        m_CurrentDrawImage = (m_CurrentDrawImage + 1) % m_RenderConfig.numImages;
     }
 
-    void RenderManagerVK::readRenderConfig(RenderConfig& rs)
+    void RenderManagerVK::waitOnDeviceIdle()
     {
-        // TODO read from config
-        rs.resX = 1200;
-        rs.resY = 1000;
-        rs.numImages = 3;
-        rs.numSamples = 1; // For msaa 2, 4 etc
-        rs.numLayers = 1; // for stereo 2
-        rs.createWindow = true;
-        rs.windowWidth = rs.resX;
-        rs.windowHeight = rs.resY;
-        rs.windowName = "Main Window";
-        rs.fullScreen = false;
+        for ( auto& dv : m_Devices )
+        {
+            vkDeviceWaitIdle( dv.logical );
+        }
     }
 
     bool RenderManagerVK::createDevices(VkSurfaceKHR surface)
@@ -297,6 +355,7 @@ namespace fv
         physicalDevices.resize( deviceCount );
         vkEnumeratePhysicalDevices(m_Instance, &deviceCount, physicalDevices.data());
 
+        u32 numCreatedDevices = 0;
         for ( auto& physical : physicalDevices )
         {
             DeviceVK dv {};
@@ -352,6 +411,12 @@ namespace fv
             if ( dv.queueIndices.present )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.present, 0, &dv.presentQueue);
 
             m_Devices.emplace_back( dv );
+
+            if ( ++numCreatedDevices >= m_RenderConfig.maxDevices )
+            {
+                LOG("VK Possible other suitable devices are discarded as num of max device (%d) was reached.", m_RenderConfig.maxDevices);
+                break;
+            }
         }
 
         if ( m_Devices.empty() )
@@ -376,6 +441,7 @@ namespace fv
             return false;
         }
         swapChain.device = &device;
+        device.swapChain = &swapChain;
         return true;
     }
 
@@ -494,6 +560,34 @@ namespace fv
         {
             LOGC("VK Cannot create standard vert shader. Render setup failed.");
             return false;
+        }
+        return true;
+    }
+
+    bool RenderManagerVK::createFrameSyncObjects(DeviceVK& device, u32 numMaxFramesBehind)
+    {
+        assert( device.logical && device.frameFences.size()==0 && device.imageAvailableSemaphores.size()==0 && device.imageFinishedSemaphores.size()==0 && numMaxFramesBehind>= 1 );
+
+        device.imageAvailableSemaphores.resize(numMaxFramesBehind);
+        device.imageFinishedSemaphores.resize(numMaxFramesBehind);
+        device.frameFences.resize(numMaxFramesBehind);
+
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        for ( u32 i = 0; i < numMaxFramesBehind; i++ )
+        {
+            if (vkCreateSemaphore(device.logical, &semaphoreInfo, nullptr, &device.imageAvailableSemaphores[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(device.logical, &semaphoreInfo, nullptr, &device.imageFinishedSemaphores[i]) != VK_SUCCESS ||
+                vkCreateFence(device.logical, &fenceInfo, nullptr, &device.frameFences[i]) != VK_SUCCESS )
+            {
+                LOGC("VK Cannot create frame sync objects.");
+                return false;
+            }
         }
         return true;
     }

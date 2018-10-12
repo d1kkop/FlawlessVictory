@@ -97,7 +97,6 @@ namespace fv
                 }
             });
 
-
             // Check to see if can update network
             if ( Time::elapsed() - lastNetworkUpdate )
             {
@@ -130,9 +129,13 @@ namespace fv
                 gc.update( Time::dt() );
             });
 
+            renderManager()->drawFrame();
+
             // Update timings
             Time::update();
         }
+
+        renderManager()->waitOnDeviceIdle();
     }
 
 

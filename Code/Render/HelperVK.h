@@ -40,6 +40,10 @@ namespace fv
         Vector<VkImageView> imgViews;
         Vector<VkFramebuffer> frameBuffers;
         Vector<VkCommandBuffer> commandBuffers;
+        Vector<VkFence> frameFences;
+        Vector<VkSemaphore> imageAvailableSemaphores;
+        Vector<VkSemaphore> imageFinishedSemaphores;
+        struct SwapChainVK* swapChain;
     };
 
     struct SwapChainVK

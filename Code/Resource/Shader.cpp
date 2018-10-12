@@ -31,6 +31,9 @@ namespace fv
     {
         Vector<char> code;
 
+        // TODO debug to always reload shader
+        ((ResourceToLoad&)rtl).reload = true;
+
         // Check if compiled file is already there
         Path binPath = shaderCompiler()->replaceWithBinaryExtension( Directories::intermediateShaders() / rtl.loadPath.filename() );
         if ( rtl.reload || !LoadBinaryFile(binPath.string().c_str(), code) )
