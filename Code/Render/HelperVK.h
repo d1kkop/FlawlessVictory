@@ -5,13 +5,6 @@
 
 namespace fv
 {
-    struct SwapChainInfoVK
-    {
-        VkSurfaceCapabilitiesKHR capabilities;
-        Vector<VkSurfaceFormatKHR> formats;
-        Vector<VkPresentModeKHR> presentModes;
-    };
-
     struct QueueFamilyIndicesVK
     {
         Optional<u32> graphics;
@@ -32,37 +25,32 @@ namespace fv
         VkQueue sparseQueue;
         VkQueue presentQueue;
         VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceMemoryProperties memProperties;
         VkPhysicalDeviceFeatures features;
         QueueFamilyIndicesVK queueIndices;
         VkPipeline opaquePipeline;
         VkPipelineLayout opaquePipelineLayout;
-        VkShaderModule standardFrag {};
-        VkShaderModule standardVert {};
-        VkRenderPass clearPass{};
+        VkShaderModule standardFrag;
+        VkShaderModule standardVert;
+        VkRenderPass clearPass;
+        VkCommandPool commandPool;
+        VkExtent2D extent;
+        VkFormat format;
+        Vector<VkImage> images;
+        Vector<VkImageView> imgViews;
+        Vector<VkFramebuffer> frameBuffers;
+        Vector<VkCommandBuffer> commandBuffers;
     };
 
     struct SwapChainVK
     {
         DeviceVK* device;
         VkSurfaceKHR surface;
+        VkExtent2D extent;
         VkPresentModeKHR presentMode;
         VkSurfaceFormatKHR surfaceFormat;
-        VkExtent2D extend;
         VkSwapchainKHR swapChain;
         VkSwapchainKHR oldSwapChain;
-        Vector<VkImage> images;
-        Vector<VkImageView> imgViews;
-        Vector<VkFramebuffer> frameBuffers;
-    };
-
-    struct SwapChainParamsVK
-    {
-        DeviceVK* device;
-        VkSurfaceKHR surface;
-        u32 width, height;
-        u32 imageCount;
-        u32 imageArrayLayerCount;
-        VkRenderPass renderPass;
     };
 
     using DebugCallbackVK = VKAPI_ATTR VkBool32 (VKAPI_CALL*)
@@ -78,8 +66,11 @@ namespace fv
         static bool createDevice(VkInstance instance, VkPhysicalDevice physical, const Vector<VkDeviceQueueCreateInfo>& queueCreateInfos, 
                                  const Vector<const char*>& requiredExtensions, const Vector<const char*>& requiredLayers, VkDevice& logical);
         static bool createSurface(VkInstance instance, const void* wHandle, VkSurfaceKHR& surface);
-        static bool createSwapChain(const SwapChainParamsVK& params, SwapChainVK& swapChain);
-        static bool createImageView(VkDevice device, VkImage image, VkFormat format, VkImageView& imgView);
+        static bool createSwapChain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
+                                    const struct RenderConfig& rc, const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
+                                    VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
+                                    VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain);
+        static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
         static bool createRenderPass(VkDevice device, VkFormat format, VkRenderPass& renderPass);
@@ -87,11 +78,13 @@ namespace fv
                                    VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
         static bool createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer);
         static bool createCommandPool(VkDevice device, u32 familyQueueIndex, VkCommandPool& pool);
+        
 
         // Command buffers
         static bool allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
-        static bool startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, 
-                                             const VkClearValue* clearValue=nullptr);
+        static bool startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer);
+        static void startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal);
+        static void stopRenderPass(VkCommandBuffer commandBuffer);
         static bool stopRecordCommandBuffer(VkCommandBuffer commandBuffer);
        
         // Checks and validation.
@@ -103,12 +96,17 @@ namespace fv
         static bool validateNameList(const Vector<String>& found, const Vector<const char*>& required);
 
         // Swap chain query and pick.
-        static void querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainInfoVK& info);
-        static bool chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info, VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);
+        static void querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, Vector<VkSurfaceFormatKHR>& formats,
+                                       VkSurfaceCapabilitiesKHR& capabilities, Vector<VkPresentModeKHR>& presentModes);
+        static bool chooseSwapChain(u32 width, u32 height,
+                                    const Vector<VkSurfaceFormatKHR>& formats, const VkSurfaceCapabilitiesKHR& capabilities, const Vector<VkPresentModeKHR>& presentModes,
+                                    VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);
 
         // Compound helpers. Stores data directly in DeviceVK.
-        static void storeDevicePropertiesAndFeatures(DeviceVK& device);
         static void storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR mainSurface);
+
+        // Misc
+        static u32  findMemoryType(u32 typeFilter, const VkPhysicalDeviceMemoryProperties& memProperties, VkMemoryPropertyFlags propertyFlags);
     };
 }
 #endif

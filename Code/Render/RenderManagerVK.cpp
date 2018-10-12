@@ -31,15 +31,15 @@ namespace fv
     #endif
         m_RequiredPhysicalExtensions = { };
 
-        RenderConfig rs{};
-        readRenderConfig( rs );
+        RenderConfig rc{};
+        readRenderConfig( rc );
 
-        if ( rs.createMainWindow )
+        if ( rc.createWindow )
         {
-            m_MainWindow = OSCreateWindow(rs.mainWindowName.c_str(), 100, 100, rs.mainWindowWidth, rs.mainWindowHeight, rs.mainWindowFullscreen, true, false);
+            m_MainWindow = OSCreateWindow(rc.windowName.c_str(), 100, 100, rc.windowWidth, rc.windowHeight, rc.fullScreen, true, false);
             if ( !m_MainWindow )
             {
-                LOGC("Failed to create main window %s.", rs.mainWindowName.c_str());
+                LOGC("Failed to create main window %s.", rc.windowName.c_str());
                 return false;
             }
             m_RequiredPhysicalExtensions.emplace_back( VK_KHR_SWAPCHAIN_EXTENSION_NAME );
@@ -82,64 +82,104 @@ namespace fv
             }
         }
 
-        // Note, surface can null in case there is no mainWindow.
+        // Note, surface can be null in case there is no mainWindow.
         if ( !createDevices(m_MainSwapChain.surface) )
             return false;
 
-        // Create pipelines
+        // See if want swap chain
+        bool bSwapChainCreated = false;
+        if ( m_MainWindow )
+        {
+            // Find device that can present 
+            for ( auto& dv : m_Devices )
+            {
+                if ( createSwapChain( dv, m_MainSwapChain, rc ) )
+                {
+                    bSwapChainCreated = true;
+                    break;
+                }
+            }
+            if ( bSwapChainCreated )
+            {
+                auto& dv = *m_MainSwapChain.device;
+                assert( dv.images.size() == 0 && dv.imgViews.size() == 0 );
+                if ( !createImagesFromSwapChain(m_MainSwapChain, rc.numLayers, dv.images, dv.imgViews) )
+                    return false;
+
+                // Pick format from swap chain
+                dv.format = m_MainSwapChain.surfaceFormat.format;
+                dv.extent = m_MainSwapChain.extent;
+            }
+            else
+            {
+                LOGC("VK Failed to create main swap chain.");
+                return false;
+            }
+        }
+
         for ( auto& dv : m_Devices )
         {
+            if ( dv.images.empty() ) // No swap chain for device
+            {
+                if ( !createImagesForDevice( dv, rc ) ) // If not derived from a swap chain.
+                    return false;
+            }
+
             // Standard default shaders necessary to set up a pipeline
-            if ( !createStandardShaders( dv ) )
+            if ( !createStandardShaders(dv) )
             {
                 return false;
             }
 
-            if ( !HelperVK::createRenderPass( dv.logical, m_MainSwapChain.surfaceFormat.format, dv.clearPass) )
+            if ( !HelperVK::createRenderPass(dv.logical, dv.format, dv.clearPass) )
             {
                 LOGC("Cannot create main render pass. Render setup failed.");
                 return false;
             }
 
-            VkExtent2D vpSize = { rs.mainWindowWidth, rs.mainWindowHeight };
-            if ( !HelperVK::createPipeline( dv.logical, dv.standardVert, dv.standardFrag, dv.clearPass, vpSize, dv.opaquePipelineLayout, dv.opaquePipeline ) )
+            if ( !HelperVK::createPipeline(dv.logical, dv.standardVert, dv.standardFrag, dv.clearPass, dv.extent, dv.opaquePipelineLayout, dv.opaquePipeline) )
             {
                 LOGC("Cannot create standard pipeline. Render setup failed.");
                 return false;
             }
+
+            if ( !createFrameBuffersForDevice( dv, dv.clearPass ) )
+            {
+                return false;
+            }
         }
 
-        // See if want swap chain
-        VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
-        if ( m_MainWindow )
+        // Temp command buffers
+        for ( auto& dv : m_Devices )
         {
-            // Find device that can present 
-            bool bSwapChainCreated = false;
-            for ( auto& dv : m_Devices )
+            // TEMP create drawable triangle
+            u32 oldSize = (u32) dv.commandBuffers.size();
+            if ( !HelperVK::allocCommandBuffers(dv.logical, dv.commandPool, 3, dv.commandBuffers) )
             {
-                SwapChainParamsVK scParams {};
-                scParams.device = &dv;
-                scParams.surface = m_MainSwapChain.surface;
-                scParams.width  = rs.mainWindowWidth;
-                scParams.height = rs.mainWindowHeight;
-                scParams.imageArrayLayerCount = 1; // 2 in case of stereo 
-                scParams.imageCount = 3; // Try triple buffering
-                scParams.renderPass = dv.clearPass;
-
-                if ( !HelperVK::createSwapChain(scParams, m_MainSwapChain) )
-                {
-                    return false;
-                }
-                bSwapChainCreated = true;
-                format = m_MainSwapChain.surfaceFormat.format;
-                m_MainSwapChain.device = &dv;
-                break; // Only pick a single device for mainWindow
+                LOGC("Cannot create temporary triangle command buffer.");
+                return false;
             }
 
-            if ( !bSwapChainCreated )
+            u32 i=0;
+            for ( auto& cb : dv.commandBuffers )
             {
-                LOGC("VK Failed to create swap chain. No device found that supports it.");
-                return false;
+                if ( !HelperVK::startRecordCommandBuffer( dv.logical, cb ) )
+                {
+                    LOGC("VK Failed to start record command buffer.");
+                    return false;
+                }
+
+                VkClearValue cv = { .4f, .3f, .9f, 0.f };
+                HelperVK::startRenderPass( cb, dv.clearPass, dv.frameBuffers[i++], { 0, 0, dv.extent }, &cv );
+                vkCmdBindPipeline( cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv.opaquePipeline );
+                vkCmdDraw( cb, 3, 1, 0, 0 );
+                HelperVK::stopRenderPass( cb );
+
+                if ( !HelperVK::stopRecordCommandBuffer(cb) )
+                {
+                    LOGC("VK Failed to stop recording command buffer.");
+                    return false;
+                }
             }
         }
 
@@ -154,20 +194,6 @@ namespace fv
         if ( destroyDebugUtilMessenger && m_DebugCallback )
         {
             destroyDebugUtilMessenger( m_Instance, m_DebugCallback, nullptr );
-        }
-        for ( auto& imgView : m_MainSwapChain.imgViews )
-        {
-            if ( imgView && m_MainSwapChain.device && m_MainSwapChain.device->logical )
-            {
-                vkDestroyImageView( m_MainSwapChain.device->logical, imgView, nullptr );
-            }
-        }
-        for ( auto& frameBuffer : m_MainSwapChain.frameBuffers )
-        {
-            if ( frameBuffer && m_MainSwapChain.device && m_MainSwapChain.device->logical )
-            {
-                vkDestroyFramebuffer( m_MainSwapChain.device->logical, frameBuffer, nullptr );
-            }
         }
         if ( m_MainSwapChain.device && m_MainSwapChain.device->logical && m_MainSwapChain.swapChain )
         {
@@ -186,6 +212,26 @@ namespace fv
                 if ( dv.clearPass ) vkDestroyRenderPass( dv.logical, dv.clearPass, nullptr );
                 if ( dv.opaquePipelineLayout ) vkDestroyPipelineLayout( dv.logical, dv.opaquePipelineLayout, nullptr );
                 if ( dv.opaquePipeline) vkDestroyPipeline( dv.logical, dv.opaquePipeline, nullptr );
+                if ( dv.commandPool )
+                {
+                    for ( auto& cb : dv.commandBuffers )
+                    {
+                        if ( cb ) vkFreeCommandBuffers( dv.logical, dv.commandPool, (u32)dv.commandBuffers.size(), dv.commandBuffers.data() );
+                    }
+                    vkDestroyCommandPool( dv.logical, dv.commandPool, nullptr );
+                }
+                for ( auto& imgView : dv.imgViews )
+                {
+                    if ( imgView ) vkDestroyImageView( dv.logical, imgView, nullptr );
+                }
+                for ( auto& img : dv.images )
+                {
+                    if ( img ) vkDestroyImage( dv.logical, img, nullptr );
+                }
+                for ( auto& frameBuffer : dv.frameBuffers )
+                {
+                    if ( frameBuffer ) vkDestroyFramebuffer( dv.logical, frameBuffer, nullptr );
+                }
                 vkDestroyDevice( dv.logical, nullptr );
             }
         }
@@ -223,14 +269,24 @@ namespace fv
         }
     }
 
+    void RenderManagerVK::drawTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3)
+    {
+        //vkCmdDraw(
+    }
+
     void RenderManagerVK::readRenderConfig(RenderConfig& rs)
     {
         // TODO read from config
-        rs.createMainWindow = true;
-        rs.mainWindowWidth = 1600;
-        rs.mainWindowHeight = 900;
-        rs.mainWindowName = "Main Window";
-        rs.mainWindowFullscreen = false;
+        rs.resX = 1200;
+        rs.resY = 1000;
+        rs.numImages = 3;
+        rs.numSamples = 1; // For msaa 2, 4 etc
+        rs.numLayers = 1; // for stereo 2
+        rs.createWindow = true;
+        rs.windowWidth = rs.resX;
+        rs.windowHeight = rs.resY;
+        rs.windowName = "Main Window";
+        rs.fullScreen = false;
     }
 
     bool RenderManagerVK::createDevices(VkSurfaceKHR surface)
@@ -252,7 +308,9 @@ namespace fv
                 continue; // not suitable
             }
 
-            HelperVK::storeDevicePropertiesAndFeatures( dv );
+            vkGetPhysicalDeviceFeatures(dv.physical, &dv.features);
+            vkGetPhysicalDeviceProperties(dv.physical, &dv.properties);
+            vkGetPhysicalDeviceMemoryProperties(dv.physical, &dv.memProperties);
             HelperVK::storeDeviceQueueFamilies( dv, surface );
 
             if ( !((dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
@@ -281,6 +339,12 @@ namespace fv
                 return false;
             }
 
+            if ( !HelperVK::createCommandPool( dv.logical, dv.queueIndices.graphics.value(), dv.commandPool ))
+            {
+                LOGC( "VK Failed to create command pool.");
+                return false;
+            }
+
             if ( dv.queueIndices.graphics ) vkGetDeviceQueue(dv.logical, *dv.queueIndices.graphics, 0, &dv.graphicsQueue);
             if ( dv.queueIndices.compute )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.compute, 0, &dv.computeQueue);
             if ( dv.queueIndices.transfer ) vkGetDeviceQueue(dv.logical, *dv.queueIndices.transfer, 0, &dv.transferQueue);
@@ -294,6 +358,127 @@ namespace fv
         {
             LOGC("VK Did not find any suitable devices.");
             return false;
+        }
+        return true;
+    }
+
+    bool RenderManagerVK::createSwapChain(DeviceVK& device, SwapChainVK& swapChain, const RenderConfig& rc)
+    {
+        assert( device.logical && device.physical && swapChain.surface );
+        if (!HelperVK::createSwapChain(device.logical, device.physical, swapChain.surface, 
+                                       rc, 
+                                       device.queueIndices.graphics,
+                                       device.queueIndices.present,
+                                       swapChain.surfaceFormat, swapChain.presentMode, swapChain.extent,
+                                       swapChain.swapChain) )
+        {
+            LOGC("VK Failed to create swap chain.");
+            return false;
+        }
+        swapChain.device = &device;
+        return true;
+    }
+
+    bool RenderManagerVK::createImagesFromSwapChain(const SwapChainVK& swapChain, u32 numLayers, Vector<VkImage>& images, Vector<VkImageView>& imgViews)
+    {
+        // Retrieve swap chain images
+        assert( swapChain.device && swapChain.device->logical && swapChain.device && swapChain.device->logical );
+        uint32_t swapChainImgCount;
+        vkGetSwapchainImagesKHR(swapChain.device->logical, swapChain.swapChain, &swapChainImgCount, nullptr);
+        images.resize(swapChainImgCount);
+        vkGetSwapchainImagesKHR(swapChain.device->logical, swapChain.swapChain, &swapChainImgCount, images.data());
+
+        // Create image views on images in swap chain
+        for ( auto& img : images )
+        {
+            VkImageView imgView;
+            if ( !HelperVK::createImageView(swapChain.device->logical, img, swapChain.surfaceFormat.format, numLayers, imgView) )
+            {
+                LOGW("VK Cannot create all images for swap chain. Render setup failed.");
+                return false;
+            }
+            imgViews.emplace_back(imgView);
+        }
+
+        assert(imgViews.size() == images.size());
+        return true;
+    }
+
+    bool RenderManagerVK::createImagesForDevice(DeviceVK& dv, const RenderConfig& rc)
+    {
+        assert(dv.images.empty() && dv.imgViews.empty() && rc.numImages > 0 && rc.numSamples >= 1);
+        for ( u32 i=0; i< rc.numImages; ++i )
+        {
+            VkImageCreateInfo ici {};
+            ici.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            ici.flags = 0;
+            ici.imageType = VK_IMAGE_TYPE_2D;
+            ici.format = VK_FORMAT_B8G8R8A8_UNORM;
+            ici.extent = { rc.resX, rc.resY, 1 };
+            ici.mipLevels = 1;
+            ici.arrayLayers = rc.numLayers;
+            ici.samples = (VkSampleCountFlagBits) rc.numSamples;
+            ici.tiling = VK_IMAGE_TILING_OPTIMAL;
+            ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            ici.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            ici.queueFamilyIndexCount = 1; 
+            ici.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            uint32_t queueFamIndices [] = { dv.queueIndices.graphics.value() };
+            ici.pQueueFamilyIndices = queueFamIndices;
+            VkImage image;
+            if ( vkCreateImage(dv.logical, &ici, nullptr, &image) != VK_SUCCESS )
+            {
+                LOGC("VK Cannot create image for device.");
+                return false;
+            }
+            VkMemoryRequirements memRequirements;
+            vkGetImageMemoryRequirements(dv.logical, image, &memRequirements);
+            VkMemoryAllocateInfo allocInfo = {};
+            allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            allocInfo.allocationSize = memRequirements.size;
+            allocInfo.memoryTypeIndex = HelperVK::findMemoryType(memRequirements.memoryTypeBits, dv.memProperties, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            VkDeviceMemory imageMemory;
+            if ( vkAllocateMemory(dv.logical, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS )
+            {
+                LOGC("VK Failed to allocate memory for image.");
+                return false;
+            }
+            if ( vkBindImageMemory(dv.logical, image, imageMemory, 0) != VK_SUCCESS )
+            {
+                vkFreeMemory(dv.logical, imageMemory, nullptr);
+                LOGC("VK Failed to bind image memory.");
+                return false;
+            }
+            // Format and extent from image create params
+            dv.format = ici.format;
+            dv.extent = { ici.extent.width, ici.extent.height };
+            dv.images.emplace_back(image);
+            VkImageView imgView;
+            if ( !HelperVK::createImageView(dv.logical, image, ici.format, rc.numLayers, imgView) )
+            {
+                LOGC("VK Cannot create image view for device.");
+                return false;
+            }
+            dv.imgViews.emplace_back(imgView);
+        }
+        return true;
+    }
+
+    bool RenderManagerVK::createFrameBuffersForDevice(DeviceVK& device, VkRenderPass renderPass)
+    {
+        assert( renderPass && device.logical );
+        // For each image, there is a framebuffer and ascociated img views.
+        u32 i=0;
+        for ( auto& img : device.images )
+        {
+            VkFramebuffer frameBuffer;
+            Vector<VkImageView> attachments = { device.imgViews[i++] };
+            if ( !HelperVK::createFramebuffer(device.logical, device.extent, renderPass, attachments, frameBuffer) )
+            {
+                LOGC("VK Cannot create all frame buffers for swap chain. Render setup failed.");
+                return false;
+            }
+            device.frameBuffers.emplace_back(frameBuffer);
         }
         return true;
     }

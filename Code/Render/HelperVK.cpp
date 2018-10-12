@@ -1,5 +1,6 @@
 #include "HelperVK.h"
 #if FV_VULKAN
+#include "RenderManager.h" // For RenderConfig
 #include "../Core/Algorithm.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
@@ -103,37 +104,46 @@ namespace fv
         return false;
     }
 
-    bool HelperVK::createSwapChain(const SwapChainParamsVK& p, SwapChainVK& swapChain)
+    bool HelperVK::createSwapChain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
+                                   const RenderConfig& rc, const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
+                                   VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
+                                   VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain)
     {
-        assert(p.device && p.surface && p.width != 0 && p.height != 0);
+        assert(device && physicalDevice && surface && rc.windowWidth != 0 && 
+               rc.windowHeight != 0 && rc.numImages >= 1 && rc.numLayers >= 1 && rc.numSamples >= 1);
 
-        SwapChainInfoVK chainInfo;
-        querySwapChainInfo(p.device->physical, p.surface, chainInfo);
-
-        if ( !chooseSwapChain(p.width, p.height, chainInfo, swapChain.surfaceFormat, swapChain.presentMode, swapChain.extend) )
+        if ( !(graphicsQueueIdx.has_value() && presentQueueIdx.has_value()) )
         {
             return false;
         }
 
-        u32 imageCount = Max<u32>(p.imageCount, chainInfo.capabilities.minImageCount);
-        if ( chainInfo.capabilities.maxImageCount != 0 ) // Only clamp to max if specified. Some GPU's do not specify.
+        Vector<VkPresentModeKHR> presentModes;
+        Vector<VkSurfaceFormatKHR> formats;
+        VkSurfaceCapabilitiesKHR capabilities;
+        querySwapChainInfo(physicalDevice, surface, formats, capabilities, presentModes);
+        if ( !chooseSwapChain(rc.windowWidth, rc.windowHeight, formats, capabilities, presentModes, chosenFormat, chosenPresentMode, surfaceExtend) )
         {
-            imageCount = Min<u32>(imageCount, chainInfo.capabilities.maxImageCount);
+            return false;
         }
-        u32 imageArrayLayers = Clamp<u32>(p.imageArrayLayerCount, 1U, (u32)chainInfo.capabilities.maxImageArrayLayers);
+
+        u32 imageCount = Max<u32>(rc.numImages, capabilities.minImageCount);
+        if ( capabilities.maxImageCount != 0 ) // Only clamp to max if specified. Some GPU's do not specify.
+        {
+            imageCount = Min<u32>(imageCount, capabilities.maxImageCount);
+        }
+        u32 imageArrayLayerCount = Clamp<u32>(rc.numLayers, 1U, (u32)capabilities.maxImageArrayLayers);
 
         VkSwapchainCreateInfoKHR createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = p.surface;
+        createInfo.surface = surface;
         createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = swapChain.surfaceFormat.format;
-        createInfo.imageColorSpace = swapChain.surfaceFormat.colorSpace;
-        createInfo.imageExtent = swapChain.extend;
-        createInfo.imageArrayLayers = imageArrayLayers; // In case of 3d stereo rendering must be 2
+        createInfo.imageFormat = chosenFormat.format;
+        createInfo.imageColorSpace = chosenFormat.colorSpace;
+        createInfo.imageExtent = surfaceExtend;
+        createInfo.imageArrayLayers = imageArrayLayerCount; // In case of 3d stereo rendering must be 2
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        assert(p.device->queueIndices.graphics.has_value() && p.device->queueIndices.present.has_value());
-        uint32_t queueFamilyIndices[] = { p.device->queueIndices.graphics.value(), p.device->queueIndices.present.value() };
+        uint32_t queueFamilyIndices[] = { graphicsQueueIdx.value(), presentQueueIdx.value() };
         if ( queueFamilyIndices[0] != queueFamilyIndices[1] )
         {
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -147,57 +157,21 @@ namespace fv
             createInfo.pQueueFamilyIndices = nullptr; // Optional
         }
 
-        createInfo.preTransform = chainInfo.capabilities.currentTransform;   // Pre transform the image (eg flip horizontal)
+        createInfo.preTransform = capabilities.currentTransform;   // Pre transform the image (eg flip horizontal)
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;  // If want to blend with other windows in system
-        createInfo.presentMode = swapChain.presentMode;
+        createInfo.presentMode = chosenPresentMode;
         createInfo.clipped = VK_TRUE; // Whether hidden pixels by other windows are obscured
         createInfo.oldSwapchain = VK_NULL_HANDLE; // TODO fix later
 
-        if ( vkCreateSwapchainKHR(p.device->logical, &createInfo, nullptr, &swapChain.swapChain) != VK_SUCCESS )
+        if ( vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS )
         {
-            LOGC("VK Failed to create swap chain for device.");
+            LOGW("VK Failed to create swap chain for device.");
             return false;
         }
-
-        // Retrieve swap chain images
-        assert(swapChain.swapChain);
-        uint32_t swapChainImgCount;
-        vkGetSwapchainImagesKHR(p.device->logical, swapChain.swapChain, &swapChainImgCount, nullptr);
-        swapChain.images.resize(swapChainImgCount);
-        vkGetSwapchainImagesKHR(p.device->logical, swapChain.swapChain, &swapChainImgCount, swapChain.images.data());
-
-        // Create image views on images in swap chain
-        for ( auto& img : swapChain.images )
-        {
-            VkImageView imgView;
-            if ( !createImageView(p.device->logical, img, swapChain.surfaceFormat.format, imgView) )
-            {
-                LOGC("VK Cannot create all images for swap chain. Render setup failed.");
-                return false;
-            }
-            swapChain.imgViews.emplace_back(imgView);
-        }
-
-        // For each image, there is a framebuffer and ascociated img views.
-        for ( auto& img : swapChain.images )
-        {
-            VkFramebuffer frameBuffer;
-            if ( !createFramebuffer(p.device->logical, swapChain.extend, p.renderPass, swapChain.imgViews, frameBuffer) )
-            {
-                LOGC("VK Cannot create all frame buffers for swap chain. Render setup failed.");
-                return false;
-            }
-            swapChain.frameBuffers.emplace_back(frameBuffer);
-        }
-
-        swapChain.surface = p.surface;
-        swapChain.device = p.device;
-
-        assert(swapChain.imgViews.size() == swapChain.images.size());
         return true;
     }
 
-    bool HelperVK::createImageView(VkDevice device, VkImage image, VkFormat format, VkImageView& imgView)
+    bool HelperVK::createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView)
     {
         assert(device && image && format);
 
@@ -216,7 +190,7 @@ namespace fv
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.layerCount = numLayers;
 
         if ( vkCreateImageView(device, &createInfo, nullptr, &imgView) != VK_SUCCESS )
         {
@@ -455,8 +429,9 @@ namespace fv
         allocInfo.commandPool = commandPool;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = numCommandBuffers;
-        commandBuffers.resize(numCommandBuffers);
-        if ( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS )
+        u32 oldSize = (u32)commandBuffers.size();
+        commandBuffers.resize(commandBuffers.size() + numCommandBuffers);
+        if ( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data() + oldSize) != VK_SUCCESS )
         {
             LOGW("VK Failed to allocate command buffer.");
             return false;
@@ -464,24 +439,13 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer,
-                                            const VkRect2D& renderArea, const VkClearValue* clearValue)
+    bool HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer)
     {
-        assert( device && commandBuffer && renderPass && frameBuffer );
+        assert( device && commandBuffer );
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-        VkRenderPassBeginInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass  = renderPass;
-        renderPassInfo.framebuffer = frameBuffer;
-        renderPassInfo.renderArea.offset = renderArea.offset;
-        renderPassInfo.renderArea.extent = renderArea.extent;
-
-        renderPassInfo.clearValueCount = clearValue ? 1 : 0;
-        renderPassInfo.pClearValues = clearValue;
 
         if ( vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS )
         {
@@ -490,6 +454,28 @@ namespace fv
         }
 
         return true;
+    }
+
+    void HelperVK::startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal)
+    {
+        assert( commandBuffer && renderPass && frameBuffer );
+        VkRenderPassBeginInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass  = renderPass;
+        renderPassInfo.framebuffer = frameBuffer;
+        renderPassInfo.renderArea.offset = renderArea.offset;
+        renderPassInfo.renderArea.extent = renderArea.extent;
+
+        renderPassInfo.clearValueCount = clearVal ? 1 : 0;
+        renderPassInfo.pClearValues = clearVal;
+
+        vkCmdBeginRenderPass( commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+    }
+
+    void HelperVK::stopRenderPass(VkCommandBuffer commandBuffer)
+    {
+        assert( commandBuffer );
+        vkCmdEndRenderPass( commandBuffer );
     }
 
     bool HelperVK::stopRecordCommandBuffer(VkCommandBuffer commandBuffer)
@@ -568,20 +554,23 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::chooseSwapChain(u32 width, u32 height, const SwapChainInfoVK& info,
+    bool HelperVK::chooseSwapChain(u32 width, u32 height, 
+                                   const Vector<VkSurfaceFormatKHR>& formats, 
+                                   const VkSurfaceCapabilitiesKHR& capabilities, 
+                                   const Vector<VkPresentModeKHR>& presentModes,
                                    VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend)
     {
         bool found = false;
-        if ( info.formats.size() > 0 )
+        if ( formats.size() > 0 )
         {
-            if ( info.formats[0].format == VK_FORMAT_UNDEFINED )
+            if ( formats[0].format == VK_FORMAT_UNDEFINED )
             {
                 format = { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
                 found = true;
             }
             else
             {
-                for ( const auto& f : info.formats )
+                for ( const auto& f : formats )
                 {
                     if ( f.format == VK_FORMAT_B8G8R8A8_UNORM  && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR )
                     {
@@ -594,11 +583,11 @@ namespace fv
         }
         if ( !found )
         {
-            LOGC("VK Could not find suitable surface format for swap chain.");
+            LOGW("VK Could not find suitable surface format for swap chain.");
             return false;
         }
         mode  = VK_PRESENT_MODE_FIFO_KHR;
-        for ( const auto& presentMode : info.presentModes )
+        for ( const auto& presentMode : presentModes )
         {
             if ( presentMode == VK_PRESENT_MODE_MAILBOX_KHR )
             {
@@ -610,44 +599,41 @@ namespace fv
                 mode = presentMode;
             }
         }
-        if ( info.capabilities.currentExtent.width != UINT_MAX )
+        if ( capabilities.currentExtent.width != UINT_MAX )
         {
-            extend = info.capabilities.currentExtent;
+            extend = capabilities.currentExtent;
         }
         else
         {
             extend = { width, height };
-            extend.width  = Clamp(extend.width, info.capabilities.minImageExtent.width, info.capabilities.maxImageExtent.width);
-            extend.height = Clamp(extend.height, info.capabilities.minImageExtent.height, info.capabilities.maxImageExtent.height);
+            extend.width  = Clamp(extend.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            extend.height = Clamp(extend.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
         }
         return true;
     }
 
-    void HelperVK::querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, SwapChainInfoVK& info)
+    void HelperVK::querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, 
+                                      Vector<VkSurfaceFormatKHR>& formats,
+                                      VkSurfaceCapabilitiesKHR& capabilities, 
+                                      Vector<VkPresentModeKHR>& presentModes)
     {
+        assert( device && surface );
+
         uint32_t formatCount;
         uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &info.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &capabilities);
         vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
         if ( formatCount > 0 )
         {
-            info.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, info.formats.data());
+            formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, formats.data());
         }
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
         if ( presentModeCount > 0 )
         {
-            info.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, info.presentModes.data());
+            presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, presentModes.data());
         }
-    }
-
-    // TODO these two store functions must be rearranged and not store direclty in DeviceVK.
-    void HelperVK::storeDevicePropertiesAndFeatures(DeviceVK& device)
-    {
-        assert(device.physical);
-        vkGetPhysicalDeviceProperties(device.physical, &device.properties);
-        vkGetPhysicalDeviceFeatures(device.physical, &device.features);
     }
 
     void HelperVK::storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR surface)
@@ -676,6 +662,19 @@ namespace fv
             }
         }
     }
+
+    u32 HelperVK::findMemoryType(u32 typeFilter, const VkPhysicalDeviceMemoryProperties& memProperties, VkMemoryPropertyFlags propertyFlags)
+    {
+        for ( u32 i = 0; i < memProperties.memoryTypeCount; i++ )
+        {
+            if ( (typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & propertyFlags) == propertyFlags )
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
 }
 
 #endif
