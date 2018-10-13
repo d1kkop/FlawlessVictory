@@ -28,22 +28,28 @@
     #define FV_GLSL2SPIRVLIB 0
     #define FV_GLSL2SPIRVBIN 1
     #define FV_VLD 0
+    #define FV_ASSIMP 1
+    #define FV_INCLUDE_WINHDR 1
 #endif
 
 // Compiler mappings
 #if _MSC_VER
-#define FV_SECURE_CRT 1
-#if !FV_SECURE_CRT
-    #define _CRT_SECURE_NO_WARNINGS
-#endif
-#define FV_INCLUDE_WINHDR 1
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#define FV_FUNCTION __FUNCTION__
-#define FV_LINE		__LINE__
-#define FV_FL		FV_FUNCTION, FV_LINE
+    #define FV_SECURE_CRT 1
+    #if !FV_SECURE_CRT
+        #define _CRT_SECURE_NO_WARNINGS
+    #endif
+    #define FV_FUNCTION __FUNCTION__
+    #define FV_LINE		__LINE__
+    #define FV_FL		FV_FUNCTION, FV_LINE
 #endif
 
+
+#if FV_INCLUDE_WINHDR
+    #define WIN32_LEAN_AND_MEAN
+    #undef min
+    #undef max
+    #include <windows.h>
+#endif
 
 #if FV_SDL
 #include "../3rdParty/SDL/include/SDL.h"
@@ -67,4 +73,11 @@
 #if FV_VLD
 #include "../3rdParty/Visual Leak Detector/include/vld.h"
 #pragma comment(lib, "../3rdParty/Visual Leak Detector/lib/Win64/vld.lib")
+#endif
+
+#if FV_ASSIMP
+#include <assimp/cimport.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#pragma comment(lib, "../3rdParty/Assimp/lib/x64/assimp-vc140-mt.lib")
 #endif

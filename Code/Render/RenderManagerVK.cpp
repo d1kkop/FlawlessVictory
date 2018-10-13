@@ -226,11 +226,13 @@ namespace fv
                 }
                 if ( dv.commandPool )
                 {
-                    // apperently, no need to free command buffers.
-                    //for ( auto cb : dv.commandBuffers )
-                    //{
-                    //    if ( cb ) vkFreeCommandBuffers(dv.logical, dv.commandPool, (u32)dv.commandBuffers.size(), dv.commandBuffers.data());
-                    //}
+                    if ( !dv.swapChain )
+                    {
+                        for ( auto cb : dv.commandBuffers )
+                        {
+                            if ( cb ) vkFreeCommandBuffers(dv.logical, dv.commandPool, (u32)dv.commandBuffers.size(), dv.commandBuffers.data());
+                        }
+                    }
                     vkDestroyCommandPool(dv.logical, dv.commandPool, nullptr);
                 }
                 for ( auto s : dv.imageAvailableSemaphores ) if ( s ) vkDestroySemaphore( dv.logical, s, nullptr );
