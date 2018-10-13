@@ -8,7 +8,7 @@ namespace fv
     class TextureImporter
     {
     public:
-        void load(const ResourceToLoad& rtl);
+        bool reimport(const Path& path, u32& width, u32& height, enum class ImageFormat& format, Vector<byte>& data);
     };
 
 

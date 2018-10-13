@@ -1,6 +1,7 @@
 #include "Texture2D.h"
+#include "PatchManager.h"
+#include "ResourceManager.h"
 #include "../Core/Thread.h"
-#include "../Core/JobManager.h"
 #include "../Resource/TextureImporter.h"
 #include "../Render/RenderManager.h"
 
@@ -28,7 +29,35 @@ namespace fv
 
     void Texture2D::load(const ResourceToLoad& rtl)
     {
-        textureImporter()->load( rtl );
+        u32 width, height;
+        ImageFormat format;
+        Vector<byte> data;
+        if ( !textureImporter()->reimport( rtl.loadPath, width, height, format, data ) )
+        {
+            return;
+        }
+
+        GraphicResource* graphic = renderManager()->createGraphic(GraphicType::Texture2D, 0 /*device idx*/);
+        if ( !graphic )
+        {
+            LOGW("Cannot create graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());
+            return;
+        }
+
+        bool graphicUpdated = graphic->updateImage( width, height, data.data(), (u32)data.size(), format );
+        if ( !graphicUpdated )
+        {
+            renderManager()->freeGraphic(graphic);
+            LOGW("Cannot update graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());
+            return;
+        }
+
+        Patch* patch    = patchManager()->createPatch(PatchType::Texture2DData);
+        patch->width    = width;
+        patch->height   = height;
+        patch->graphic  = graphic;
+        patch->resource = rtl.resource;
+        patch->submit();
     }
 
 }

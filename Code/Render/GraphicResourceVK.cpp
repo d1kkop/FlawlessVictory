@@ -30,6 +30,9 @@ namespace fv
         case GraphicType::Shader:
             m_Shader = nullptr;
             break;
+        case GraphicType::Submesh:
+            m_Indices = nullptr;
+            m_Vertices.clear();
         default:
             assert(false);
             break;
@@ -74,7 +77,6 @@ namespace fv
     bool GraphicResourceVK::updateBuffer(const byte* data, u32 size, BufferFormat format)
     {
         FV_CHECK_GRAPHIC_TYPE(GraphicType::Buffer);
-
         return false;
     }
 
@@ -82,6 +84,12 @@ namespace fv
     {
         FV_CHECK_GRAPHIC_TYPE(GraphicType::Shader);
         return HelperVK::createShaderModule( m_Device, code, m_Shader );
+    }
+
+    bool GraphicResourceVK::updateMeshData(const Submesh& submesh)
+    {
+        FV_CHECK_GRAPHIC_TYPE(GraphicType::Submesh);
+        return true;
     }
 
 }

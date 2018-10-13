@@ -1,24 +1,14 @@
 #include "TextureImporter.h"
 #include "../Core/Functions.h"
-#include "../Core/Directories.h"
 #include "../Core/LogManager.h"
 #include "../Render/GraphicResource.h"
-#include "../Render/RenderManager.h"
-#include "../Resource/PatchManager.h"
-#include "../Resource/ResourceManager.h"
-#include "../Resource/Texture2D.h"
 
 namespace fv
 {
-    void TextureImporter::load(const ResourceToLoad& rtl)
+    bool TextureImporter::reimport(const Path& path, u32& width, u32& height, ImageFormat& imgFormat, Vector<byte>& data)
     {
-        assert( rtl.resource );
-
-        String sPath = rtl.loadPath.string();
+        String sPath = path.string();
         const char* filename = sPath.c_str();
-
-        u32 width, height;
-        GraphicResource* graphic;
 
     #if FV_FREEIMAGE
 
@@ -27,23 +17,22 @@ namespace fv
         if ( fif == FIF_UNKNOWN )
         {
             LOGW("Cannot obtain file type from texture %s.", filename);
-            return;
+            return false;
         }
         if ( !FreeImage_FIFSupportsReading(fif) )
         {
             LOGW("FreeImage does not support loading %s", filename);
-            return;
+            return false;
         }
         FIBITMAP* dib = FreeImage_Load(fif, filename);
         if ( !dib )
         {
             LOGW("Loading of %s failed.", filename);
-            return;
+            return false;
         }
         // Convert to easy format
         u32 bpp = FreeImage_GetBPP(dib);
         FIBITMAP* dibConverted;
-        ImageFormat imgFormat;
         switch ( bpp )
         {
         case 8:
@@ -74,47 +63,26 @@ namespace fv
         if ( !dibConverted )
         {
             LOGW("Could not convert %s to usuable format.", filename);
-            return;
+            return false;
         }
 
-        byte* bits = FreeImage_GetBits(dibConverted);
-        width  = FreeImage_GetWidth(dibConverted);
-        height = FreeImage_GetHeight(dibConverted);
+        byte* bits  = FreeImage_GetBits(dibConverted);
+        width       = FreeImage_GetWidth(dibConverted);
+        height      = FreeImage_GetHeight(dibConverted);
         // Sanity checks
         if ( (bits == nullptr) || (width == 0) || (height == 0) )
         {
             LOGW("Texture %s has invalid data. Loading failed.", filename);
             FreeImage_Unload(dibConverted);
-            return;
+            return false;
         }
-
-        graphic = renderManager()->createGraphic(GraphicType::Texture2D, 0 /*device idx*/);
-        if ( !graphic )
-        {
-            LOGW("Cannot create graphic resource for texture 2D. Loading failed.", filename);
-            FreeImage_Unload(dibConverted);
-            return;
-        }
-
-        bool graphicUpdated = graphic->updateImage(width, height, bits, width*height*bpp, imgFormat);
+        u32 size = width*height *bpp;
+        data.resize( size );
+        memcpy( data.data(), bits, size );
         FreeImage_Unload(dibConverted);
-        if ( !graphicUpdated )
-        {
-            renderManager()->freeGraphic(graphic);
-            LOGW("Cannot update graphic resource for texture 2D. Loading failed.", filename);
-            return;
-        }
-
     #endif
 
-        assert( width && height && graphic );
-        Patch* patch    = patchManager()->createPatch(PatchType::Texture2DData);
-        patch->width    = width;
-        patch->height   = height;
-        patch->graphic  = graphic;
-        patch->resource = rtl.resource;
-
-        patchManager()->submitPatch(patch);
+        return true;
     }
 
 

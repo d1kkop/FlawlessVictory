@@ -16,6 +16,7 @@ namespace fv
         FV_MO void applyPatch( u32 width, u32 height, ImageFormat format, GraphicResource* resource );
 
     private:
+        // From different thread
         FV_DLL void load(const ResourceToLoad& rtl) override;
 
         u32 m_Width  = 0;

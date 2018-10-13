@@ -30,7 +30,8 @@ namespace fv
         Texture3D,
         TextureCube,
         Buffer,
-        Shader
+        Shader,
+        Submesh
     };
 
     class GraphicResource: public Object
@@ -42,6 +43,7 @@ namespace fv
         virtual bool updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format) = 0;
         virtual bool updateBuffer(const byte* data, u32 size, BufferFormat format) = 0;
         virtual bool updateShaderCode(Vector<char>& code) = 0;
+        virtual bool updateMeshData(const struct Submesh& submesh) = 0;
 
     protected:
         GraphicType m_Type;

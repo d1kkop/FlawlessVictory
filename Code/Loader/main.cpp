@@ -8,6 +8,7 @@
 #include "../Resource/ResourceManager.h"
 #include "../Resource/ShaderCompiler.h"
 #include "../Resource/TextureImporter.h"
+#include "../Resource/ModelImporter.h"
 #include "../Resource/PatchManager.h"
 #include "../Scene/GameObject.h"
 #include "../System/SystemManager.h"
@@ -29,6 +30,7 @@ void shutdown()
     deleteGameObjectManager();
     deleteShaderCompiler();
     deleteTextureImporter();
+    deleteModelImporter();
     deleteRenderManager();
     // Do jobManager after render manager as graphics may be async deleted.
     deleteInputManager();

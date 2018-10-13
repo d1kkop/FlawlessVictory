@@ -1,4 +1,5 @@
 #include "PCH.h"
+#include "Functions.h"
 
 namespace fv
 {
@@ -52,4 +53,21 @@ namespace fv
         else if ( z > high ) z = high;
         return *this;
     }
+
+    Vec3& Vec3::min(const Vec3& o)
+    {
+        x = Min(x, o.x);
+        y = Min(y, o.y);
+        z = Min(z, o.z);
+        return *this;
+    }
+
+    Vec3& Vec3::max(const Vec3& o)
+    {
+        x = Max(x, o.x);
+        y = Max(y, o.y);
+        z = Max(z, o.z);
+        return *this;
+    }
+
 }

@@ -19,7 +19,7 @@ namespace fv
         bool initGraphics() override;
         void closeGraphics() override;
         FV_TS GraphicResource* createGraphic(GraphicType type, u32 deviceIdx=0) override;
-        FV_TS void freeGraphic(GraphicResource* resource, bool async=false) override;
+        FV_TS void freeGraphic(GraphicResource* resource, bool async=true) override;
         void drawFrame() override;
         void waitOnDeviceIdle() override;
 

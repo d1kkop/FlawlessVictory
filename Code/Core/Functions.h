@@ -46,4 +46,10 @@ namespace fv
 
     template <class T, class ...Args> 
     T* CreateOnce(T*& pType, Args... args) { if (!pType) pType=new T(args...); return pType; }
+
+    template <class T>
+    void MemCopy(T* dst, const T* src, u32 count)
+    {
+        memcpy( dst, src, sizeof(T)*count );
+    }
 }

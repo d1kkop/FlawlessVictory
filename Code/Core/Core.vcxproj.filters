@@ -72,6 +72,9 @@
     <ClCompile Include="ComponentManager2.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
+    <ClCompile Include="Vec2.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core.h" />
@@ -152,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="ComponentManager2.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec2.h">
+      <Filter>Math</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

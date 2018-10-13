@@ -10,12 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
-    <ClInclude Include="Mesh.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicResource.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -33,9 +27,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicResourceVK.cpp">
       <Filter>Components</Filter>
     </ClCompile>

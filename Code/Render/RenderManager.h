@@ -28,7 +28,7 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
         FV_TS virtual GraphicResource* createGraphic(GraphicType type, u32 deviceIdx=0) = 0;
-        FV_TS virtual void freeGraphic(GraphicResource* graphic, bool async=false) = 0;
+        FV_TS virtual void freeGraphic(GraphicResource* graphic, bool async=true) = 0;
         static void setGraphicType( GraphicResource* gr, GraphicType type );
         void readRenderConfig();
         virtual void drawFrame() = 0;

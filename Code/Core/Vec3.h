@@ -57,6 +57,8 @@ namespace fv
         bool approx(const Vec3& o, float eps=0.0001f) const;
         Vec3& normalize();
         Vec3& clamp(float low, float high);
+        Vec3& min(const Vec3& o);
+        Vec3& max(const Vec3& o);
     };
 
     // Short normalize
@@ -73,6 +75,10 @@ namespace fv
 
     // Global cross
     inline Vec3 cross(const Vec3& a, const Vec3& b) { return a^b; }
+
+    // Global min/max
+    inline Vec3 min(const Vec3& a, const Vec3& b) { Vec3 r=a; return r.min(b); }
+    inline Vec3 max(const Vec3& a, const Vec3& b) { Vec3 r=a; return r.max(b); }
 
     // Opposite scalar operations
     inline Vec3 operator+ (float f, const Vec3& v) { return v+f; }

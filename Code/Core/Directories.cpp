@@ -11,6 +11,8 @@ namespace fv
     Path g_Log;
     Path g_Standard;
     Path g_IntermediateShaders;
+    Path g_IntermediateMeshes;
+    Path g_IntermediateTextures;
 
     const Path& Directories::bin() { return g_Bin; }
     const Path& Directories::assets()  { return g_Assets; }
@@ -19,6 +21,8 @@ namespace fv
     const Path& Directories::log() { return g_Log; }
     const Path& Directories::standard() { return g_Standard; }
     const Path& Directories::intermediateShaders() { return g_IntermediateShaders; }
+    const Path& Directories::intermediateMeshes() { return g_IntermediateMeshes; }
+    const Path& Directories::intermediateTextures() { return g_IntermediateTextures; }
 
     
     u32 InitDirectories()
@@ -29,7 +33,9 @@ namespace fv
         g_Intermediate = "Intermediate";
         g_Log = "Log";
         g_Standard = "Standard";
-        g_IntermediateShaders = g_Intermediate.append("Shaders");
+        g_IntermediateShaders  = g_Intermediate.append("Shaders");
+        g_IntermediateMeshes   = g_Intermediate.append("Meshes");
+        g_IntermediateTextures = g_Intermediate.append("Textures");
 
     #if !FV_BUILD
         Path prefix = "../../";
@@ -40,6 +46,8 @@ namespace fv
         g_Intermediate = prefix / g_Intermediate;
         g_Standard = prefix / g_Standard;
         g_IntermediateShaders = prefix / g_IntermediateShaders;
+        g_IntermediateMeshes = prefix / g_IntermediateMeshes;
+        g_IntermediateTextures = prefix / g_IntermediateTextures;
     #endif
 
         fs::create_directory( g_Bin );
@@ -49,6 +57,8 @@ namespace fv
         fs::create_directory( g_Intermediate );
         fs::create_directory( g_Standard );
         fs::create_directory( g_IntermediateShaders );
+        fs::create_directory( g_IntermediateMeshes );
+        fs::create_directory( g_IntermediateTextures );
 
         return 1;
     }

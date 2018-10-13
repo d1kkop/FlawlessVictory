@@ -12,5 +12,7 @@ namespace fv
         static const Path& log();
         static const Path& standard();
         static const Path& intermediateShaders();
+        static const Path& intermediateMeshes();
+        static const Path& intermediateTextures();
     };
 }

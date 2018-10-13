@@ -78,8 +78,6 @@
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="GraphicResource.h" />
     <ClInclude Include="GraphicResourceVK.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="Mesh.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="RenderManagerVK.h" />
     <ClInclude Include="HelperVK.h" />
@@ -95,7 +93,6 @@
   <ItemGroup>
     <ClCompile Include="GraphicResourceVK.cpp" />
     <ClCompile Include="HelperVK.cpp" />
-    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderManagerVK.cpp" />
   </ItemGroup>

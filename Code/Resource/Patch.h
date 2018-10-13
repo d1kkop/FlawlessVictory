@@ -10,7 +10,8 @@ namespace fv
     enum class PatchType
     {
         Texture2DData,
-        ShaderCode
+        ShaderCode,
+        MeshData
     };
 
     // Instead of subclassing this. Make one 'big' patch object to avoid massive memory fragmentation by different types.
@@ -20,6 +21,7 @@ namespace fv
     public:
         ~Patch();
         void applyPatch();
+        void submit(); // Same as PatchManager()->submiPatch( this );
 
         PatchType patchType;
         GraphicResource* graphic {};
@@ -31,10 +33,16 @@ namespace fv
                 u32 width, height, depth;
                 ImageFormat imgFormat;
             }; /* Texture2 or 3D */
+            struct 
+            {
+                u32 numVertices, numIndices;
+            }; /* MeshData */
         };
+        Vector<GraphicResource*> submeshes; // For Meshdata
 
     private:
         FV_MO void applyTexture2DLoad();
         FV_MO void applyShaderCode();
+        FV_MO void applyMeshData();
     };
 }
