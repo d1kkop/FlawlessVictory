@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "Assets.h"
 #include "ResourceManager.h"
 #include "ShaderCompiler.h"
 #include "../Core/Functions.h"
@@ -35,7 +36,8 @@ namespace fv
         ((ResourceToLoad&)rtl).reload = true;
 
         // Check if compiled file is already there
-        Path binPath = shaderCompiler()->replaceWithBinaryExtension( Directories::intermediateShaders() / rtl.loadPath.filename() );
+        Path binPath = Directories::intermediateShaders() / rtl.loadPath.filename();
+        binPath.replace_extension( Assets::shaderBinExtension() );
         if ( rtl.reload || !LoadBinaryFile(binPath.string().c_str(), code) )
         {
             code.clear(); // In case binary load partially succeeded
@@ -56,11 +58,11 @@ namespace fv
                     Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
                     p->graphic  = graphic;
                     p->resource = rtl.resource;
-                    patchManager()->submitPatch( p );
+                    p->submit();
                 }
                 else
                 {
-                    renderManager()->freeGraphic( graphic, true );
+                    renderManager()->freeGraphic( graphic );
                 }
             }
         }

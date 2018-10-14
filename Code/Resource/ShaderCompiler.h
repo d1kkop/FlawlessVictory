@@ -6,7 +6,6 @@ namespace fv
     class ShaderCompiler
     {
     public:
-        virtual Path replaceWithBinaryExtension( const Path& pathIn ) = 0;
         virtual bool compileShader(const Path& pathIn, Vector<char>& code) = 0;
     };
 

@@ -8,7 +8,6 @@ namespace fv
     class ShaderCompilerGLSL2SpirVBin: public ShaderCompiler
     {
     public:
-        Path replaceWithBinaryExtension( const Path& pathIn ) override;
         bool compileShader(const Path& pathIn, Vector<char>& code) override;
     };
 }

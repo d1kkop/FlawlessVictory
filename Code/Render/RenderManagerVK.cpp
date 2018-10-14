@@ -268,17 +268,18 @@ namespace fv
     void RenderManagerVK::freeGraphic(GraphicResource* resource, bool async)
     {
         if (!resource) return;
+        auto* gr = sc<GraphicResourceVK*>(resource);
         if ( !async || IsEngineClosing() )
         {
-            resource->freeResource();
-            m_Graphics.freeObject( sc<GraphicResourceVK*>(resource) );
+            gr->freeResource();
+            m_Graphics.freeObject( gr );
         }
         else
         {
             jobManager()->addJob( [=]()
             {
-                resource->freeResource();
-                m_Graphics.freeObject(sc<GraphicResourceVK*>(resource));
+                gr->freeResource();
+                m_Graphics.freeObject( gr );
             }, true /*auto free job*/);
         }
     }

@@ -1,5 +1,6 @@
 #include "ShaderCompilerGLSL2SpirVBin.h"
 #if FV_GLSL2SPIRVBIN
+#include "Assets.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
 #include "../Core/OSLayer.h"
@@ -7,12 +8,6 @@
 
 namespace fv
 {
-
-    Path ShaderCompilerGLSL2SpirVBin::replaceWithBinaryExtension(const Path& pathIn)
-    {
-        return Path(pathIn.string() + ".spv");
-    }
-
     bool ShaderCompilerGLSL2SpirVBin::compileShader(const Path& path, Vector<char>& code)
     {
         String ext = path.extension().string();
@@ -22,7 +17,8 @@ namespace fv
             return false;
         }
 
-        Path output = replaceWithBinaryExtension( Directories::intermediateShaders() / path.filename() );
+        Path output = Directories::intermediateShaders() / path.filename();
+        output.replace_extension(Assets::shaderBinExtension());
 
         // https://vulkan.lunarg.com/doc/view/1.0.8.0/windows/spirv_toolchain.html
         String args;
