@@ -85,5 +85,5 @@
 #endif
 
 #if FV_NLOHMANJSON
-#include <nlohmann/json.hpp>
+#include "../3rdParty/nlohmann/json.hpp"
 #endif

@@ -43,15 +43,16 @@ namespace fv
             if ( !settings.write(rtl.loadPath) )
             {
                 LOGW("Failed to write import file for %s.", rtl.loadPath.string().c_str());
+                // Continue though.
             }
         }
         
-        // Try load from binary if no reload is forced
+        // Try load from binary if no import is forced
         Path binPath = Directories::intermediateMeshes() / rtl.loadPath.filename();
         binPath.replace_extension(Assets::meshBinExtension());
-        if ( rtl.reload || !modelImporter()->loadBinary(binPath, newSubmeshes ) )
+        if ( rtl.reimport || !modelImporter()->loadBinary(binPath, newSubmeshes ) )
         {
-            newSubmeshes.clear();
+            newSubmeshes.clear(); // In case binary load succeeded partially.
             if ( !modelImporter()->reimport(rtl.loadPath, settings, newSubmeshes) ||
                  newSubmeshes.empty() )
             {

@@ -18,6 +18,11 @@ namespace fv
 
         template <class T>
         void serialize(const String& key, T& value);
+        template <class T>
+        void serializeVector(const String& key, Vector<T>& value);
+        template <class K, class V>
+        void serializeMap(const String& key, Map<K, V>& value);
+
         bool hasSerializeErrors() const { return m_HasSerializeErrors; }
 
     private:
@@ -45,6 +50,54 @@ namespace fv
     #else
         #error no implementation
     #endif
+    }
+
+    template <class T>
+    void TextSerializer::serializeVector(const String& key, Vector<T>& value)
+    {
+        #if FV_NLOHMANJSON
+        if ( m_IsWriting )
+        {
+            json j;
+            for ( auto& v : value )
+                j.emplace_back( v );
+            m_Document[key] = j;
+        }
+        else
+        {
+            json& j = m_Document[key];
+            for ( auto& v : j )
+            {
+                value.emplace_back( v );
+            }
+        }
+        #else
+        #error no implementation
+        #endif
+    }
+
+    template <class K, class V>
+    void TextSerializer::serializeMap(const String& key, Map<K, V>& value)
+    {
+        #if FV_NLOHMANJSON
+        if ( m_IsWriting )
+        {
+            json j;
+            for ( auto& kvp : value )
+                j[kvp.first] = kvp.second;
+            m_Document[key] = j;
+        }
+        else
+        {
+            json& j = m_Document[key];
+            for (auto& kvp : j.items())
+            {
+                value[ kvp.key() ] = kvp.value();
+            }
+        }
+        #else
+        #error no implementation
+        #endif
     }
 
 }

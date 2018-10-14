@@ -51,7 +51,7 @@ namespace fv
         {
             return &nIt->second;
         }
-        LOGC( "Cannot find type: %s.", name );
+        LOGW( "Cannot find type: %s.", name );
         return nullptr;
     }
 
@@ -62,7 +62,7 @@ namespace fv
         {
             return nIt->second;
         }
-        LOGC("Cannot find type hash: %d.", hash);
+        LOGW("Cannot find type hash: %d.", hash);
         return nullptr;
     }
 

@@ -32,19 +32,16 @@ namespace fv
     {
         Vector<char> code;
 
-        // TODO debug to always reload shader
-        ((ResourceToLoad&)rtl).reload = true;
-
         // Check if compiled file is already there
         Path binPath = Directories::intermediateShaders() / rtl.loadPath.filename();
         binPath.replace_extension( Assets::shaderBinExtension() );
-        if ( rtl.reload || !LoadBinaryFile(binPath.string().c_str(), code) )
+        if ( rtl.reimport || !LoadBinaryFile(binPath.string().c_str(), code) )
         {
             code.clear(); // In case binary load partially succeeded
-            // Compile from glsl
             if ( !shaderCompiler()->compileShader(rtl.loadPath, code) )
             {
                 LOGW("Failed to load shader %s.", rtl.loadPath.string().c_str());
+                return;
             }
         }
 

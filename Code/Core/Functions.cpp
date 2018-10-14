@@ -178,6 +178,16 @@ namespace fv
         fclose(file);
     }
 
+    u64 FileModifiedTime(const char* path)
+    {
+        struct stat st;
+        if ( stat(path, &st) == 0 )
+        {
+            return (u64)st.st_mtime;
+        }
+        return -1;
+    }
+
     bool IsEngineClosing()
     {
         return g_EngineClosing;
