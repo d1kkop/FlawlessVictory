@@ -31,6 +31,7 @@ namespace fv
             break;
         case PatchType::ShaderCode:
             applyShaderCode();
+            break;
         case PatchType::MeshData:
             applyMeshData();
             break;
@@ -46,6 +47,7 @@ namespace fv
     {
         FV_CHECK_MO();
         M<Texture2D> tex = std::static_pointer_cast<Texture2D>( resource );
+        assert(tex);
         tex->applyPatch( width, height, imgFormat, graphic );
         graphic = nullptr; // Ownership transferred.
     }
@@ -54,6 +56,7 @@ namespace fv
     {
         FV_CHECK_MO();
         M<Shader> shader = std::static_pointer_cast<Shader>(resource);
+        assert(shader);
         shader->applyPatch( graphic );
         graphic = nullptr; // Ownership transferred.
     }
@@ -62,7 +65,8 @@ namespace fv
     {
         FV_CHECK_MO();
         M<Mesh> mesh = std::static_pointer_cast<Mesh>(resource);
-        mesh->applyPatch( numVertices, numIndices, submeshes );
+        assert(mesh);
+        mesh->applyPatch( submeshes, hostMeshes );
         submeshes.clear(); // Ownership transferred.
     }
 

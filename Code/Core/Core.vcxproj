@@ -93,6 +93,7 @@
     <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="OSLayer.cpp" />
     <ClCompile Include="Quat.cpp" />
+    <ClCompile Include="TextSerializer.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TypeManager.cpp" />
@@ -103,6 +104,7 @@
   <ItemGroup>
     <ClInclude Include="..\Core.h" />
     <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="BinarySerialize.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="ComponentManager2.h" />
@@ -123,6 +125,7 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Quat.h" />
     <ClInclude Include="Reflection.h" />
+    <ClInclude Include="TextSerializer.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TypeManager.h" />

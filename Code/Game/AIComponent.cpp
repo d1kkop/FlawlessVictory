@@ -10,6 +10,8 @@ namespace game
     {
         m_FragShader = resourceManager()->load<Shader>( "sample.frag" );
         m_VertShader = resourceManager()->load<Shader>( "sample.vert" );
+        m_Sponza = resourceManager()->load<Mesh>( "sponza.obj" );
+        m_Tyra = resourceManager()->load<Mesh>( "tyra.obj" );
     }
 
     void AIComponent::updateMT(float t)

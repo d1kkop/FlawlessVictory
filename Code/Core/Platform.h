@@ -29,6 +29,7 @@
     #define FV_GLSL2SPIRVBIN 1
     #define FV_VLD 0
     #define FV_ASSIMP 1
+    #define FV_NLOHMANJSON 1
     #define FV_INCLUDE_WINHDR 1
 #endif
 
@@ -81,4 +82,8 @@
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #pragma comment(lib, "../3rdParty/Assimp/lib/x64/assimp-vc140-mt.lib")
+#endif
+
+#if FV_NLOHMANJSON
+#include <nlohmann/json.hpp>
 #endif

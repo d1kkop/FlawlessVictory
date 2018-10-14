@@ -1,4 +1,5 @@
 #pragma once
+#include "Mesh.h"
 #include "../Core/Object.h"
 #include "../Core/Common.h"
 #include "../Render/GraphicResource.h"
@@ -35,9 +36,9 @@ namespace fv
             }; /* Texture2 or 3D */
             struct 
             {
-                u32 numVertices, numIndices;
             }; /* MeshData */
         };
+        Vector<Submesh> hostMeshes; // In case importer wants to keep in host memory
         Vector<GraphicResource*> submeshes; // For Meshdata
 
     private:

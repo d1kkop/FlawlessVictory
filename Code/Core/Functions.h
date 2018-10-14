@@ -38,6 +38,10 @@ namespace fv
     // Read at once contents of file as binary.
     FV_DLL bool LoadBinaryFile(const char* path, Vector<char>& data);
 
+    FV_DLL bool OpenFile( FILE*& file, const char* path, const char* mode );
+
+    FV_DLL void CloseFile( FILE* file, bool flush = false );
+
     // Useful for destructors that depend on manager that may not exist anymore.
     FV_DLL bool IsEngineClosing();
 

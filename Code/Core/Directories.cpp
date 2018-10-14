@@ -4,18 +4,20 @@ namespace fs = std::experimental::filesystem;
 
 namespace fv
 {
+    // Root
     Path g_Bin;
     Path g_Assets;
     Path g_Build;
     Path g_Intermediate;
     Path g_Log;
     Path g_Standard;
+    // Intermediate
     Path g_IntermediateShaders;
     Path g_IntermediateMeshes;
     Path g_IntermediateTextures;
 
     const Path& Directories::bin() { return g_Bin; }
-    const Path& Directories::assets()  { return g_Assets; }
+    const Path& Directories::assets() { return g_Assets; }
     const Path& Directories::build() { return g_Build; }
     const Path& Directories::intermediate() { return g_Intermediate; }
     const Path& Directories::log() { return g_Log; }
@@ -30,12 +32,13 @@ namespace fv
         g_Bin = "Bin";
         g_Assets = "Assets";
         g_Build = "Build";
-        g_Intermediate = "Intermediate";
+        g_Intermediate = "Intermediate/GeneratedAssets";
         g_Log = "Log";
         g_Standard = "Standard";
-        g_IntermediateShaders  = g_Intermediate.append("Shaders");
-        g_IntermediateMeshes   = g_Intermediate.append("Meshes");
-        g_IntermediateTextures = g_Intermediate.append("Textures");
+        g_IntermediateShaders  = g_Intermediate / "Shaders";
+        g_IntermediateMeshes   = g_Intermediate / "Meshes";
+        g_IntermediateTextures = g_Intermediate / "Textures";
+
 
     #if !FV_BUILD
         Path prefix = "../../";

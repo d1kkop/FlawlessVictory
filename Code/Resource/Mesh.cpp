@@ -1,8 +1,10 @@
 #include "Mesh.h"
+#include "Assets.h"
 #include "ModelImporter.h"
 #include "ResourceManager.h"
 #include "PatchManager.h"
 #include "../Core/Thread.h"
+#include "../Core/Directories.h"
 #include "../Render/RenderManager.h"
 
 namespace fv
@@ -15,7 +17,7 @@ namespace fv
             renderManager()->freeGraphic( gr );
     }
 
-    void Mesh::applyPatch(u32 numVertices, u32 numIndices, const Vector<GraphicResource*>& submeshes)
+    void Mesh::applyPatch(const Vector<GraphicResource*>& submeshes, const Vector<Submesh>& hostMeshes)
     {
         FV_CHECK_MO();
 
@@ -23,28 +25,42 @@ namespace fv
         for ( auto* gr : m_SubMeshes )
             renderManager()->freeGraphic( gr );
 
-        m_SubMeshes = std::move(submeshes);
-    }
-
-    void Mesh::applySubmeshPatch(u32 subMeshIdx, const float** vertexData, const u32* numComponents, u32 numAttachments)
-    {
-        FV_CHECK_MO();
+        m_SubMeshes  = std::move(submeshes);
+        m_HostMeshes = std::move(hostMeshes);
     }
 
     void Mesh::load(const ResourceToLoad& rtl)
     {
         Vector<Submesh> newSubmeshes;
-        if ( !modelImporter()->reimport( rtl.loadPath, newSubmeshes ) )
+
+        // Try get import settings from file
+        MeshImportSettings settings {};
+        bool importSettingsRead = settings.read(rtl.loadPath);
+
+        if ( !importSettingsRead )
         {
-            return;
+            // Write import file
+            if ( !settings.write(rtl.loadPath) )
+            {
+                LOGW("Failed to write import file for %s.", rtl.loadPath.string().c_str());
+            }
+        }
+        
+        // Try load from binary if no reload is forced
+        Path binPath = Directories::intermediateMeshes() / rtl.loadPath.filename();
+        binPath.replace_extension(Assets::meshBinExtension());
+        if ( rtl.reload || !modelImporter()->loadBinary(binPath, newSubmeshes ) )
+        {
+            newSubmeshes.clear();
+            if ( !modelImporter()->reimport(rtl.loadPath, settings, newSubmeshes) ||
+                 newSubmeshes.empty() )
+            {
+                LOGW("Failed to load %s.", rtl.loadPath.string().c_str());
+                return;
+            }
         }
 
-        if ( newSubmeshes.empty() )
-        {
-            LOGW("Failed to load %s.", rtl.loadPath.string().c_str());
-            return;
-        }
-
+        // Create graphical component of each submesh
         Vector<GraphicResource*> meshGraphics;
         for ( auto& sm : newSubmeshes )
         {
@@ -60,8 +76,14 @@ namespace fv
             }
         }
 
+        // Create a patch to be applied on main thread with new graphical content.
         Patch* patch = patchManager()->createPatch( PatchType::MeshData );
         patch->submeshes = std::move( meshGraphics );
+        patch->resource = rtl.resource;
+        if ( settings.keepInRam )
+        {
+            patch->hostMeshes = std::move( newSubmeshes );
+        }
         patch->submit();
     }
 

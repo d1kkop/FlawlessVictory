@@ -15,7 +15,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "System", "System\System.vcx
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8F0BC455-2DFC-4F54-9269-82813140FA03}"
 	ProjectSection(SolutionItems) = preProject
-		TODO.txt = TODO.txt
+		Readme.txt = Readme.txt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Loader", "Loader\Loader.vcxproj", "{DF83A8DC-2A66-4CAA-80BC-FF9B435071A6}"

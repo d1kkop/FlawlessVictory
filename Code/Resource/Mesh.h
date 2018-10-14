@@ -30,9 +30,7 @@ namespace fv
 
     public:
         FV_DLL ~Mesh() override;
-
-        FV_MO void applyPatch(u32 numVertices, u32 numIndices, const Vector<GraphicResource*>& submeshes);
-        FV_MO void applySubmeshPatch(u32 subMeshIdx, const float** vertexData, const u32* numComponents, u32 numAttachments);
+        FV_MO void applyPatch(const Vector<GraphicResource*>& submeshes, const Vector<Submesh>& hostMeshes);
 
     private:
         // From different thread
@@ -40,5 +38,6 @@ namespace fv
 
     private:
         Vector<GraphicResource*> m_SubMeshes;
+        Vector<Submesh> m_HostMeshes{}; // Usually empty
     };
 }

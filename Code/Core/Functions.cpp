@@ -161,6 +161,23 @@ namespace fv
         return true;
     }
 
+    bool OpenFile(FILE*& file, const char* path, const char* mode)
+    {
+    #if FV_SECURE_CRT
+        fopen_s( &file, path, mode );
+    #else
+        f = fopen(path, mode);
+    #endif
+        return file;
+    }
+
+    void CloseFile(FILE* file, bool flush)
+    {
+        if (!file) return;
+        if ( flush ) fflush(file);
+        fclose(file);
+    }
+
     bool IsEngineClosing()
     {
         return g_EngineClosing;

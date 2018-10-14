@@ -70,6 +70,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Resources.h" />
+    <ClCompile Include="Assets.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ModelImporter.cpp" />
     <ClCompile Include="Patch.cpp" />
@@ -84,6 +85,7 @@
     <ClCompile Include="TextureImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Assets.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="ModelImporter.h" />

@@ -33,6 +33,7 @@ namespace fv
         case GraphicType::Submesh:
             m_Indices = nullptr;
             m_Vertices.clear();
+            break;
         default:
             assert(false);
             break;
@@ -89,6 +90,7 @@ namespace fv
     bool GraphicResourceVK::updateMeshData(const Submesh& submesh)
     {
         FV_CHECK_GRAPHIC_TYPE(GraphicType::Submesh);
+        // Directly upload to GPU
         return true;
     }
 

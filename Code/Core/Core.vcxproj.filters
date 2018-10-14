@@ -75,6 +75,9 @@
     <ClCompile Include="Vec2.cpp">
       <Filter>Math</Filter>
     </ClCompile>
+    <ClCompile Include="TextSerializer.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core.h" />
@@ -158,6 +161,12 @@
     </ClInclude>
     <ClInclude Include="Vec2.h">
       <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="BinarySerialize.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="TextSerializer.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
