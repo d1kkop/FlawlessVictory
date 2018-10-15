@@ -53,7 +53,7 @@ namespace fv
 
     void SystemManager::mainloop()
     {
-        Time::start();
+        TimeStart();
         float lastPhysicsUpdate = 0.f;
         float lastNetworkUpdate = 0.f;
 
@@ -132,7 +132,7 @@ namespace fv
             renderManager()->drawFrame();
 
             // Update timings
-            Time::update();
+            TimeUpdate();
         }
 
         renderManager()->waitOnDeviceIdle();
