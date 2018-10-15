@@ -39,6 +39,7 @@ namespace fv
         g_Epoch = EpochTime();
         g_Dt = (float)(g_Epoch - prevEpoch);
         g_Elapsed = (float)(g_Epoch - g_EpochBegin);
+        ++g_FrameNumber;
         ++g_Ticks;
         if ( g_Epoch - g_LastFpsMeasurement >= 1 )
         {
