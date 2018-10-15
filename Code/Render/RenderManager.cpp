@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "RenderManagerVK.h"
 #include "../Core/Functions.h"
 #include "../Core/ComponentManager.h"

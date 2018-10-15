@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "HelperVK.h"
 #if FV_VULKAN
 #include "RenderManager.h" // For RenderConfig
@@ -81,7 +82,7 @@ namespace fv
         auto res = vkCreateDevice(physical, &createInfo, nullptr, &logical);
         if ( res != VK_SUCCESS )
         {
-            LOGW("VK Failed to create logical device.");
+            LOGC("VK Failed to create logical device.");
             return false;
         }
         return true;
@@ -94,7 +95,7 @@ namespace fv
         bool bResult = SDL_Vulkan_CreateSurface((SDL_Window*)wHandle, instance, &surface);
         if ( !bResult )
         {
-            LOGW("SDL_VK Failed to create vulkan window surface. SDL error %s.", SDL_GetError());
+            LOGC("SDL_VK Failed to create vulkan window surface. SDL error %s.", SDL_GetError());
             return false;
         }
         return true;
@@ -165,7 +166,59 @@ namespace fv
 
         if ( vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS )
         {
-            LOGW("VK Failed to create swap chain for device.");
+            LOGC("VK Failed to create swap chain for device.");
+            return false;
+        }
+        return true;
+    }
+
+    bool HelperVK::createImage(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties, 
+                               const VkExtent2D& size, u32 mipLevels, VkFormat format, u32 samples, u32 layers, 
+                               bool shareInQueues, u32 queueIdx,
+                               VkImage& image, VkDeviceMemory& memory)
+    {
+        assert( mipLevels >= 1 && layers >= 1 && size.width > 0 && size.height > 0 && samples >= 1 );
+        VkImageCreateInfo ici {};
+        ici.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        ici.flags = 0;
+        ici.imageType = VK_IMAGE_TYPE_2D;
+        ici.format = format;
+        ici.extent = { size.width, size.width, 1 };
+        ici.mipLevels = mipLevels;
+        ici.arrayLayers = layers;
+        ici.samples = (VkSampleCountFlagBits)samples;
+        ici.tiling = VK_IMAGE_TILING_OPTIMAL;
+        ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        ici.sharingMode = shareInQueues ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+        ici.queueFamilyIndexCount = 1;
+        ici.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        uint32_t queueFamIndices[] = { queueIdx };
+        ici.pQueueFamilyIndices = queueFamIndices;
+        if ( vkCreateImage(device, &ici, nullptr, &image) != VK_SUCCESS )
+        {
+            LOGC("VK Cannot create image for device.");
+            return false;
+        }
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, image, &memRequirements);
+        VkMemoryAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = HelperVK::findMemoryType(memRequirements.memoryTypeBits, memProperties, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        if ( vkAllocateMemory(device, &allocInfo, nullptr, &memory) != VK_SUCCESS )
+        {
+            LOGC("VK Failed to allocate memory for image.");
+            vkDestroyImage( device, image, nullptr );
+            image = nullptr;
+            return false;
+        }
+        if ( vkBindImageMemory(device, image, memory, 0) != VK_SUCCESS )
+        {
+            LOGC("VK Failed to bind image memory.");
+            vkDestroyImage( device, image, nullptr );
+            vkFreeMemory( device, memory, nullptr );
+            image = nullptr;
+            memory = nullptr;
             return false;
         }
         return true;
@@ -206,12 +259,11 @@ namespace fv
         Vector<char> code;
         if ( !LoadBinaryFile(path.string().c_str(), code) )
         {
-            LOGW("VK Faild to load shader %s.", path.string().c_str());
+            // Allow failing to load
             return false;
         }
         if ( !createShaderModule(device, code, shaderModule) )
         {
-            LOGW("VK failed to create shader module for %s.", path.string().c_str());
             return false;
         }
         return true;
@@ -226,7 +278,7 @@ namespace fv
         createInfo.pCode = (const uint32_t*)code.data();
         if ( vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS )
         {
-            LOGW("Failed to create shader module.");
+            LOGC("Failed to create shader module.");
             return false;
         }
         return true;
@@ -262,7 +314,7 @@ namespace fv
 
         if ( vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS )
         {
-            LOGW("VK Failed to create render pass.");
+            LOGC("VK Failed to create render pass.");
             return false;
         }
         return true;
@@ -367,7 +419,7 @@ namespace fv
 
         if ( vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS )
         {
-            LOGW("VK Failed to create base pipeline layout");
+            LOGC("VK Failed to create base pipeline layout");
             return false;
         }
 
@@ -389,7 +441,7 @@ namespace fv
 
         if ( vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS )
         {
-            LOGW("VK Failed to create base graphics pipeline.");
+            LOGC("VK Failed to create base graphics pipeline.");
             vkDestroyPipelineLayout( device, pipelineLayout, nullptr );
             pipelineLayout = nullptr;
             return false;
@@ -412,7 +464,7 @@ namespace fv
 
         if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS) 
         {
-            LOGW("VK Failed to create framebuffer.");
+            LOGC("VK Failed to create framebuffer.");
             return false;
         }
         return true;
@@ -426,7 +478,7 @@ namespace fv
         poolInfo.queueFamilyIndex = familyQueueIndex;
         if ( vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS )
         {
-            LOGW("VK Failed to create command pool.");
+            LOGC("VK Failed to create command pool.");
             return false;
         }
         return true;
@@ -446,7 +498,7 @@ namespace fv
 
         if ( vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS )
         {
-            LOGW("VK Failed to create vertex buffer.");
+            LOGC("VK Failed to create vertex buffer.");
             return false;
         }
 
@@ -462,11 +514,21 @@ namespace fv
 
         if ( vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS )
         {
-            LOGW("VK Failed to allocate memory for vertex buffer.");
+            LOGC("VK Failed to allocate memory for vertex buffer.");
+            vkDestroyBuffer( device, vertexBuffer, nullptr );
+            vertexBuffer = nullptr;
             return false;
         }
 
-        vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+        if ( vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0) != VK_SUCCESS )
+        {
+            LOGC("VK Failed bind vertex buffer.");
+            vkDestroyBuffer( device, vertexBuffer, nullptr );
+            vkFreeMemory( device, vertexBufferMemory, nullptr );
+            vertexBuffer = nullptr;
+            vertexBufferMemory = nullptr;
+            return false;
+        }
 
         void* mappedData;
         if ( vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &mappedData) == VK_SUCCESS )
@@ -476,7 +538,7 @@ namespace fv
         }
         else 
         {
-            LOGW("VK Failed to map and update vertex buffer.");
+            LOGC("VK Failed to map and update vertex buffer.");
             return false;
         }
 
@@ -591,7 +653,7 @@ namespace fv
         commandBuffers.resize(commandBuffers.size() + numCommandBuffers);
         if ( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data() + oldSize) != VK_SUCCESS )
         {
-            LOGW("VK Failed to allocate command buffer.");
+            LOGC("VK Failed to allocate command buffer.");
             return false;
         }
         return true;
@@ -607,7 +669,7 @@ namespace fv
 
         if ( vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS )
         {
-            LOGW("VK Failed to begin command buffer.");
+            LOGC("VK Failed to begin command buffer.");
             return false;
         }
 
@@ -641,7 +703,7 @@ namespace fv
         assert( commandBuffer );
         if ( vkEndCommandBuffer(commandBuffer) != VK_SUCCESS )
         {
-            LOGW("VK Failed to end command buffer.");
+            LOGC("VK Failed to end command buffer.");
             return false;
         }
         return true;
@@ -791,33 +853,6 @@ namespace fv
         {
             presentModes.resize(presentModeCount);
             vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, presentModes.data());
-        }
-    }
-
-    void HelperVK::storeDeviceQueueFamilies(DeviceVK& device, VkSurfaceKHR surface)
-    {
-        assert(device.physical);
-        uint32_t queueFamilyCount;
-        Vector<VkQueueFamilyProperties> queueFamilies;
-        vkGetPhysicalDeviceQueueFamilyProperties(device.physical, &queueFamilyCount, nullptr);
-        queueFamilies.resize(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device.physical, &queueFamilyCount, queueFamilies.data());
-        for ( u32 i=0; i<queueFamilyCount; ++i )
-        {
-            auto& queueFam = queueFamilies[i];
-            if ( queueFam.queueCount > 0 )
-            {
-                if ( (queueFam.queueFlags & VK_QUEUE_GRAPHICS_BIT) ) device.queueIndices.graphics = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_COMPUTE_BIT) )  device.queueIndices.compute = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_TRANSFER_BIT) ) device.queueIndices.transfer = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) device.queueIndices.sparse = i;
-            }
-            VkBool32 presentSupported = false;
-            if ( surface )
-            {
-                vkGetPhysicalDeviceSurfaceSupportKHR(device.physical, i, surface, &presentSupported);
-                if ( presentSupported ) device.queueIndices.present = i;
-            }
         }
     }
 

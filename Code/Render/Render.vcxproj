@@ -58,6 +58,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -76,9 +78,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
+    <ClInclude Include="DeviceVK.h" />
+    <ClInclude Include="FrameSyncObjectVK.h" />
+    <ClInclude Include="PCH.h" />
+    <ClInclude Include="PipelineVK.h" />
+    <ClInclude Include="RenderImageVK.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="RenderManagerVK.h" />
     <ClInclude Include="HelperVK.h" />
+    <ClInclude Include="SwapChainVK.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -89,9 +97,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DeviceVK.cpp" />
+    <ClCompile Include="FrameSyncObjectVK.cpp" />
     <ClCompile Include="HelperVK.cpp" />
+    <ClCompile Include="PipelineVK.cpp" />
+    <ClCompile Include="RenderImageVK.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderManagerVK.cpp" />
+    <ClCompile Include="SwapChainVK.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

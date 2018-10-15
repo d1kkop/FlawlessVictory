@@ -1,13 +1,11 @@
 #pragma once
 #include "RenderManager.h"
 #if FV_VULKAN
-#include "HelperVK.h"
+#include "DeviceVK.h"
+#include "SwapChainVK.h"
 
 namespace fv
 {
-    enum class GraphicType;
-
-
     class RenderManagerVK : public RenderManager
     {
     public:
@@ -29,12 +27,6 @@ namespace fv
 
     private:
         bool createDevices(VkSurfaceKHR mainSurface);
-        bool createSwapChain(DeviceVK& device, SwapChainVK& swapChain, const RenderConfig& rc);
-        bool createImagesFromSwapChain(const SwapChainVK& swapChain, u32 numLayers, Vector<VkImage>& images, Vector<VkImageView>& imageViews);
-        bool createImagesForDevice(DeviceVK& dv, const RenderConfig& rc);
-        bool createFrameBuffersForDevice(DeviceVK& device, VkRenderPass renderPass);
-        bool createStandardShaders(DeviceVK& device);
-        bool createFrameSyncObjects(DeviceVK& device, u32 numFramesBehind);
 
         u64 createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format) override;
         u64 createShader(const char* data, u32 size) override;
@@ -45,19 +37,17 @@ namespace fv
 
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
-        Vector<DeviceVK> m_Devices;
+        Vector<DeviceVK*> m_Devices; // Must use ptr as has mutexes for which default operators are deleted.
+        SwapChainVK m_MainSwapChain{};
+        void* m_Window {};
+        u32 m_FrameImageIdx = 0;    // Iterates from 0 to RenderConfig.numFramesBehind-1
+        u32 m_CurrentDrawImage = 0; // In case of no swap chain.
+
+        // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;
         Vector<const char*> m_RequiredInstanceLayers;
         Vector<const char*> m_RequiredPhysicalExtensions;
         Vector<const char*> m_RequiredPhysicalLayers;
-        SwapChainVK m_MainSwapChain{};
-        VkCommandBuffer m_DrawTriangle{};
-        VkViewport m_MainViewport{};
-        void* m_MainWindow{};
-        void* m_SecondaryWindow{};
-        u32 m_FrameImageIdx = 0; // Iterates from 0 to RenderConfig.numFramesBehind-1
-        u32 m_CurrentDrawImage = 0; // In case of no swap chain.
-        Mutex m_PipelinesMutex;
     };
 }
 #endif

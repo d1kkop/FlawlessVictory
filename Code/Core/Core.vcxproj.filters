@@ -153,9 +153,6 @@
     <ClInclude Include="Component.h">
       <Filter>BaseObjects</Filter>
     </ClInclude>
-    <ClInclude Include="PCH.h">
-      <Filter>BaseObjects</Filter>
-    </ClInclude>
     <ClInclude Include="ComponentManager2.h">
       <Filter>Managers</Filter>
     </ClInclude>
@@ -168,5 +165,6 @@
     <ClInclude Include="TextSerializer.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="PCH.h" />
   </ItemGroup>
 </Project>
