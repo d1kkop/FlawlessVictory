@@ -2,7 +2,6 @@
 #include "Mesh.h"
 #include "../Core/Object.h"
 #include "../Core/Common.h"
-#include "../Render/GraphicResource.h"
 
 namespace fv
 {
@@ -20,12 +19,11 @@ namespace fv
     class Patch: public Object
     {
     public:
-        ~Patch();
         void applyPatch();
         void submit(); // Same as PatchManager()->submiPatch( this );
 
         PatchType patchType;
-        GraphicResource* graphic {};
+        u64 graphic = -1;
         M<Resource> resource;
         union
         {
@@ -39,7 +37,8 @@ namespace fv
             }; /* MeshData */
         };
         Vector<Submesh> hostMeshes; // In case importer wants to keep in host memory
-        Vector<GraphicResource*> submeshes; // For Meshdata
+        Vector<u64> submeshes; // For Meshdata
+        Vector<M<Material>> materials;
 
     private:
         FV_MO void applyTexture2DLoad();

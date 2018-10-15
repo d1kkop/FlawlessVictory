@@ -6,6 +6,7 @@
 #include "../Core/BinarySerialize.h"
 #include "../Core/Directories.h"
 #include "../Core/TextSerializer.h"
+#include "../Render/RenderManager.h"
 using namespace std;
 #if FV_ASSIMP
 using namespace Assimp;

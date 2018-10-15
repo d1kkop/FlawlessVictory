@@ -1,9 +1,14 @@
 #pragma once
-#include "../Core/Math.h"
+#include "Resource.h"
+#include "../Render/RenderManager.h"
 
 namespace fv
 {
-    class Material
+    class Material: public Resource
     {
+        FV_TYPE(Material)
+
+    public:
+        MaterialData data;
     };
 }

@@ -13,25 +13,30 @@ namespace fv
 
     Mesh::~Mesh()
     {
-        for ( auto* gr : m_SubMeshes )
-            renderManager()->freeGraphic( gr );
+        for ( auto sm : m_SubMeshes )
+        {
+            renderManager()->deleteSubmesh( sm );
+        }
     }
 
-    void Mesh::applyPatch(const Vector<GraphicResource*>& submeshes, const Vector<Submesh>& hostMeshes)
+    void Mesh::applyPatch(const Vector<u64>& submeshes, const Vector<Submesh>& hostMeshes, const Vector<M<Material>>& materials)
     {
         FV_CHECK_MO();
 
-        // free old
-        for ( auto* gr : m_SubMeshes )
-            renderManager()->freeGraphic( gr );
+        for ( auto sm : m_SubMeshes )
+        {
+            renderManager()->deleteSubmesh( sm );
+        }
 
         m_SubMeshes  = std::move(submeshes);
         m_HostMeshes = std::move(hostMeshes);
+        m_Materials  = std::move(materials);
     }
 
     void Mesh::load(const ResourceToLoad& rtl)
     {
-        Vector<Submesh> newSubmeshes;
+        Vector<Submesh> subMeshes;
+        Vector<M<Material>> materials;
 
         // Try get import settings from file
         MeshImportSettings settings {};
@@ -50,11 +55,11 @@ namespace fv
         // Try load from binary if no import is forced
         Path binPath = Directories::intermediateMeshes() / rtl.loadPath.filename();
         binPath.replace_extension(Assets::meshBinExtension());
-        if ( rtl.reimport || !modelImporter()->loadBinary(binPath, newSubmeshes ) )
+        if ( rtl.reimport || !modelImporter()->loadBinary(binPath, subMeshes ) )
         {
-            newSubmeshes.clear(); // In case binary load succeeded partially.
-            if ( !modelImporter()->reimport(rtl.loadPath, settings, newSubmeshes) ||
-                 newSubmeshes.empty() )
+            subMeshes.clear(); // In case binary load succeeded partially.
+            if ( !modelImporter()->reimport(rtl.loadPath, settings, subMeshes) ||
+                 subMeshes.empty() )
             {
                 LOGW("Failed to load %s.", rtl.loadPath.string().c_str());
                 return;
@@ -62,28 +67,37 @@ namespace fv
         }
 
         // Create graphical component of each submesh
-        Vector<GraphicResource*> meshGraphics;
-        for ( auto& sm : newSubmeshes )
+        Vector<u64> meshGraphics;
+        u32 i=0;
+        for ( auto& sm : subMeshes )
         {
-            GraphicResource* graphic = renderManager()->createGraphic(GraphicType::Submesh, 0 /* device id */);
-            if ( graphic && graphic->updateMeshData( sm ) )
+            SubmeshInput si;
+            si.normals = sm.normals.size();
+            si.tanBins = sm.tangents.size() && sm.bitangents.size();
+            si.uvs = sm.uvs.size();
+            si.lightUvs = sm.lightUVs.size();
+            si.extras[0] = sm.extra1.size();
+            si.extras[1] = sm.extra2.size();
+            si.extras[2] = sm.extra3.size();
+            si.extras[3] = sm.extra4.size();
+            si.bones = sm.weights.size() && sm.boneIndices.size();
+
+            u64 graphic = renderManager()->createSubmesh( sm, materials[i++]->data );
+            if ( graphic != -1 )
             {
-                meshGraphics.emplace_back( graphic );
-            }
-            else
-            {
-                LOGW("Failed to update one or more submeshes of mesh %s.", rtl.loadPath.string().c_str());
-                renderManager()->freeGraphic( graphic );
+                LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
+                return;
             }
         }
 
         // Create a patch to be applied on main thread with new graphical content.
         Patch* patch = patchManager()->createPatch( PatchType::MeshData );
         patch->submeshes = std::move( meshGraphics );
-        patch->resource = rtl.resource;
+        patch->materials = std::move( materials );
+        patch->resource  = rtl.resource;
         if ( settings.keepInRam )
         {
-            patch->hostMeshes = std::move( newSubmeshes );
+            patch->hostMeshes = std::move( subMeshes );
         }
         patch->submit();
     }

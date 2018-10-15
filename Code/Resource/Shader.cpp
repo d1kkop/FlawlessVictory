@@ -6,7 +6,6 @@
 #include "../Core/Directories.h"
 #include "../Core/LogManager.h"
 #include "../Render/RenderManager.h"
-#include "../Render/GraphicResource.h"
 #include "../Resource/PatchManager.h"
 
 namespace fv
@@ -15,16 +14,13 @@ namespace fv
 
     Shader::~Shader()
     {
-        renderManager()->freeGraphic(m_Graphic, true);
+        renderManager()->deleteShader(m_Graphic);
     }
 
-    void Shader::applyPatch(GraphicResource* graphic)
+    void Shader::applyPatch(u64 graphic)
     {
         FV_CHECK_MO();
-
-        if ( m_Graphic )
-            renderManager()->freeGraphic( m_Graphic );
-
+        renderManager()->deleteShader(m_Graphic);
         m_Graphic = graphic;
     }
 
@@ -47,22 +43,18 @@ namespace fv
 
         if ( !code.empty() )
         {
-            GraphicResource* graphic = renderManager()->createGraphic(GraphicType::Shader);
-            if ( graphic )
+            u64 graphic = renderManager()->createShader( code.data(), (u32)code.size() );
+            if ( graphic != -1 )
             {
-                if ( graphic->updateShaderCode( code ) )
-                {
-                    Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
-                    p->graphic  = graphic;
-                    p->resource = rtl.resource;
-                    p->submit();
-                }
-                else
-                {
-                    renderManager()->freeGraphic( graphic );
-                }
+                Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
+                p->graphic  = graphic;
+                p->resource = rtl.resource;
+                p->submit();
+            }
+            else
+            {
+                LOGW("Failed to update shader for %s.", rtl.loadPath.string().c_str());
             }
         }
     }
-
 }

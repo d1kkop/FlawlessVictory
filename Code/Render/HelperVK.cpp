@@ -232,7 +232,7 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::createRenderPass(VkDevice device, VkFormat colorFormat, VkRenderPass& renderPass)
+    bool HelperVK::createRenderPass(VkDevice device, VkFormat colorFormat, u32 samples, VkRenderPass& renderPass)
     {
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format  = colorFormat;
@@ -271,10 +271,13 @@ namespace fv
     bool HelperVK::createPipeline(VkDevice device,
                                   VkShaderModule vertShader,
                                   VkShaderModule fragShader,
+                                  VkShaderModule geomShader,
                                   VkRenderPass renderPass,
-                                  VkExtent2D vpSize,
-                                  VkPipelineLayout& pipelineLayout,
-                                  VkPipeline& pipeline)
+                                  const VkViewport& vp,
+                                  const Vector<VkVertexInputAttributeDescription>& vertexInputs,
+                                  u32 totalVertexSize,
+                                  VkPipeline& pipeline,
+                                  VkPipelineLayout& pipelineLayout)
     {
         assert(device && vertShader && fragShader && renderPass);
 
@@ -290,34 +293,40 @@ namespace fv
         fragShaderStageInfo.module = fragShader;
         fragShaderStageInfo.pName = "main";
 
-        VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+        VkPipelineShaderStageCreateInfo geomShaderStageInfo = {};
+        geomShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        geomShaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+        geomShaderStageInfo.module = geomShader;
+        geomShaderStageInfo.pName = "main";
+
+        u32 numShaderStages = 2;
+        VkPipelineShaderStageCreateInfo shaderStages[8] = { vertShaderStageInfo, fragShaderStageInfo };
+        if ( geomShader ) shaderStages[numShaderStages++] = geomShaderStageInfo;
+
+        VkVertexInputBindingDescription bindingDescription = {};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = totalVertexSize;
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = (u32)vertexInputs.size();
+        vertexInputInfo.pVertexAttributeDescriptions = vertexInputs.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)vpSize.width;
-        viewport.height = (float)vpSize.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        VkRect2D scissor = {};
+        VkRect2D scissor;
         scissor.offset = { 0, 0 };
-        scissor.extent = vpSize;
+        scissor.extent = { (u32)vp.width, (u32)vp.height };
 
         VkPipelineViewportStateCreateInfo viewportState = {};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
+        viewportState.pViewports = &vp;
         viewportState.scissorCount = 1;
         viewportState.pScissors = &scissor;
 
@@ -358,13 +367,13 @@ namespace fv
 
         if ( vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS )
         {
-            LOGC("VK Failed to create base pipeline layout");
+            LOGW("VK Failed to create base pipeline layout");
             return false;
         }
 
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
+        pipelineInfo.stageCount = numShaderStages;
         pipelineInfo.pStages = shaderStages; // vertex and fragment (minimum)
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
@@ -380,7 +389,9 @@ namespace fv
 
         if ( vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS )
         {
-            LOGC("VK Failed to create base graphics pipeline.");
+            LOGW("VK Failed to create base graphics pipeline.");
+            vkDestroyPipelineLayout( device, pipelineLayout, nullptr );
+            pipelineLayout = nullptr;
             return false;
         }
 
@@ -419,6 +430,153 @@ namespace fv
             return false;
         }
         return true;
+    }
+
+    bool HelperVK::createVertexBuffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties,
+                                      const void* data, u32 bufferSize, bool shareInQueues, bool coherentMemory, 
+                                      VkBuffer& vertexBuffer, VkDeviceMemory& vertexBufferMemory)
+    {
+        assert( device && data && bufferSize != 0 );
+
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = bufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.sharingMode = shareInQueues ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+
+        if ( vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to create vertex buffer.");
+            return false;
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        u32 flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        flags |= coherentMemory ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, memProperties, flags);
+
+        if ( vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS )
+        {
+            LOGW("VK Failed to allocate memory for vertex buffer.");
+            return false;
+        }
+
+        vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+
+        void* mappedData;
+        if ( vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &mappedData) == VK_SUCCESS )
+        {
+            memcpy(mappedData, data, bufferSize);
+            vkUnmapMemory(device, vertexBufferMemory);
+        }
+        else 
+        {
+            LOGW("VK Failed to map and update vertex buffer.");
+            return false;
+        }
+
+        return true;
+    }
+
+    void HelperVK::createVertexAttribs(const SubmeshInput& s, Vector<VkVertexInputAttributeDescription>& inputAttribs, u32& vertexSize)
+    {
+        auto& inputs = inputAttribs;
+        inputs.clear();
+        inputs.reserve(VertexType::COUNT);
+        u32 vertexComponentCount = 0;
+        VkVertexInputAttributeDescription input;
+
+        // Vertex
+        {
+            input.binding  = 0;
+            input.location = VertexType::Position;
+            input.offset = 0;
+            input.format = VK_FORMAT_R32G32B32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 3;
+        }
+        if ( s.normals )
+        {
+            input.binding  = 0;
+            input.location = VertexType::Normal;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32G32B32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 3;
+        }
+        if ( s.tanBins )
+        {
+            // tangent
+            input.binding  = 0;
+            input.location = VertexType::Tangent;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32G32B32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 3;
+            // bitangent
+            input.binding  = 0;
+            input.location = VertexType::Bitangent;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32G32B32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 3;
+        }
+        if ( s.uvs )
+        {
+            input.binding  = 0;
+            input.location = VertexType::Uv;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32G32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 2;
+        }
+        if ( s.lightUvs )
+        {
+            input.binding  = 0;
+            input.location = VertexType::LightUv;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32G32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 2;
+        }
+        for ( u32 i=0; i<4; ++i )
+        {
+            if ( s.extras[i] )
+            {
+                input.binding  = 0;
+                input.location = VertexType::Extra1 + i;
+                input.offset = vertexComponentCount*sizeof(float);
+                input.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+                inputs.emplace_back(input);
+                vertexComponentCount += 4;
+            }
+        }
+        if ( s.bones )
+        {
+            // weights
+            input.binding  = 0;
+            input.location = VertexType::Weights;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 4;
+            // bone indices
+            input.binding  = 0;
+            input.location = VertexType::BoneIndices;
+            input.offset = vertexComponentCount*sizeof(float);
+            input.format = VK_FORMAT_R32_UINT;
+            inputs.emplace_back(input);
+            vertexComponentCount += 1;
+        }
+
+        // This assumes that u32 is equal to float32
+        static_assert( sizeof(float) == sizeof(u32) ); 
+        vertexSize = vertexComponentCount*sizeof(float);
     }
 
     bool HelperVK::allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers)

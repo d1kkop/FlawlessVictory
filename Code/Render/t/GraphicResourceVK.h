@@ -16,17 +16,25 @@ namespace fv
         bool updateImage(u32 width, u32 height, const byte* data, u32 size, ImageFormat format) override;
         bool updateBuffer(const byte* data, u32 size, BufferFormat format) override;
         bool updateShaderCode(Vector<char>& code) override;
-        bool updateMeshData(const Submesh& submesh) override;
+        bool updateMeshData(const Submesh& submesh, const SubmeshInput& sinput, const MaterialData& matData) override;
 
-        VkDevice m_Device{};
-        union
-        {
+        struct DeviceVK* m_Device;
+        //union
+        //{
             VkImage m_Image;
             VkBuffer m_Buffer;
             VkShaderModule m_Shader;
-            VkBuffer m_Indices;
-        };
-        Vector<VkBuffer> m_Vertices;
+
+//            struct 
+ //           {
+                VkBuffer m_Indices;
+                VkBuffer m_Vertices;
+                VkPipeline m_Pipeline;
+                VkRenderPass m_RenderPass;
+                MaterialData m_MatData;
+        //    };
+        //};
+        Vector<VkVertexInputAttributeDescription> m_VertexInputs;
 
         friend class RenderManagerVK;
     };

@@ -1,23 +1,19 @@
 #include "RenderManagerVK.h"
 #if FV_VULKAN
 #include "HelperVK.h"
-#include "GraphicResourceVK.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
 #include "../Core/Directories.h"
 #include "../Core/OSLayer.h"
-#include "../Core/JobManager.h"
 
 namespace fv
 {
-    RenderManagerVK::RenderManagerVK():
-        m_Graphics(32, true)
+    RenderManagerVK::RenderManagerVK()
     {
     }
 
     RenderManagerVK::~RenderManagerVK()
     {
-        m_Graphics.purge(); // Ensures that graphic child resources are deleted before device is destroyed.
         closeGraphics();
     }
 
@@ -131,15 +127,9 @@ namespace fv
                 return false;
             }
 
-            if ( !HelperVK::createRenderPass(dv.logical, dv.format, dv.clearPass) )
+            if ( !HelperVK::createRenderPass(dv.logical, dv.format, rc.numSamples, dv.clearPass) )
             {
                 LOGC("Cannot create main render pass. Render setup failed.");
-                return false;
-            }
-
-            if ( !HelperVK::createPipeline(dv.logical, dv.standardVert, dv.standardFrag, dv.clearPass, dv.extent, dv.opaquePipelineLayout, dv.opaquePipeline) )
-            {
-                LOGC("Cannot create standard pipeline. Render setup failed.");
                 return false;
             }
 
@@ -176,7 +166,8 @@ namespace fv
 
                 VkClearValue cv = { .4f, .3f, .9f, 0.f };
                 HelperVK::startRenderPass( cb, dv.clearPass, dv.frameBuffers[i++], { 0, 0, dv.extent }, &cv );
-                vkCmdBindPipeline( cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv.opaquePipeline );
+        //        vkCmdBindPipeline( cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv.opaquePipeline );
+                //vkCmdBindVertexBuffers( cb, 0, 1, 
                 vkCmdDraw( cb, 3, 1, 0, 0 );
                 HelperVK::stopRenderPass( cb );
 
@@ -207,8 +198,6 @@ namespace fv
                 if ( dv.standardFrag ) vkDestroyShaderModule( dv.logical, dv.standardFrag, nullptr );
                 if ( dv.standardVert ) vkDestroyShaderModule( dv.logical, dv.standardVert, nullptr );
                 if ( dv.clearPass ) vkDestroyRenderPass( dv.logical, dv.clearPass, nullptr );
-                if ( dv.opaquePipelineLayout ) vkDestroyPipelineLayout( dv.logical, dv.opaquePipelineLayout, nullptr );
-                if ( dv.opaquePipeline) vkDestroyPipeline( dv.logical, dv.opaquePipeline, nullptr );
                 for ( auto imgView : dv.imgViews )
                 {
                     if ( imgView ) vkDestroyImageView( dv.logical, imgView, nullptr );
@@ -219,6 +208,12 @@ namespace fv
                     {
                         if ( img ) vkDestroyImage(dv.logical, img, nullptr);
                     }
+                }
+                for ( auto& kvp : dv.pipelines )
+                {
+                    auto pipVk = kvp.second;
+                    if ( pipVk.pipeline) vkDestroyPipeline( dv.logical, pipVk.pipeline, nullptr );
+                    if ( pipVk.layout ) vkDestroyPipelineLayout( dv.logical, pipVk.layout, nullptr );
                 }
                 for ( auto frameBuffer : dv.frameBuffers )
                 {
@@ -252,35 +247,6 @@ namespace fv
         if ( m_Instance )
         {
             vkDestroyInstance(m_Instance, nullptr);
-        }
-    }
-
-    GraphicResource* RenderManagerVK::createGraphic(GraphicType type, u32 deviceIdx)
-    {
-        GraphicResourceVK* gr = m_Graphics.newObject(); // Is thread safe
-        RenderManager::setGraphicType( gr, type );
-        assert( m_Devices[deviceIdx].logical );
-        gr->init(type);
-        gr->m_Device = m_Devices[deviceIdx].logical;
-        return gr;
-    }
-
-    void RenderManagerVK::freeGraphic(GraphicResource* resource, bool async)
-    {
-        if (!resource) return;
-        auto* gr = sc<GraphicResourceVK*>(resource);
-        if ( !async || IsEngineClosing() )
-        {
-            gr->freeResource();
-            m_Graphics.freeObject( gr );
-        }
-        else
-        {
-            jobManager()->addJob( [=]()
-            {
-                gr->freeResource();
-                m_Graphics.freeObject( gr );
-            }, true /*auto free job*/);
         }
     }
 
@@ -350,6 +316,54 @@ namespace fv
         }
     }
 
+    bool RenderManagerVK::getOrCreatePipeline(u32 deviceIdx, const SubmeshInput& sinput, const MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut)
+    {
+        struct tempStruct 
+        {
+            SubmeshInput sinput;
+            MaterialData matData;
+            VkRenderPass renderPass;
+        };
+        tempStruct ts;
+        ts.sinput = sinput;
+        ts.matData = matData;
+        ts.renderPass = renderPass;
+        u32 pipelineHash = Hash32( (const char*)&ts, sizeof(ts) );
+
+     //   VkShaderModule vertShader = 
+       
+        auto& dv = m_Devices[deviceIdx];
+
+        scoped_lock lk( m_PipelinesMutex );
+        auto pIt = dv.pipelines.find(pipelineHash);
+        if ( pIt == dv.pipelines.end() )
+        {
+            // Get input attribs
+            u32 vertexSize;
+            Vector<VkVertexInputAttributeDescription> inputAttribs;
+            HelperVK::createVertexAttribs( sinput, inputAttribs, vertexSize );
+
+            // Create pipeline
+            VkPipeline pipeline;
+            VkPipelineLayout layout;
+            if ( !HelperVK::createPipeline(dv.logical, nullptr, nullptr, nullptr, renderPass, m_MainViewport, inputAttribs, vertexSize, pipeline, layout) )
+            {
+                LOGW("VK Failed to create pipeline.");
+                return false;
+            }
+
+            pipelineOut.pipeline;
+            pipelineOut.layout = layout;
+            dv.pipelines[pipelineHash] = pipelineOut;
+        }
+        else
+        {
+            pipelineOut = pIt->second;
+        }
+
+        return true;
+    }
+
     bool RenderManagerVK::createDevices(VkSurfaceKHR surface)
     {
         uint32_t deviceCount = 0;
@@ -413,7 +427,7 @@ namespace fv
             if ( dv.queueIndices.sparse )   vkGetDeviceQueue(dv.logical, *dv.queueIndices.sparse, 0, &dv.sparseQueue);
             if ( dv.queueIndices.present )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.present, 0, &dv.presentQueue);
 
-            m_Devices.emplace_back( dv );
+            m_Devices.push_back( dv );
 
             if ( ++numCreatedDevices >= m_RenderConfig.maxDevices )
             {
@@ -593,6 +607,39 @@ namespace fv
             }
         }
         return true;
+    }
+
+    u64 RenderManagerVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format)
+    {
+        assert(false);
+        return -1;
+    }
+
+    u64 RenderManagerVK::createShader(const char* data, u32 size)
+    {
+        assert(false);
+        return -1;
+    }
+
+    u64 RenderManagerVK::createSubmesh(const Submesh& submesh, const MaterialData& matData)
+    {
+        assert(false);
+        return -1;
+    }
+
+    void RenderManagerVK::deleteTexture2D(u64 tex2d)
+    {
+        assert(false);
+    }
+
+    void RenderManagerVK::deleteShader(u64 shader)
+    {
+        assert(false);
+    }
+
+    void RenderManagerVK::deleteSubmesh(u64 submesh)
+    {
+        assert(false);
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

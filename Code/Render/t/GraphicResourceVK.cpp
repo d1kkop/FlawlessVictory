@@ -1,6 +1,7 @@
 #include "GraphicResourceVK.h"
 #if FV_VULKAN
 #include "HelperVK.h"
+#include "RenderManagerVK.h"
 #include "../Core/LogManager.h"
 
 #define FV_CHECK_GRAPHIC_TYPE(type) \
@@ -31,8 +32,8 @@ namespace fv
             m_Shader = nullptr;
             break;
         case GraphicType::Submesh:
-            m_Indices = nullptr;
-            m_Vertices.clear();
+            m_Indices  = nullptr;
+            m_Vertices = nullptr;
             break;
         default:
             assert(false);
@@ -47,15 +48,15 @@ namespace fv
         case GraphicType::Texture2D:
         case GraphicType::Texture3D:
         case GraphicType::TextureCube:
-            if ( m_Device && m_Image ) vkDestroyImage(m_Device, m_Image, nullptr);
+            if ( m_Device && m_Image && m_Device->logical ) vkDestroyImage(m_Device->logical, m_Image, nullptr);
             m_Image = nullptr;
             break;
         case GraphicType::Buffer:
-            if ( m_Device && m_Buffer ) vkDestroyBuffer(m_Device, m_Buffer, nullptr);
+            if ( m_Device && m_Buffer && m_Device->logical ) vkDestroyBuffer(m_Device->logical, m_Buffer, nullptr);
             m_Buffer = nullptr;
             break;
         case GraphicType::Shader:
-            if ( m_Device && m_Shader ) vkDestroyShaderModule(m_Device, m_Shader, nullptr);
+            if ( m_Device && m_Shader && m_Device->logical ) vkDestroyShaderModule(m_Device->logical, m_Shader, nullptr);
             m_Shader = nullptr;
             break;
         }
@@ -84,13 +85,26 @@ namespace fv
     bool GraphicResourceVK::updateShaderCode(Vector<char>& code)
     {
         FV_CHECK_GRAPHIC_TYPE(GraphicType::Shader);
-        return HelperVK::createShaderModule( m_Device, code, m_Shader );
+        return HelperVK::createShaderModule( m_Device->logical, code, m_Shader );
     }
 
-    bool GraphicResourceVK::updateMeshData(const Submesh& submesh)
+
+    bool GraphicResourceVK::updateMeshData(const Submesh& submesh, const SubmeshInput& sinput, const MaterialData& matData)
     {
         FV_CHECK_GRAPHIC_TYPE(GraphicType::Submesh);
+
+        auto rv = sc<RenderManagerVK*>( renderManager() );
+
+        // TODO obtain render pass
+
+        PipelineVK pipeline;
+        if ( !rv->getOrCreatePipeline(0, sinput, matData, nullptr, pipeline) )
+        {
+            return false;
+        }
+
         // Directly upload to GPU
+        m_Pipeline = pipeline.pipeline;
         return true;
     }
 

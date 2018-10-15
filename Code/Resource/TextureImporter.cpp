@@ -1,7 +1,7 @@
 #include "TextureImporter.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
-#include "../Render/GraphicResource.h"
+#include "../Render/RenderManager.h"
 
 namespace fv
 {

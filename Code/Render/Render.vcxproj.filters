@@ -10,12 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
-    <ClInclude Include="GraphicResource.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="GraphicResourceVK.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="RenderManagerVK.h">
       <Filter>Managers</Filter>
     </ClInclude>
@@ -27,9 +21,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphicResourceVK.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="RenderManager.cpp">
       <Filter>Managers</Filter>
     </ClCompile>

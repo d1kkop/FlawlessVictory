@@ -57,6 +57,9 @@
     <ClCompile Include="Assets.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ResourceManager.h">

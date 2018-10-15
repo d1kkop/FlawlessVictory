@@ -8,20 +8,6 @@
 
 namespace fv
 {
-    Patch::~Patch()
-    {
-        // Graphic is only valid ptr if patch was not applied. Eg at end of application.
-        // RenderManager will also clean up this graphic if not cleaned from here.
-        if ( graphic )
-        {
-            renderManager()->freeGraphic( graphic );
-        }
-        for ( auto* g : submeshes )
-        {
-            renderManager()->freeGraphic( g );
-        }
-    }
-
     void Patch::applyPatch()
     {
         switch ( patchType )
@@ -49,7 +35,7 @@ namespace fv
         M<Texture2D> tex = std::static_pointer_cast<Texture2D>( resource );
         assert(tex);
         tex->applyPatch( width, height, imgFormat, graphic );
-        graphic = nullptr; // Ownership transferred.
+        graphic = -1; // Ownership transferred.
     }
 
     FV_MO void Patch::applyShaderCode()
@@ -58,7 +44,7 @@ namespace fv
         M<Shader> shader = std::static_pointer_cast<Shader>(resource);
         assert(shader);
         shader->applyPatch( graphic );
-        graphic = nullptr; // Ownership transferred.
+        graphic = -1; // Ownership transferred.
     }
 
     FV_MO void Patch::applyMeshData()
@@ -66,7 +52,7 @@ namespace fv
         FV_CHECK_MO();
         M<Mesh> mesh = std::static_pointer_cast<Mesh>(resource);
         assert(mesh);
-        mesh->applyPatch( submeshes, hostMeshes );
+        mesh->applyPatch( submeshes, hostMeshes, materials );
         submeshes.clear(); // Ownership transferred.
     }
 

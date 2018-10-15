@@ -5,6 +5,20 @@
 
 namespace fv
 {
+    enum VertexDescriptorType
+    {
+        P,                  /* pos */
+        PN,                 /* pos normal */
+        PNT,                /* pos normal tex */
+        PNTL,               /* pos normal tex lightuv */
+        PNTLTB,             /* pos normal tex lightuv tan&bin */
+        PNTTB,              /* pos normal tex t&b */
+        PNTTBBO,            /* pos normal tex t&b bones */
+        PNTBO,              /* pos normal tex bones */
+        PNBO,               /* pos normal bones */
+        PBO                 /* pos normal bones */
+    };
+
     struct QueueFamilyIndicesVK
     {
         Optional<u32> graphics;
@@ -13,6 +27,12 @@ namespace fv
         Optional<u32> sparse;
         Optional<u32> present;
         bool complete() const { return graphics.has_value() && compute.has_value() && transfer.has_value() && sparse.has_value() && present.has_value(); }
+    };
+
+    struct PipelineVK
+    {
+        VkPipeline pipeline;
+        VkPipelineLayout layout;
     };
 
     struct DeviceVK
@@ -28,14 +48,16 @@ namespace fv
         VkPhysicalDeviceMemoryProperties memProperties;
         VkPhysicalDeviceFeatures features;
         QueueFamilyIndicesVK queueIndices;
-        VkPipeline opaquePipeline;
-        VkPipelineLayout opaquePipelineLayout;
         VkShaderModule standardFrag;
         VkShaderModule standardVert;
         VkRenderPass clearPass;
         VkCommandPool commandPool;
         VkExtent2D extent;
         VkFormat format;
+        Vector<VkImage> m_Textures2D;
+        Vector<VkShaderModule> m_Shaders;
+        Vector<VkBuffer> m_Submeshes;
+        Vector<VkBuffer> m_SubMeshIndices;
         Vector<VkImage> images;
         Vector<VkImageView> imgViews;
         Vector<VkFramebuffer> frameBuffers;
@@ -43,6 +65,8 @@ namespace fv
         Vector<VkFence> frameFences;
         Vector<VkSemaphore> imageAvailableSemaphores;
         Vector<VkSemaphore> imageFinishedSemaphores;
+        // Dynamically created possible at a later stage
+        Map<u32, PipelineVK> pipelines;
         struct SwapChainVK* swapChain;
     };
 
@@ -77,12 +101,14 @@ namespace fv
         static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
-        static bool createRenderPass(VkDevice device, VkFormat format, VkRenderPass& renderPass);
-        static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkRenderPass renderPass,
-                                   VkExtent2D vpSize, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline);
+        static bool createRenderPass(VkDevice device, VkFormat format, u32 samples, VkRenderPass& renderPass);
+        static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkShaderModule geomShader, VkRenderPass renderPass, const VkViewport& vp,
+                                   const Vector<VkVertexInputAttributeDescription>& vertexInputs, u32 totalVertexSize,
+                                   VkPipeline& pipeline, VkPipelineLayout& pipelineLayout);
         static bool createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer);
         static bool createCommandPool(VkDevice device, u32 familyQueueIndex, VkCommandPool& pool);
-        
+        static bool createVertexBuffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties, const void* data, u32 bufferSize, bool shareInQueues, bool coherentMemory, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+        static void createVertexAttribs(const struct SubmeshInput& sinput, Vector<VkVertexInputAttributeDescription>& inputAttribs, u32& vertexSize);
 
         // Command buffers
         static bool allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);

@@ -11,20 +11,19 @@ namespace fv
 
     Texture2D::~Texture2D()
     {
-        renderManager()->freeGraphic(m_Graphic, true);
+        renderManager()->deleteTexture2D( m_Graphic );
     }
 
-    void Texture2D::applyPatch(u32 width, u32 height, ImageFormat format, GraphicResource* resource)
+    void Texture2D::applyPatch(u32 width, u32 height, ImageFormat format, u64 graphic)
     {
         FV_CHECK_MO();
 
-        if ( m_Graphic ) 
-            renderManager()->freeGraphic(m_Graphic, true);
+        renderManager()->deleteTexture2D( m_Graphic );
 
         m_Width = width;
         m_Height = height;
         m_Format = format;
-        m_Graphic = resource;
+        m_Graphic = graphic;
     }
 
     void Texture2D::load(const ResourceToLoad& rtl)
@@ -37,18 +36,10 @@ namespace fv
             return;
         }
 
-        GraphicResource* graphic = renderManager()->createGraphic(GraphicType::Texture2D, 0 /*device idx*/);
-        if ( !graphic )
+        u64 graphic = renderManager()->createTexture2D( width, height, (const char*)data.data(), (u32)data.size(), format );
+        if ( graphic == -1 )
         {
             LOGW("Cannot create graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());
-            return;
-        }
-
-        bool graphicUpdated = graphic->updateImage( width, height, data.data(), (u32)data.size(), format );
-        if ( !graphicUpdated )
-        {
-            renderManager()->freeGraphic(graphic);
-            LOGW("Cannot update graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());
             return;
         }
 

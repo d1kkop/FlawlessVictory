@@ -1,16 +1,9 @@
 #include "RenderManagerVK.h"
-#include "GraphicResourceVK.h"
 #include "../Core/Functions.h"
 #include "../Core/ComponentManager.h"
 
 namespace fv
 {
-    void RenderManager::setGraphicType( GraphicResource* gr, GraphicType graphicType )
-    {
-        assert( gr );
-        gr->m_Type = graphicType;
-    }
-
     void RenderManager::readRenderConfig()
     {
         auto& rs = m_RenderConfig;

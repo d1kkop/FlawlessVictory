@@ -1,9 +1,9 @@
 #pragma once
 #include "../Core/Common.h"
-#include "Mesh.h"
 
 namespace fv
 {
+    struct Submesh;
     struct ResourceToLoad;
 
     struct MeshImportSettings

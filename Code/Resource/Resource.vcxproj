@@ -71,6 +71,7 @@
   <ItemGroup>
     <ClCompile Include="..\Resources.h" />
     <ClCompile Include="Assets.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ModelImporter.cpp" />
     <ClCompile Include="Patch.cpp" />
