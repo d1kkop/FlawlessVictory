@@ -78,6 +78,7 @@ namespace fv
         for ( auto& sm : subMeshes )
         {
             SubmeshInput si;
+            si.positions = true;
             si.normals = sm.normals.size();
             si.tanBins = sm.tangents.size() && sm.bitangents.size();
             si.uvs = sm.uvs.size();

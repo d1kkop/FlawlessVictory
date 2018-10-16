@@ -326,7 +326,8 @@ namespace fv
                                   VkShaderModule geomShader,
                                   VkRenderPass renderPass,
                                   const VkViewport& vp,
-                                  const Vector<VkVertexInputAttributeDescription>& vertexInputs,
+                                  const Vector<VkVertexInputBindingDescription>& vertexBindings,
+                                  const Vector<VkVertexInputAttributeDescription>& vertexAttribs,
                                   u32 totalVertexSize,
                                   VkPipeline& pipeline,
                                   VkPipelineLayout& pipelineLayout)
@@ -362,9 +363,10 @@ namespace fv
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = (u32)vertexInputs.size();
-        vertexInputInfo.pVertexAttributeDescriptions = vertexInputs.data();
+        vertexInputInfo.vertexBindingDescriptionCount = (u32)vertexBindings.size();
+        vertexInputInfo.pVertexBindingDescriptions = vertexBindings.data();
+        vertexInputInfo.vertexAttributeDescriptionCount = (u32)vertexAttribs.size();
+        vertexInputInfo.pVertexAttributeDescriptions = vertexAttribs.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -554,6 +556,7 @@ namespace fv
         VkVertexInputAttributeDescription input;
 
         // Vertex
+        if ( s.positions )
         {
             input.binding  = 0;
             input.location = VertexType::Position;

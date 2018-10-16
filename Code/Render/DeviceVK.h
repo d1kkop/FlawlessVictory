@@ -31,7 +31,7 @@ namespace fv
         bool createRenderImages(const struct RenderConfig& rc);
         bool createFrameSyncObjects(const struct RenderConfig& rc);
         bool getOrCreatePipeline(const struct SubmeshInput& sinput, const struct MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut);
-        bool prepareNewFrame(u32 waitFrameIdx, RenderImageVK& newRenderImage);
+        bool recordCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb);
 
         VkInstance instance;
         VkDevice logical;
@@ -51,6 +51,7 @@ namespace fv
         VkShaderModule standardFrag;
         VkShaderModule standardVert;
         VkRenderPass clearPass;
+        PipelineVK clearPipeline;
         Map<u32, PipelineVK> pipelines;
         Vector<VkImage> textures2d;
         Vector<VkShaderModule> shaders;

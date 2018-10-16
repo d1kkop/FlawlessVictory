@@ -21,6 +21,7 @@ namespace fv
         for ( auto& buf : buffers) vkDestroyBuffer( logical, buf, nullptr );
         for ( auto& dvm : deviceMemorys) vkFreeMemory( logical, dvm, nullptr );
         for ( auto& kvp : pipelines ) kvp.second.release();
+        // clearPipeline.release(); // No need, is in map of pipelines 
         vkDestroyRenderPass( logical, clearPass, nullptr );
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
@@ -118,6 +119,15 @@ namespace fv
             LOGC("VK Cannot create standard vert shader. Render setup failed.");
             return false;
         }
+        SubmeshInput sinput{};
+        MaterialData mdata{};
+        mdata.fragShader = (HShader) standardFrag;
+        mdata.vertShader = (HShader) standardVert;
+        if ( !getOrCreatePipeline( sinput, mdata, clearPass, clearPipeline ) )
+        {
+            LOGC("VK Cannot create standard pipeline.");
+            return false;
+        }
         return true;
     }
 
@@ -177,8 +187,16 @@ namespace fv
         {
             // Get input attribs
             u32 vertexSize;
-            Vector<VkVertexInputAttributeDescription> inputAttribs;
-            HelperVK::createVertexAttribs(sinput, inputAttribs, vertexSize);
+            Vector<VkVertexInputAttributeDescription> vertexAttribs;
+            HelperVK::createVertexAttribs(sinput, vertexAttribs, vertexSize);
+
+            VkVertexInputBindingDescription vertexBinding {};
+            vertexBinding.binding = 0;
+            vertexBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            vertexBinding.stride = vertexSize;
+            Vector<VkVertexInputBindingDescription> vertexBindings;
+            if ( vertexAttribs.size() )
+                vertexBindings.emplace_back( vertexBinding );
 
             // Conduct default viewport
             VkViewport vp;
@@ -192,13 +210,15 @@ namespace fv
             // Create pipeline
             VkPipeline pipeline;
             VkPipelineLayout layout;
-            if ( !HelperVK::createPipeline(logical, nullptr, nullptr, nullptr, renderPass, vp, inputAttribs, vertexSize, pipeline, layout) )
+            if ( !HelperVK::createPipeline(logical, (VkShaderModule) matData.vertShader,(VkShaderModule) matData.fragShader, (VkShaderModule)matData.geomShader,
+                                           renderPass, vp, vertexBindings, vertexAttribs, vertexSize, pipeline, layout) )
             {
                 // pipelineMutex is already unlocked
                 return false;
             }
 
-            pipelineOut.pipeline;
+            pipelineOut.device = this;
+            pipelineOut.pipeline = pipeline;
             pipelineOut.layout = layout;
 
             pipelines[pipelineHash] = pipelineOut;
@@ -206,6 +226,34 @@ namespace fv
         else
         {
             pipelineOut = pIt->second;
+        }
+        return true;
+    }
+
+    bool DeviceVK::recordCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    {
+        assert( logical && commandPool );
+        for ( auto& ri : renderImages )
+        {
+            Vector<VkCommandBuffer> newCbs;
+            if ( !HelperVK::allocCommandBuffers(logical, commandPool, 1, newCbs) )
+            {
+                LOGC("Cannot create temporary triangle command buffer.");
+                return false;
+            }
+            ri.commandBuffers.emplace_back( newCbs[0] );
+            if ( !HelperVK::startRecordCommandBuffer(logical, newCbs[0]) )
+            {
+                LOGC("VK Failed to start record command buffer.");
+                return false;
+            }
+            // Record actual command buffer by using a callback
+            recordCb( newCbs[0], ri );
+            if ( !HelperVK::stopRecordCommandBuffer(newCbs[0]) )
+            {
+                LOGC("VK Failed to stop recording command buffer.");
+                return false;
+            }
         }
         return true;
     }

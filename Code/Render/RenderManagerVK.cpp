@@ -114,40 +114,19 @@ namespace fv
             if (!dv->createFrameSyncObjects( rc )) return false;
         }
 
-        //// Temp command buffers
-        //for ( auto& dv : m_Devices )
-        //{
-        //    // TEMP create drawable triangle
-        //    u32 oldSize = (u32) dv.commandBuffers.size();
-        //    if ( !HelperVK::allocCommandBuffers(dv.logical, dv.commandPool, 3, dv.commandBuffers) )
-        //    {
-        //        LOGC("Cannot create temporary triangle command buffer.");
-        //        return false;
-        //    }
-
-        //    u32 i=0;
-        //    for ( auto& cb : dv.commandBuffers )
-        //    {
-        //        if ( !HelperVK::startRecordCommandBuffer( dv.logical, cb ) )
-        //        {
-        //            LOGC("VK Failed to start record command buffer.");
-        //            return false;
-        //        }
-
-        //        VkClearValue cv = { .4f, .3f, .9f, 0.f };
-        //        HelperVK::startRenderPass( cb, dv.clearPass, dv.frameBuffers[i++], { 0, 0, dv.extent }, &cv );
-        ////        vkCmdBindPipeline( cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv.opaquePipeline );
-        //        //vkCmdBindVertexBuffers( cb, 0, 1, 
-        //        vkCmdDraw( cb, 3, 1, 0, 0 );
-        //        HelperVK::stopRenderPass( cb );
-
-        //        if ( !HelperVK::stopRecordCommandBuffer(cb) )
-        //        {
-        //            LOGC("VK Failed to stop recording command buffer.");
-        //            return false;
-        //        }
-        //    }
-        //}
+        // TODO Temp command buffers
+        for ( auto& dv : m_Devices )
+        {
+            dv->recordCommandBuffer( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
+            {
+                VkClearValue cv = { .4f, .3f, .9f, 0.f };
+                HelperVK::startRenderPass(cb, dv->clearPass, ri.frameBuffer, { 0, 0, dv->extent }, &cv);
+                vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv->clearPipeline.pipeline);
+                //vkCmdBindVertexBuffers( cb, 0, 1, 
+                vkCmdDraw(cb, 3, 1, 0, 0);
+                HelperVK::stopRenderPass(cb);
+            });
+        }
 
         LOG("VK Initialized succesful.");
         return true;
@@ -333,17 +312,17 @@ namespace fv
 
     void RenderManagerVK::deleteTexture2D(u64 tex2d)
     {
-        assert(false);
+    //    assert(false);
     }
 
     void RenderManagerVK::deleteShader(u64 shader)
     {
-        assert(false);
+    //    assert(false);
     }
 
     void RenderManagerVK::deleteSubmesh(u64 submesh)
     {
-        assert(false);
+    //    assert(false);
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

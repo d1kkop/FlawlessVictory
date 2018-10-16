@@ -4,7 +4,6 @@
 
 namespace fv
 {
-    class GraphicResource;
     enum class GraphicType;
 
     struct RenderConfig
@@ -20,6 +19,11 @@ namespace fv
         bool fullScreen;
         String windowName;
     };
+
+    using HShader = void*;
+    using HTexture2D = void*;
+    using HMaterial = void*;
+    using HRenderPass = void*;
 
     enum class BufferFormat
     {
@@ -78,6 +82,7 @@ namespace fv
 
     struct SubmeshInput
     {
+        bool positions;
         bool normals;
         bool tanBins;
         bool uvs;
@@ -88,10 +93,9 @@ namespace fv
 
     struct MaterialData
     {
-        u64 vertShader;
-        u64 fragShader;
-        u64 geomShader;
-        u64 renderPass;
+        HShader vertShader;
+        HShader fragShader;
+        HShader geomShader;
     };
 
 
