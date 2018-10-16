@@ -8,12 +8,19 @@
 #include "../Scene/GameComponent.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/PatchManager.h"
+#include "../Resource/ResourceManager.h"
 
 namespace fv
 {
     bool SystemManager::initialize(const SystemParams& params)
     {
         m_Params = params;
+
+        // Execute functions/constructors that are thread safe in a sense that their data will never change.
+        // Call these before any threads are started.
+        resourceManager()->initialize();
+
+        StopBeginFase();
 
         // Initilize os related stuff.
         if ( !OSInitialize() )

@@ -291,7 +291,7 @@ namespace fv
 
     RSubmesh DeviceVK::createSubmesh(const Submesh& submesh)
     {
-        assert( false );
+     //   assert( false );
         return {};
     }
 

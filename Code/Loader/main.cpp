@@ -60,9 +60,6 @@ int main(int argc, char** argv)
 #else
     dllPath.remove_filename().append("UnitTests");
 #endif
-
-    // Force cache all search directories, so that lookup is thread safe 
-    resourceManager();
     
     SystemParams sysParams{};
     sysParams.moduleName   = dllPath.string();

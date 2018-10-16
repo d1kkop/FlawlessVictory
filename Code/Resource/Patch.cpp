@@ -54,9 +54,9 @@ namespace fv
         assert(mesh);
         mesh->applyPatch( submeshes, hostMeshes, materials );
         // Should all have been moved
-        assert( submeshes.empty() );
-        assert( hostMeshes.empty() );
-        assert( materials.empty() );
+        submeshes.clear();
+        hostMeshes.clear();
+        materials.clear();
     }
 
 }

@@ -139,7 +139,7 @@ namespace fv
         const aiScene* scene = importer.ReadFile(path.string().c_str(), aiProcessPreset_TargetRealtime_Fast); // aiProcessPreset_TargetRealtime_Fast aiProcessPreset_TargetRealtime_MaxQuality
         if ( !scene )
         {
-            LOGW("Failed to import %s.", path.string().c_str());
+            LOGW("Failed to import %s from assimp.", path.string().c_str());
             return true;
         }
         loadSubmeshes(submeshes, scene);
@@ -157,7 +157,7 @@ namespace fv
 #if FV_ASSIMP
     void ModelImporter::loadSubmeshes(Vector<Submesh> &submeshes, const aiScene* scene)
     {
-        if ( scene->mNumMeshes ) return;
+        if ( scene->mNumMeshes==0 ) return;
         submeshes.resize(scene->mNumMeshes);
         for ( u32 i = 0; i < scene->mNumMeshes; i++ )
         {
@@ -241,7 +241,7 @@ namespace fv
         assert( aiMat && mat );
         aiString pathToTexture;
         if ( aiMat->GetTexture( texType, 0, &pathToTexture) == aiReturn_SUCCESS &&
-             pathToTexture.length && pathToTexture.data[0] != '*' /* Do not import embedded textures for now */ )
+             (pathToTexture.length==0 || pathToTexture.data[0] != '*') /* Do not import embedded textures for now */ )
         {
             Sampler2D s {};
             s.filter   = SamplerFilter::An16x;
@@ -253,7 +253,7 @@ namespace fv
 
     void ModelImporter::loadMaterials(const String& baseName, Vector<M<Material>>& materials, const aiScene* scene)
     {
-        if ( scene->mNumMaterials ) return;
+        if ( scene->mNumMaterials==0 ) return;
         materials.resize( scene->mNumMaterials );
         for ( u32 i = 0; i < scene->mNumMaterials; i++ )
         {

@@ -7,8 +7,7 @@ namespace fv
 
     struct ResourceConfig
     {
-        u32 loadThreadSleepTimeMs = 10;
-        u32 writeCachedFiletimesSleepMs = 1000;
+        u32 loadThreadSleepTimeMs = 200;
     };
 
     struct ResourceToLoad
@@ -18,56 +17,60 @@ namespace fv
         bool reimport;
     };
 
+    struct LoadedResourceInfo
+    {
+        M<Resource> resource;
+        Path path;
+        bool loaded;
+    };
+
     class ResourceManager
     {
     public:
-        ResourceManager();
         ~ResourceManager();
-
-        FV_TS FV_DLL M<Resource> load(u32 type, const String& name);
-        FV_TS FV_DLL M<Resource> create(u32 type, const String& name, bool& wasAlreadyCreated);
         FV_TS FV_DLL void cleanupResourcesWithoutReferences();
 
         template <class T>
-        FV_TS M<T> load(const String& name);
+        FV_TS M<T> load(const String& filename);
 
         template <class T>
-        FV_TS M<T> create(const String& name, bool& wasAlreadyCreated);
+        FV_TS M<T> create(const String& filename, bool& wasAlreadyCreated);
 
     private:
-        FV_MO void readResourceConfig(ResourceConfig& config);
-        FV_TS M<Resource> findOrCreateResource(const String& filename, u32 type, bool& wasAlreadyCreated, Path* loadPath); /* loadPath can be null */
-        FV_TS bool shouldReimport(const Path& filename);
+        FV_BG FV_DLL void initialize(); 
+        FV_BG void readResourceConfig(ResourceConfig& config);
+        FV_BG void cacheSearchDirectories();
+        FV_BG void cacheFiletimes();
+        FV_TS Path filenameToDirectory(const String& filename) const; // Thread safe because directories are cached on startup.
+        FV_TS FV_DLL M<Resource> findOrCreateResource(const String& filename, u32 type, bool& wasAlreadyCreated);
+        u64  getAndUpdateCachedFiletime( const String& filename, u64 newDiskTime, bool& fileTimesUpdated );
+        void writeCachedFiletimes();
         void loadThread();
-        void fileTimesThread();
 
-        // Note resources are not recycled but shared, so to have a shared ptr.
-        Map<Path, M<Resource>> m_NameToResource;
-        Map<Path, Path> m_FilenameToDirectory;
+        Map<Path, LoadedResourceInfo> m_NameToResource;
+        Vector<LoadedResourceInfo> m_LoadedResourcesCopy;
+        Map<Path, Path> m_CachedFilenameToDirectories;
         Map<String, u64> m_CachedFiletimes;
-        Vector<ResourceToLoad> m_PendingResourcesToLoad[2];
-        u32 m_ListToFill = 0;
-        u32 m_StuffedList = 1;
         Mutex m_NameToResourceMutex;
-        Mutex m_PendingListMutex;
-        Mutex m_CachedFiletimesMutex;
         Thread m_ResourceThread;
-        Thread m_FiletimesThread;
         ResourceConfig m_Config{};
         Atomic<bool> m_Closing = false;
+
+        friend class SystemManager;
     };
 
 
     template <class T>
-    M<T> ResourceManager::load(const String& name)
+    M<T> ResourceManager::load(const String& filename)
     {
-        return std::static_pointer_cast<T>( load(T::type(), name) );
+        bool wasAlreadyCreated;
+        return std::static_pointer_cast<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
     }
 
     template <class T>
-    M<T> ResourceManager::create(const String& name, bool& wasAlreadyCreated)
+    M<T> ResourceManager::create(const String& filename, bool& wasAlreadyCreated)
     {
-        return std::static_pointer_cast<T>( create(T::type(), name, wasAlreadyCreated) );
+        return std::static_pointer_cast<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
     }
 
     FV_DLL ResourceManager* resourceManager();

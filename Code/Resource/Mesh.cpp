@@ -61,7 +61,7 @@ namespace fv
             if ( !modelImporter()->reimport(rtl.loadPath, settings, subMeshes, materials) ||
                  subMeshes.empty() )
             {
-                LOGW("Failed to load %s.", rtl.loadPath.string().c_str());
+                LOGW("Failed to load %s (num submeshes %d).", rtl.loadPath.string().c_str(), (u32)subMeshes.size());
                 return;
             }
         }
