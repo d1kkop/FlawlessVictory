@@ -66,6 +66,12 @@ namespace fv
             }
         }
 
+        if ( materials.size() != subMeshes.size() )
+        {
+            LOGW("Failed to load mesh %s, materials and subhmeshes do not match.", rtl.loadPath.string().c_str());
+            return;
+        }
+
         // Create graphical component of each submesh
         Vector<u64> meshGraphics;
         u32 i=0;

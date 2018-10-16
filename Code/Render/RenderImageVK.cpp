@@ -9,6 +9,7 @@ namespace fv
 {
     void RenderImageVK::release()
     {
+        if (!device ||!device->logical) return;
         vkDestroyImage(device->logical, image, nullptr);
         vkFreeMemory(device->logical, imageMemory, nullptr);
         vkDestroyImageView( device->logical, imgView, nullptr );
@@ -16,9 +17,8 @@ namespace fv
         vkFreeCommandBuffers( device->logical, device->commandPool, (u32)commandBuffers.size(), commandBuffers.data() );
     }
 
-    bool RenderImageVK::createImages(const struct RenderConfig& rc)
+    bool RenderImageVK::createImage(const struct RenderConfig& rc)
     {
-        if ( device->swapChain ) return true; // Images from swap chain.
         // Set format and extent as no swap chain is present.
         if ( !HelperVK::createImage(device->logical, device->memProperties,
                                     device->extent, 1, device->format, rc.numSamples, rc.numLayers, false, 
@@ -29,16 +29,19 @@ namespace fv
         return true;
     }
 
-    bool RenderImageVK::createImageViews(const struct RenderConfig& rc)
+    bool RenderImageVK::createImageView(const struct RenderConfig& rc, VkImage swapChainImage)
     {
-        if ( !HelperVK::createImageView(device->logical, image, device->format, rc.numLayers, imgView) )
+        VkImage chosenImage = image;
+        if ( swapChainImage )
+            chosenImage = swapChainImage;
+        if ( !HelperVK::createImageView(device->logical, chosenImage, device->format, rc.numLayers, imgView) )
         {
             return false;
         }
-        return false;
+        return true;
     }
 
-    bool RenderImageVK::createFrameBuffers(VkRenderPass renderPass)
+    bool RenderImageVK::createFrameBuffer(VkRenderPass renderPass)
     {
         assert(renderPass);
         Vector<VkImageView> attachments = { imgView };

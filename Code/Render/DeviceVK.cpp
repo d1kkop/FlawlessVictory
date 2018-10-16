@@ -82,7 +82,7 @@ namespace fv
     bool DeviceVK::createSwapChain(const RenderConfig& rc, VkSurfaceKHR surface)
     {
         assert(logical && physical && surface && !swapChain);
-        swapChain = new SwapChainVK;
+        swapChain = new SwapChainVK();
         swapChain->surface = surface;
         swapChain->device = this;
         if ( !HelperVK::createSwapChain(logical, physical, surface,
@@ -125,11 +125,22 @@ namespace fv
     {
         assert(renderImages.size()==0 && rc.numImages > 0 && rc.numSamples >= 1);
         renderImages.resize(rc.numImages);
+        u32 i=0;
         for ( auto& ri : renderImages )
         {
-            if ( !ri.createImages( rc ) ) return false;
-            if ( !ri.createImageViews( rc ) ) return false;
-            if ( !ri.createFrameBuffers( clearPass ) ) return false;
+            ri.device = this;
+            VkImage swapChainImg = nullptr;
+            if ( !ri.device->swapChain )
+            {
+                if ( !ri.createImage( rc ) ) return false;
+            } 
+            else
+            {
+                assert( swapChain->images.size() == rc.numImages );
+                swapChainImg = ri.device->swapChain->images[i++];
+            }
+            if ( !ri.createImageView( rc, swapChainImg ) ) return false;
+            if ( !ri.createFrameBuffer( clearPass ) ) return false;
         }
         return true;
     }
@@ -140,6 +151,7 @@ namespace fv
         frameSyncObjects.resize( rc.numFramesBehind );
         for ( auto& fso : frameSyncObjects )
         {
+            fso.device = this;
             if ( !fso.create() ) return false;
         }
         return true;

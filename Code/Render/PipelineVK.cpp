@@ -7,6 +7,7 @@ namespace fv
 {
     void PipelineVK::release()
     {
+        if (!device ||!device->logical) return;
         vkDestroyPipeline( device->logical, pipeline, nullptr );
         vkDestroyPipelineLayout( device->logical, layout, nullptr );
     }

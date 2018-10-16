@@ -8,6 +8,7 @@ namespace fv
 {
     void FrameSyncObjectVK::release()
     {
+        if (!device ||!device->logical) return;
         vkDestroySemaphore( device->logical, imageAvailableSemaphore, nullptr );
         vkDestroySemaphore( device->logical, imageFinishedSemaphore, nullptr );
         vkDestroyFence( device->logical, frameFence, nullptr );

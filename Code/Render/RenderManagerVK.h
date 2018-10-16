@@ -38,7 +38,6 @@ namespace fv
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
         Vector<DeviceVK*> m_Devices; // Must use ptr as has mutexes for which default operators are deleted.
-        SwapChainVK m_MainSwapChain{};
         void* m_Window {};
         u32 m_FrameImageIdx = 0;    // Iterates from 0 to RenderConfig.numFramesBehind-1
         u32 m_CurrentDrawImage = 0; // In case of no swap chain.

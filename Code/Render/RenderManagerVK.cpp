@@ -73,9 +73,10 @@ namespace fv
     #endif
 
         // In case of main swap chain
+        VkSurfaceKHR surface = nullptr;
         if ( m_Window )
         {
-            if ( !HelperVK::createSurface(m_Instance, m_Window, m_MainSwapChain.surface) )
+            if ( !HelperVK::createSurface(m_Instance, m_Window, surface) )
             {
                 LOGC("VK Failed to create main window surface.");
                 return false;
@@ -83,7 +84,7 @@ namespace fv
         }
 
         // Note, surface can be null in case there is no mainWindow.
-        if ( !createDevices(m_MainSwapChain.surface) )
+        if ( !createDevices(surface) )
             return false;
 
         // See if want swap chain
@@ -92,7 +93,7 @@ namespace fv
             // Find device that can present 
             for ( auto& dv : m_Devices )
             {
-                if ( dv->createSwapChain( rc, m_MainSwapChain.surface ) )
+                if ( dv->createSwapChain( rc, surface ) )
                 {
                     if ( !dv->swapChain->createImages( rc.numLayers ) )
                     {
@@ -107,10 +108,10 @@ namespace fv
         for ( auto& dv : m_Devices )
         {
             dv->setFormatAndExtent( rc );
-            dv->createStandard( rc );
-            dv->createCommandPools();
-            dv->createRenderImages( rc );
-            dv->createFrameSyncObjects( rc );
+            if (!dv->createStandard( rc )) return false;
+            if (!dv->createCommandPools()) return false;
+            if (!dv->createRenderImages( rc )) return false;
+            if (!dv->createFrameSyncObjects( rc )) return false;
         }
 
         //// Temp command buffers
@@ -182,7 +183,7 @@ namespace fv
             uint32_t imageIndex; // Iterates from 0 to numImages-1 in swap chain.
             if ( dv->swapChain )
             {
-                vkAcquireNextImageKHR(dv->logical, m_MainSwapChain.swapChain, (u64)-1, so.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+                vkAcquireNextImageKHR(dv->logical, dv->swapChain->swapChain, (u64)-1, so.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
             }
             else
             {
@@ -213,15 +214,11 @@ namespace fv
             {
                 VkPresentInfoKHR presentInfo = {};
                 presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
                 presentInfo.waitSemaphoreCount = 1;
                 presentInfo.pWaitSemaphores = signalSemaphores;
-
-                VkSwapchainKHR swapChains[] = { m_MainSwapChain.swapChain };
                 presentInfo.swapchainCount = 1;
-                presentInfo.pSwapchains = swapChains;
+                presentInfo.pSwapchains = &dv->swapChain->swapChain;
                 presentInfo.pImageIndices = &imageIndex;
-
                 vkQueuePresentKHR(dv->presentQueue, &presentInfo);
             }
         }
@@ -247,7 +244,7 @@ namespace fv
         physicalDevices.resize( deviceCount );
         vkEnumeratePhysicalDevices(m_Instance, &deviceCount, physicalDevices.data());
 
-        DeviceVK* device = new DeviceVK;
+        DeviceVK* device = new DeviceVK();
         u32 numCreatedDevices = 0;
         for ( auto& physical : physicalDevices )
         {
@@ -288,7 +285,6 @@ namespace fv
 
             if ( !HelperVK::createDevice( m_Instance, dv.physical, queueCreateInfos, m_RequiredPhysicalExtensions, m_RequiredPhysicalLayers, dv.logical ) )
             {
-                LOGC( "VK Failed to create logical devices." );
                 break;
             }
 
@@ -299,7 +295,7 @@ namespace fv
             if ( dv.queueIndices.present )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.present, 0, &dv.presentQueue);
 
             m_Devices.emplace_back( device );
-            device = new DeviceVK;
+            device = new DeviceVK();
 
             if ( ++numCreatedDevices >= m_RenderConfig.maxDevices )
             {
@@ -319,19 +315,19 @@ namespace fv
 
     u64 RenderManagerVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format)
     {
-        assert(false);
+      //  assert(false);
         return -1;
     }
 
     u64 RenderManagerVK::createShader(const char* data, u32 size)
     {
-        assert(false);
+      //  assert(false);
         return -1;
     }
 
     u64 RenderManagerVK::createSubmesh(const Submesh& submesh, const MaterialData& matData)
     {
-        assert(false);
+     //   assert(false);
         return -1;
     }
 

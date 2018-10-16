@@ -8,10 +8,11 @@ namespace fv
 {
     void SwapChainVK::release()
     {
+        if (!device ||!device->logical) return;
         // No need to delete images
-        vkDestroySurfaceKHR( device->instance, surface, nullptr );
         vkDestroySwapchainKHR( device->logical, swapChain, nullptr );
         vkDestroySwapchainKHR( device->logical, oldSwapChain, nullptr );
+        vkDestroySurfaceKHR( device->instance, surface, nullptr );
     }
 
     bool SwapChainVK::createImages(u32 numLayers)

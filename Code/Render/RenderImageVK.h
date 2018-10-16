@@ -10,9 +10,9 @@ namespace fv
     public:
         RenderImageVK() = default;
         void release(); // Do not put in destructor.
-        bool createImages(const struct RenderConfig& rc);
-        bool createImageViews(const struct RenderConfig& rc);
-        bool createFrameBuffers(VkRenderPass renderPass);
+        bool createImage(const struct RenderConfig& rc);
+        bool createImageView(const struct RenderConfig& rc, VkImage swapChainImg);
+        bool createFrameBuffer(VkRenderPass renderPass);
 
         struct DeviceVK* device;
         VkImage image;
