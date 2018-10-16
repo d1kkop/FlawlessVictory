@@ -28,6 +28,7 @@ namespace fv
                                 VkImage& image, VkDeviceMemory& memory);
         static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
+        static bool createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
         static bool createRenderPass(VkDevice device, VkFormat format, u32 samples, VkRenderPass& renderPass);
         static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkShaderModule geomShader, VkRenderPass renderPass, const VkViewport& vp,
@@ -64,6 +65,7 @@ namespace fv
 
         // Misc
         static u32  findMemoryType(u32 typeFilter, const VkPhysicalDeviceMemoryProperties& memProperties, VkMemoryPropertyFlags propertyFlags);
+        static VkFormat convert( enum class ImageFormat imgFormat );
     };
 }
 #endif

@@ -14,13 +14,11 @@ namespace fv
         renderManager()->deleteTexture2D( m_Graphic );
     }
 
-    void Texture2D::applyPatch(u32 width, u32 height, ImageFormat format, u64 graphic)
+    void Texture2D::applyPatch(u32 width, u32 height, ImageFormat format, const RTexture2D& graphic )
     {
         FV_CHECK_MO();
-
         renderManager()->deleteTexture2D( m_Graphic );
-
-        m_Width = width;
+        m_Width  = width;
         m_Height = height;
         m_Format = format;
         m_Graphic = graphic;
@@ -36,8 +34,8 @@ namespace fv
             return;
         }
 
-        u64 graphic = renderManager()->createTexture2D( width, height, (const char*)data.data(), (u32)data.size(), format );
-        if ( graphic == -1 )
+        RTexture2D graphic = renderManager()->createTexture2D( 0, width, height, (const char*)data.data(), (u32)data.size(), format );
+        if ( graphic.device == -1 )
         {
             LOGW("Cannot create graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());
             return;
@@ -46,6 +44,7 @@ namespace fv
         Patch* patch    = patchManager()->createPatch(PatchType::Texture2DData);
         patch->width    = width;
         patch->height   = height;
+        patch->imgFormat = format;
         patch->graphic  = graphic;
         patch->resource = rtl.resource;
         patch->submit();

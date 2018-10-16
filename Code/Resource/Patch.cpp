@@ -35,7 +35,7 @@ namespace fv
         M<Texture2D> tex = std::static_pointer_cast<Texture2D>( resource );
         assert(tex);
         tex->applyPatch( width, height, imgFormat, graphic );
-        graphic = -1; // Ownership transferred.
+        graphic = {}; // Ownership transferred.
     }
 
     FV_MO void Patch::applyShaderCode()
@@ -44,7 +44,7 @@ namespace fv
         M<Shader> shader = std::static_pointer_cast<Shader>(resource);
         assert(shader);
         shader->applyPatch( graphic );
-        graphic = -1; // Ownership transferred.
+        graphic = {}; // Ownership transferred.
     }
 
     FV_MO void Patch::applyMeshData()
@@ -53,7 +53,10 @@ namespace fv
         M<Mesh> mesh = std::static_pointer_cast<Mesh>(resource);
         assert(mesh);
         mesh->applyPatch( submeshes, hostMeshes, materials );
-        submeshes.clear(); // Ownership transferred.
+        // Should all have been moved
+        assert( submeshes.empty() );
+        assert( hostMeshes.empty() );
+        assert( materials.empty() );
     }
 
 }

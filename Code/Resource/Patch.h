@@ -23,7 +23,7 @@ namespace fv
         void submit(); // Same as PatchManager()->submiPatch( this );
 
         PatchType patchType;
-        u64 graphic = -1;
+        DeviceResource graphic;
         M<Resource> resource;
         union
         {
@@ -32,12 +32,9 @@ namespace fv
                 u32 width, height, depth;
                 ImageFormat imgFormat;
             }; /* Texture2 or 3D */
-            struct 
-            {
-            }; /* MeshData */
         };
         Vector<Submesh> hostMeshes; // In case importer wants to keep in host memory
-        Vector<u64> submeshes; // For Meshdata
+        Vector<RSubmesh> submeshes; // For Meshdata
         Vector<M<Material>> materials;
 
     private:

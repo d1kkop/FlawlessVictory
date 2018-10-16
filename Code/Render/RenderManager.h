@@ -20,10 +20,18 @@ namespace fv
         String windowName;
     };
 
-    using HShader = void*;
-    using HTexture2D = void*;
-    using HMaterial = void*;
-    using HRenderPass = void*;
+    // Using this instead of many small heap allocations that are slow to access compared to stack memory.
+    struct DeviceResource
+    {
+        u32 device = (u32)-1;
+        void* resources[4]{};
+    };
+
+    using RSubmesh = DeviceResource;
+    using RShader = DeviceResource;
+    using RTexture2D = DeviceResource;
+    using RMaterial = DeviceResource;
+    using RRenderPass = DeviceResource;
 
     enum class BufferFormat
     {
@@ -37,11 +45,10 @@ namespace fv
         RGB8,
         Single8,
         RGBA16,
-        RGBA32F,
         RGB16,
+        RGBA32F,
         RGB32F,
-        RGB555,
-        RGB565
+        RGB555
     };
 
     enum VertexType
@@ -93,9 +100,9 @@ namespace fv
 
     struct MaterialData
     {
-        HShader vertShader;
-        HShader fragShader;
-        HShader geomShader;
+        RShader vertShader;
+        RShader fragShader;
+        RShader geomShader;
     };
 
 
@@ -106,16 +113,18 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
 
-        virtual u64 createTexture2D( u32 width, u32 height, const char* data, u32 size, ImageFormat format ) = 0;
-        virtual u64 createShader( const char* data, u32 size ) = 0;
-        virtual u64 createSubmesh( const Submesh& submesh, const MaterialData& matData ) = 0;
-        virtual void deleteTexture2D( u64 tex2d ) = 0;
-        virtual void deleteShader( u64 shader ) = 0;
-        virtual void deleteSubmesh( u64 submesh ) = 0;
+        FV_TS virtual RTexture2D createTexture2D( u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format ) = 0;
+        FV_TS virtual RShader createShader( u32 deviceIdx, const char* data, u32 size ) = 0;
+        FV_TS virtual RSubmesh createSubmesh( u32 deviceIdx, const Submesh& submesh ) = 0;
+        FV_TS virtual void deleteTexture2D( RTexture2D tex2d ) = 0;
+        FV_TS virtual void deleteShader( RShader shader ) = 0;
+        FV_TS virtual void deleteSubmesh( RSubmesh submesh ) = 0;
 
         void readRenderConfig();
         virtual void drawFrame() = 0;
         virtual void waitOnDeviceIdle() = 0;
+        virtual u32 numDevices() const = 0;
+        virtual u32 autoDeviceIdx() = 0;
 
     protected:
         RenderConfig m_RenderConfig{};

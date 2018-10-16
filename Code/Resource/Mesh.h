@@ -11,14 +11,14 @@ namespace fv
 
     public:
         FV_DLL ~Mesh() override;
-        FV_MO void applyPatch(const Vector<u64>& submeshes, const Vector<Submesh>& hostMeshes, const Vector<M<Material>>& materials);
+        FV_MO void applyPatch(const Vector<RSubmesh>& submeshes, const Vector<Submesh>& hostMeshes, const Vector<M<Material>>& materials);
 
     private:
         // From different thread
         FV_DLL void load(const ResourceToLoad& rtl) override;
 
     private:
-        Vector<u64> m_SubMeshes;
+        Vector<RSubmesh> m_SubMeshes;
         Vector<M<Material>> m_Materials;
         Vector<Submesh> m_HostMeshes{}; // Usually empty
     };

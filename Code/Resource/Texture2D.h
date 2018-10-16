@@ -1,5 +1,6 @@
 #pragma once
 #include "Resource.h"
+#include "../Render/RenderManager.h"
 
 namespace fv
 {
@@ -12,7 +13,7 @@ namespace fv
         FV_DLL u32 width() const { return m_Width; }
         FV_DLL u32 height() const { return m_Height; }
 
-        FV_MO void applyPatch( u32 width, u32 height, enum class ImageFormat format, u64 graphic );
+        FV_MO void applyPatch( u32 width, u32 height, enum class ImageFormat format, const RTexture2D& graphic );
 
     private:
         // From different thread
@@ -20,7 +21,7 @@ namespace fv
 
         u32 m_Width  = 0;
         u32 m_Height = 0;
-        u64 m_Graphic = -1;
+        RTexture2D m_Graphic{};
         enum class ImageFormat m_Format {};
     };
 }

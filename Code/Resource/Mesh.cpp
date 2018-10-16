@@ -19,7 +19,7 @@ namespace fv
         }
     }
 
-    void Mesh::applyPatch(const Vector<u64>& submeshes, const Vector<Submesh>& hostMeshes, const Vector<M<Material>>& materials)
+    void Mesh::applyPatch(const Vector<RSubmesh>& submeshes, const Vector<Submesh>& hostMeshes, const Vector<M<Material>>& materials)
     {
         FV_CHECK_MO();
 
@@ -37,6 +37,7 @@ namespace fv
     {
         Vector<Submesh> subMeshes;
         Vector<M<Material>> materials;
+        u32 devIdx = renderManager()->autoDeviceIdx();
 
         // Try get import settings from file
         MeshImportSettings settings {};
@@ -73,7 +74,7 @@ namespace fv
         }
 
         // Create graphical component of each submesh
-        Vector<u64> meshGraphics;
+        Vector<RSubmesh> graphicSubmeshes;
         u32 i=0;
         for ( auto& sm : subMeshes )
         {
@@ -89,17 +90,22 @@ namespace fv
             si.extras[3] = sm.extra4.size();
             si.bones = sm.weights.size() && sm.boneIndices.size();
 
-            u64 graphic = renderManager()->createSubmesh( sm, materials[i++]->data );
-            if ( graphic != -1 )
+            RSubmesh graphicSubmesh = renderManager()->createSubmesh( devIdx, sm );
+            if ( graphicSubmesh.device != -1 )
             {
                 LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
+                for ( auto& gsm : graphicSubmeshes )
+                {
+                    renderManager()->deleteSubmesh( gsm );
+                }
                 return;
             }
+            graphicSubmeshes.emplace_back( graphicSubmesh );
         }
 
         // Create a patch to be applied on main thread with new graphical content.
         Patch* patch = patchManager()->createPatch( PatchType::MeshData );
-        patch->submeshes = std::move( meshGraphics );
+        patch->submeshes = std::move( graphicSubmeshes );
         patch->materials = std::move( materials );
         patch->resource  = rtl.resource;
         if ( settings.keepInRam )

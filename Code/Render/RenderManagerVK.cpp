@@ -273,6 +273,7 @@ namespace fv
             if ( dv.queueIndices.sparse )   vkGetDeviceQueue(dv.logical, *dv.queueIndices.sparse, 0, &dv.sparseQueue);
             if ( dv.queueIndices.present )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.present, 0, &dv.presentQueue);
 
+            device->idx = numCreatedDevices;
             m_Devices.emplace_back( device );
             device = new DeviceVK();
 
@@ -292,37 +293,43 @@ namespace fv
         return true;
     }
 
-    u64 RenderManagerVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format)
+    u32 RenderManagerVK::autoDeviceIdx()
     {
-      //  assert(false);
-        return -1;
+        u32 retVal = m_AutoDeviceIdx++;
+        return retVal % numDevices();
     }
 
-    u64 RenderManagerVK::createShader(const char* data, u32 size)
+    RTexture2D RenderManagerVK::createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format)
     {
-      //  assert(false);
-        return -1;
+        return m_Devices[deviceIdx]->createTexture2D( width, height, data, size, format );
     }
 
-    u64 RenderManagerVK::createSubmesh(const Submesh& submesh, const MaterialData& matData)
+    RShader RenderManagerVK::createShader(u32 deviceIdx, const char* data, u32 size)
     {
-     //   assert(false);
-        return -1;
+        return m_Devices[deviceIdx]->createShader( data, size );
     }
 
-    void RenderManagerVK::deleteTexture2D(u64 tex2d)
+    RSubmesh RenderManagerVK::createSubmesh(u32 deviceIdx, const Submesh& submesh)
     {
-    //    assert(false);
+        return m_Devices[deviceIdx]->createSubmesh( submesh );
     }
 
-    void RenderManagerVK::deleteShader(u64 shader)
+    void RenderManagerVK::deleteTexture2D(RTexture2D tex2d)
     {
-    //    assert(false);
+        if ( tex2d.device == -1 ) return;
+        m_Devices[tex2d.device]->deleteTexture2D( tex2d );
     }
 
-    void RenderManagerVK::deleteSubmesh(u64 submesh)
+    void RenderManagerVK::deleteShader(RShader shader)
     {
-    //    assert(false);
+        if ( shader.device == -1 ) return;
+        m_Devices[shader.device]->deleteShader(shader);
+    }
+
+    void RenderManagerVK::deleteSubmesh(RSubmesh submesh)
+    {
+        if ( submesh.device == -1 ) return;
+        m_Devices[submesh.device]->deleteSubmesh(submesh);
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

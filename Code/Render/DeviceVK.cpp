@@ -7,6 +7,7 @@
 #include "../Core/Directories.h"
 #include "../Core/LogManager.h"
 #include "../Core/Functions.h"
+#include "../Core/Algorithm.h"
 
 namespace fv
 {
@@ -16,10 +17,9 @@ namespace fv
         delete swapChain; swapChain = nullptr;
         for ( auto& ri : renderImages ) ri.release();
         for ( auto& fo : frameSyncObjects) fo.release();
-        for ( auto& img : textures2d ) vkDestroyImage( logical, img, nullptr );
-        for ( auto& shd : shaders ) vkDestroyShaderModule( logical, shd, nullptr );
-        for ( auto& buf : buffers) vkDestroyBuffer( logical, buf, nullptr );
-        for ( auto& dvm : deviceMemorys) vkFreeMemory( logical, dvm, nullptr );
+        for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d );
+        for ( auto& shad: shaders) deleteShader( shad );
+        for ( auto& subm : submeshes ) deleteSubmesh( subm );
         for ( auto& kvp : pipelines ) kvp.second.release();
         // clearPipeline.release(); // No need, is in map of pipelines 
         vkDestroyRenderPass( logical, clearPass, nullptr );
@@ -121,8 +121,8 @@ namespace fv
         }
         SubmeshInput sinput{};
         MaterialData mdata{};
-        mdata.fragShader = (HShader) standardFrag;
-        mdata.vertShader = (HShader) standardVert;
+        mdata.fragShader = { idx, standardFrag };
+        mdata.vertShader = { idx, standardVert };
         if ( !getOrCreatePipeline( sinput, mdata, clearPass, clearPipeline ) )
         {
             LOGC("VK Cannot create standard pipeline.");
@@ -210,7 +210,10 @@ namespace fv
             // Create pipeline
             VkPipeline pipeline;
             VkPipelineLayout layout;
-            if ( !HelperVK::createPipeline(logical, (VkShaderModule) matData.vertShader,(VkShaderModule) matData.fragShader, (VkShaderModule)matData.geomShader,
+            if ( !HelperVK::createPipeline(logical, 
+                                           (VkShaderModule) matData.vertShader.resources[0],
+                                           (VkShaderModule) matData.fragShader.resources[0],
+                                           (VkShaderModule) matData.geomShader.resources[0],
                                            renderPass, vp, vertexBindings, vertexAttribs, vertexSize, pipeline, layout) )
             {
                 // pipelineMutex is already unlocked
@@ -256,6 +259,67 @@ namespace fv
             }
         }
         return true;
+    }
+
+    RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format)
+    {
+        VkImage img;
+        VkDeviceMemory mem;
+        VkFormat vkFormat = HelperVK::convert( format );
+        if ( !HelperVK::createImage( logical, memProperties, { width, height }, 1, vkFormat, 1, 1, false, queueIndices.graphics.has_value(), img, mem ) )
+        {
+            return {};
+        }
+        scoped_lock lk(tex2dMutex);
+        DeviceResource dr = { idx, img, mem };
+        textures2d.emplace_back( dr );
+        return dr;
+    }
+
+    RShader DeviceVK::createShader(const char* data, u32 size)
+    {
+        VkShaderModule shader;
+        if ( !HelperVK::createShaderModule( logical, data, size, shader ) )
+        {
+            return {};
+        }
+        scoped_lock lk(shaderMutex);
+        DeviceResource dr = { idx, shader };
+        shaders.emplace_back( dr );
+        return dr;
+    }
+
+    RSubmesh DeviceVK::createSubmesh(const Submesh& submesh)
+    {
+        assert( false );
+        return {};
+    }
+
+    void DeviceVK::deleteTexture2D(RTexture2D tex2d)
+    {
+        vkDestroyImage( logical, (VkImage) tex2d.resources[0], nullptr );
+        vkFreeMemory( logical, (VkDeviceMemory) tex2d.resources[1], nullptr );
+        scoped_lock lk(tex2dMutex);
+        Remove_if ( textures2d, [&](auto& t)
+        {
+            return ( tex2d.resources[0] == t.resources[0] && /* vkImage */
+                     tex2d.resources[1] == t.resources[1] ); /* vkDeviceMemory */
+        });
+    }
+
+    void DeviceVK::deleteShader(RShader shader)
+    {
+        vkDestroyShaderModule( logical, (VkShaderModule) shader.resources[0], nullptr );
+        scoped_lock lk(shaderMutex);
+        Remove_if (shaders, [&](auto& s)
+        {
+            return (shader.resources[0] == s.resources[0]); /* vkShaderModule */
+        });
+    }
+
+    void DeviceVK::deleteSubmesh(RSubmesh submesh)
+    {
+        assert(false);
     }
 
 }

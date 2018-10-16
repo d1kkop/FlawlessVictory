@@ -17,7 +17,7 @@ namespace fv
         renderManager()->deleteShader(m_Graphic);
     }
 
-    void Shader::applyPatch(u64 graphic)
+    void Shader::applyPatch(const RShader& graphic)
     {
         FV_CHECK_MO();
         renderManager()->deleteShader(m_Graphic);
@@ -43,8 +43,8 @@ namespace fv
 
         if ( !code.empty() )
         {
-            u64 graphic = renderManager()->createShader( code.data(), (u32)code.size() );
-            if ( graphic != -1 )
+            RShader graphic = renderManager()->createShader( 0, code.data(), (u32)code.size() );
+            if ( graphic.device != -1 )
             {
                 Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
                 p->graphic  = graphic;

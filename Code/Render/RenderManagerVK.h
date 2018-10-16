@@ -27,13 +27,15 @@ namespace fv
 
     private:
         bool createDevices(VkSurfaceKHR mainSurface);
+        u32 numDevices() const override { return (u32) m_Devices.size(); }
+        u32 autoDeviceIdx() override;
 
-        u64 createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format) override;
-        u64 createShader(const char* data, u32 size) override;
-        u64 createSubmesh(const Submesh& submesh, const MaterialData& matData) override;
-        void deleteTexture2D(u64 tex2d) override;
-        void deleteShader(u64 shader) override;
-        void deleteSubmesh(u64 submesh) override;
+        FV_TS RTexture2D createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format) override;
+        FV_TS RShader createShader(u32 deviceIdx, const char* data, u32 size) override;
+        FV_TS RSubmesh createSubmesh(u32 deviceIdx, const Submesh& submesh) override;
+        FV_TS void deleteTexture2D(RTexture2D tex2d) override;
+        FV_TS void deleteShader(RShader shader) override;
+        FV_TS void deleteSubmesh(RSubmesh submesh) override;
 
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
@@ -41,6 +43,7 @@ namespace fv
         void* m_Window {};
         u32 m_FrameImageIdx = 0;    // Iterates from 0 to RenderConfig.numFramesBehind-1
         u32 m_CurrentDrawImage = 0; // In case of no swap chain.
+        Atomic<u32> m_AutoDeviceIdx;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

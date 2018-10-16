@@ -39,13 +39,10 @@ namespace fv
             dibConverted = FreeImage_ConvertTo8Bits(dib);
             imgFormat = ImageFormat::Single8;
             break;
+
         case 15:
             dibConverted = FreeImage_ConvertTo16Bits555(dib);
             imgFormat = ImageFormat::RGB555;
-            break;
-        case 16:
-            dibConverted = FreeImage_ConvertTo16Bits565(dib);
-            imgFormat = ImageFormat::RGB565;
             break;
 
         case 24:

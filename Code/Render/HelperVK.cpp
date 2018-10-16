@@ -269,19 +269,24 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule)
+    bool HelperVK::createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule)
     {
         assert(device);
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = (const uint32_t*)code.data();
+        createInfo.codeSize = size;
+        createInfo.pCode = (const uint32_t*)data;
         if ( vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS )
         {
             LOGC("Failed to create shader module.");
             return false;
         }
         return true;
+    }
+
+    bool HelperVK::createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule)
+    {
+        return createShaderModule( device, code.data(), (u32)code.size(), shaderModule );
     }
 
     bool HelperVK::createRenderPass(VkDevice device, VkFormat colorFormat, u32 samples, VkRenderPass& renderPass)
@@ -869,6 +874,37 @@ namespace fv
             }
         }
         return -1;
+    }
+
+    VkFormat HelperVK::convert(ImageFormat imgFormat)
+    {
+        switch ( imgFormat )
+        {
+        case ImageFormat::RGBA8:
+            return VK_FORMAT_R8G8B8A8_SRGB;
+
+        case ImageFormat::RGB8:
+            return VK_FORMAT_R8G8B8_SRGB;
+
+        case ImageFormat::Single8:
+            return VK_FORMAT_R8_SRGB;
+
+        case ImageFormat::RGBA16:
+            return VK_FORMAT_R16G16B16A16_UNORM;
+
+        case ImageFormat::RGB16:
+            return VK_FORMAT_R16G16B16_UNORM;
+
+        case ImageFormat::RGBA32F:
+            return VK_FORMAT_R32G32B32A32_SFLOAT;
+
+        case ImageFormat::RGB32F:
+            return VK_FORMAT_R32G32B32_SFLOAT;
+
+        case ImageFormat::RGB555:
+            return VK_FORMAT_A1R5G5B5_UNORM_PACK16;
+        }
+        return VK_FORMAT_UNDEFINED;
     }
 
 }

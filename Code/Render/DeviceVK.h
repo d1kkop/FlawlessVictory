@@ -5,6 +5,7 @@
 #include "RenderImageVK.h"
 #include "FrameSyncObjectVK.h"
 #include "PipelineVK.h"
+#include "RenderManager.h"
 
 namespace fv
 {
@@ -33,6 +34,14 @@ namespace fv
         bool getOrCreatePipeline(const struct SubmeshInput& sinput, const struct MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut);
         bool recordCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb);
 
+        FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format);
+        FV_TS RShader createShader(const char* data, u32 size);
+        FV_TS RSubmesh createSubmesh(const Submesh& submesh);
+        FV_TS void deleteTexture2D(RTexture2D tex2d);
+        FV_TS void deleteShader(RShader shader);
+        FV_TS void deleteSubmesh(RSubmesh submesh);
+
+        u32 idx;
         VkInstance instance;
         VkDevice logical;
         VkPhysicalDevice physical;
@@ -53,16 +62,18 @@ namespace fv
         VkRenderPass clearPass;
         PipelineVK clearPipeline;
         Map<u32, PipelineVK> pipelines;
-        Vector<VkImage> textures2d;
-        Vector<VkShaderModule> shaders;
-        Vector<VkBuffer> buffers;
-        Vector<VkDeviceMemory> deviceMemorys;
         Vector<RenderImageVK> renderImages;
         Vector<FrameSyncObjectVK> frameSyncObjects;
+        Vector<DeviceResource> textures2d;
+        Vector<DeviceResource> shaders;
+        Vector<DeviceResource> submeshes;
         struct SwapChainVK* swapChain;
 
     private:
         Mutex pipelineMutex;
+        Mutex tex2dMutex;
+        Mutex shaderMutex;
+        Mutex submeshMutex;
     };
 }
 #endif

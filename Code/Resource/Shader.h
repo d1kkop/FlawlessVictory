@@ -1,5 +1,6 @@
 #pragma once
 #include "Resource.h"
+#include "../Render/RenderManager.h"
 
 namespace fv
 {
@@ -9,11 +10,11 @@ namespace fv
 
     public:
         FV_DLL ~Shader() override;
-        FV_MO void applyPatch( u64 graphic );
+        FV_MO void applyPatch( const RShader& graphic );
 
     private:
         FV_DLL void load(const ResourceToLoad& rtl) override;
 
-        u64 m_Graphic = -1;
+        RShader m_Graphic{};
     };
 }
