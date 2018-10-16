@@ -8,9 +8,9 @@ namespace fv
     public:
         // Extensions
         static const Path& importExtension();
-        static const Path& metaExtension();
         static const Path& meshBinExtension();
         static const Path& tex2DBinExtension();
         static const Path& shaderBinExtension();
+        static const Path& materialExtension();
     };
 }

@@ -1,6 +1,8 @@
 #include "ModelImporter.h"
 #include "ResourceManager.h"
 #include "Assets.h"
+#include "Material.h"
+#include "Texture2D.h"
 #include "../Core/LogManager.h"
 #include "../Core/Functions.h"
 #include "../Core/BinarySerialize.h"
@@ -129,76 +131,19 @@ namespace fv
         return false;
     }
 
-    bool ModelImporter::reimport(const Path& path, const MeshImportSettings& settings, Vector<Submesh>& submeshes)
+    bool ModelImporter::reimport(const Path& path, const MeshImportSettings& settings, Vector<Submesh>& submeshes, Vector<M<Material>>& materials)
     {
 
      #if FV_ASSIMP
         Importer importer;
         const aiScene* scene = importer.ReadFile(path.string().c_str(), aiProcessPreset_TargetRealtime_Fast); // aiProcessPreset_TargetRealtime_Fast aiProcessPreset_TargetRealtime_MaxQuality
-
         if ( !scene )
         {
             LOGW("Failed to import %s.", path.string().c_str());
             return true;
         }
-
-        submeshes.resize( scene->mNumMeshes );
-        for ( u32 i = 0; i < scene->mNumMeshes; i++ )
-        {
-            const aiMesh* aiMesh = scene->mMeshes[i];
-            auto& sm = submeshes[i];
-            // determine bounding box min/max
-            sm.bMin = { FLT_MAX, FLT_MAX, FLT_MAX };
-            sm.bMax = { FLT_MIN, FLT_MIN, FLT_MIN };
-            for ( u32 j=0; j<aiMesh->mNumVertices; ++j )
-            {
-                sm.bMin.min( *(Vec3*)&aiMesh->mVertices[j] );
-                sm.bMax.max( *(Vec3*)&aiMesh->mVertices[j] );
-            }
-            // vertices
-            sm.vertices.resize( aiMesh->mNumVertices );
-            memcpy( sm.vertices.data(), aiMesh->mVertices, aiMesh->mNumVertices*sizeof(Vec3) );
-            // normals
-            if ( aiMesh->HasNormals() ) 
-            {
-                sm.normals.resize( aiMesh->mNumVertices );
-                memcpy( sm.normals.data(), aiMesh->mNormals, aiMesh->mNumVertices*sizeof(Vec3) );
-            }
-            // tangents
-            if ( aiMesh->HasTangentsAndBitangents() )
-            {
-                sm.tangents.resize( aiMesh->mNumVertices );
-                sm.bitangents.resize( aiMesh->mNumVertices );
-                memcpy( sm.tangents.data(), aiMesh->mTangents, aiMesh->mNumVertices*sizeof(Vec3) );
-                memcpy( sm.bitangents.data(), aiMesh->mBitangents, aiMesh->mNumVertices*sizeof(Vec3) );
-            }
-            // uvs
-            Vector<Vec2>* uvs [] = { &sm.uvs, &sm.lightUVs };
-            for ( u32 j=0; j<Min(aiMesh->GetNumUVChannels(), 2U); j++)
-            {
-                uvs[j]->resize( aiMesh->mNumVertices );
-                for ( u32 k=0; k<aiMesh->mNumVertices; ++k )
-                {
-                    sm.uvs[k].x = aiMesh->mTextureCoords[j][k].x;
-                    sm.uvs[k].y = aiMesh->mTextureCoords[j][k].y;
-                }
-            }
-            // extras
-            Vector<Vec4>* extras [] = { &sm.extra1, &sm.extra2, &sm.extra3, &sm.extra4 };
-            for ( u32 j=0; j<Min(4u, aiMesh->GetNumColorChannels()); j++ )
-            {
-                extras[j]->resize(aiMesh->mNumVertices);
-                memcpy(extras[j]->data(), aiMesh->mColors[j], aiMesh->mNumVertices*sizeof(Vec4));
-            }
-            // indices
-            sm.indices.resize( aiMesh->mNumFaces * 3 );
-            for ( u32 j=0; j<aiMesh->mNumFaces; j++ )
-            {
-                sm.indices[j*3+0] = aiMesh->mFaces[j].mIndices[0];
-                sm.indices[j*3+1] = aiMesh->mFaces[j].mIndices[1];
-                sm.indices[j*3+2] = aiMesh->mFaces[j].mIndices[2];
-            }
-        }
+        loadSubmeshes(submeshes, scene);
+        loadMaterials(path.filename().replace_extension("").string(), materials, scene);
     #endif
 
         // Write binary conversion
@@ -208,6 +153,129 @@ namespace fv
 
         return true;
     }
+
+#if FV_ASSIMP
+    void ModelImporter::loadSubmeshes(Vector<Submesh> &submeshes, const aiScene* scene)
+    {
+        if ( scene->mNumMeshes ) return;
+        submeshes.resize(scene->mNumMeshes);
+        for ( u32 i = 0; i < scene->mNumMeshes; i++ )
+        {
+            const aiMesh* aiMesh = scene->mMeshes[i];
+            auto& sm = submeshes[i];
+            // determine bounding box min/max
+            sm.bMin = { FLT_MAX, FLT_MAX, FLT_MAX };
+            sm.bMax = { FLT_MIN, FLT_MIN, FLT_MIN };
+            for ( u32 j=0; j<aiMesh->mNumVertices; ++j )
+            {
+                sm.bMin.min(*(Vec3*)&aiMesh->mVertices[j]);
+                sm.bMax.max(*(Vec3*)&aiMesh->mVertices[j]);
+            }
+            // vertices
+            sm.vertices.resize(aiMesh->mNumVertices);
+            memcpy(sm.vertices.data(), aiMesh->mVertices, aiMesh->mNumVertices*sizeof(Vec3));
+            // normals
+            if ( aiMesh->HasNormals() )
+            {
+                sm.normals.resize(aiMesh->mNumVertices);
+                memcpy(sm.normals.data(), aiMesh->mNormals, aiMesh->mNumVertices*sizeof(Vec3));
+            }
+            // tangents
+            if ( aiMesh->HasTangentsAndBitangents() )
+            {
+                sm.tangents.resize(aiMesh->mNumVertices);
+                sm.bitangents.resize(aiMesh->mNumVertices);
+                memcpy(sm.tangents.data(), aiMesh->mTangents, aiMesh->mNumVertices*sizeof(Vec3));
+                memcpy(sm.bitangents.data(), aiMesh->mBitangents, aiMesh->mNumVertices*sizeof(Vec3));
+            }
+            // uvs
+            Vector<Vec2>* uvs[] = { &sm.uvs, &sm.lightUVs };
+            for ( u32 j=0; j<Min(aiMesh->GetNumUVChannels(), 2U); j++ )
+            {
+                uvs[j]->resize(aiMesh->mNumVertices);
+                for ( u32 k=0; k<aiMesh->mNumVertices; ++k )
+                {
+                    sm.uvs[k].x = aiMesh->mTextureCoords[j][k].x;
+                    sm.uvs[k].y = aiMesh->mTextureCoords[j][k].y;
+                }
+            }
+            // extras
+            Vector<Vec4>* extras[] = { &sm.extra1, &sm.extra2, &sm.extra3, &sm.extra4 };
+            for ( u32 j=0; j<Min(4u, aiMesh->GetNumColorChannels()); j++ )
+            {
+                extras[j]->resize(aiMesh->mNumVertices);
+                memcpy(extras[j]->data(), aiMesh->mColors[j], aiMesh->mNumVertices*sizeof(Vec4));
+            }
+            // indices
+            sm.indices.resize(aiMesh->mNumFaces * 3);
+            for ( u32 j=0; j<aiMesh->mNumFaces; j++ )
+            {
+                sm.indices[j*3+0] = aiMesh->mFaces[j].mIndices[0];
+                sm.indices[j*3+1] = aiMesh->mFaces[j].mIndices[1];
+                sm.indices[j*3+2] = aiMesh->mFaces[j].mIndices[2];
+            }
+        }
+    }
+
+    Binding ModelImporter::aiTextureTypeToBinding(aiTextureType type)
+    {
+        switch ( type )
+        {
+        case aiTextureType_DIFFUSE:
+            return Binding::Diffuse;
+        case aiTextureType_SPECULAR:
+            return Binding::Specular;
+        case aiTextureType_AMBIENT:
+            return Binding::Ambient;
+        case aiTextureType_EMISSIVE:
+            return Binding::Emissive;
+        case aiTextureType_NORMALS:
+            return Binding::Normal;
+        }
+        LOGW("Cannot map Assimp texture type to correct binding. Defaultin to 'diffuse'.");
+        return Binding::Diffuse;
+    }
+
+    void ModelImporter::aiAddSamplerFromModel( const aiMaterial* aiMat, Material* mat, aiTextureType texType )
+    {
+        assert( aiMat && mat );
+        aiString pathToTexture;
+        if ( aiMat->GetTexture( texType, 0, &pathToTexture) == aiReturn_SUCCESS &&
+             pathToTexture.length && pathToTexture.data[0] != '*' /* Do not import embedded textures for now */ )
+        {
+            Sampler2D s {};
+            s.filter   = SamplerFilter::An16x;
+            s.texture  = resourceManager()->load<Texture2D>(pathToTexture.C_Str());
+            s.location = (u32) aiTextureTypeToBinding( texType );
+            mat->m_Samplers.emplace_back(s);
+        }
+    }
+
+    void ModelImporter::loadMaterials(const String& baseName, Vector<M<Material>>& materials, const aiScene* scene)
+    {
+        if ( scene->mNumMaterials ) return;
+        materials.resize( scene->mNumMaterials );
+        for ( u32 i = 0; i < scene->mNumMaterials; i++ )
+        {
+            const aiMaterial* aiMat = scene->mMaterials[i];
+            String name = baseName + "_" + std::to_string(i) + Assets::materialExtension().string();
+            bool wasAlreadyCreated;
+            M<Material> mat = resourceManager()->create<Material>( name, wasAlreadyCreated );
+            if ( wasAlreadyCreated )
+            {
+                LOGW("Material with name %s was already imported. Values of already imported material are taken.", name.c_str());
+                materials.emplace_back( mat );
+                continue; // Skip updating this material
+            }
+            aiAddSamplerFromModel( aiMat, mat.get(), aiTextureType_DIFFUSE );
+            aiAddSamplerFromModel( aiMat, mat.get(), aiTextureType_SPECULAR );
+            aiAddSamplerFromModel( aiMat, mat.get(), aiTextureType_AMBIENT );
+            aiAddSamplerFromModel( aiMat, mat.get(), aiTextureType_EMISSIVE );
+            aiAddSamplerFromModel( aiMat, mat.get(), aiTextureType_NORMALS );
+        }
+    }
+
+#endif
 
     ModelImporter* g_ModelImporter {};
     ModelImporter* modelImporter() { return CreateOnce(g_ModelImporter); }

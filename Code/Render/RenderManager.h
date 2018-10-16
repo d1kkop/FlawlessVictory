@@ -20,7 +20,7 @@ namespace fv
         String windowName;
     };
 
-    // Using this instead of many small heap allocations that are slow to access compared to stack memory.
+    // Using this instead of many small heap allocations that are slow to access (cache miss) compared to stack memory.
     struct DeviceResource
     {
         u32 device = (u32)-1;

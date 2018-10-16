@@ -76,7 +76,8 @@ namespace fv
     M<Resource> ResourceManager::load(u32 type, const String& name)
     {
         Path loadPath;
-        M<Resource> resource = findOrCreateResource( name, type, loadPath );
+        bool wasAlreadyCreated;
+        M<Resource> resource = findOrCreateResource( name, type, wasAlreadyCreated, &loadPath );
         if ( !resource ) 
         {
             // Should always succeed.
@@ -91,6 +92,17 @@ namespace fv
         return resource;
     }
 
+    M<Resource> ResourceManager::create(u32 type, const String& name, bool& wasAlreadyCreated)
+    {
+        M<Resource> resource = findOrCreateResource(name, type, wasAlreadyCreated, nullptr);
+        if ( !resource )
+        {
+            // Should always succeed.
+            return nullptr;
+        }
+        return resource;
+    }
+
     void ResourceManager::readResourceConfig(ResourceConfig& config)
     {
         FV_CHECK_MO();
@@ -99,23 +111,28 @@ namespace fv
         config.loadThreadSleepTimeMs = 10;
     }
 
-    M<Resource> ResourceManager::findOrCreateResource(const String& name, u32 type, Path& loadPath)
+    M<Resource> ResourceManager::findOrCreateResource(const String& name, u32 type, bool& wasAlreadyCreated, Path* loadPath)
     {
+        wasAlreadyCreated = false;
         // See if already exists
         scoped_lock lk(m_NameToResourceMutex);
         auto rIt = m_NameToResource.find(name);
         if ( rIt != m_NameToResource.end() )
         {
+            wasAlreadyCreated = true;
             return rIt->second;
         }
         // Try find from name to directory.
-        auto fIt = m_FilenameToDirectory.find(name);
-        if ( fIt == m_FilenameToDirectory.end() )
+        if ( loadPath )
         {
-            LOGW("No resource with name %s found.", name.c_str());
-            return nullptr;
+            auto fIt = m_FilenameToDirectory.find(name);
+            if ( fIt == m_FilenameToDirectory.end() )
+            {
+                LOGW("No resource with name %s found.", name.c_str());
+                return nullptr;
+            }
+            *loadPath = fIt->second;
         }
-        loadPath = fIt->second;
         const TypeInfo* ti = typeManager()->typeInfo(type);
         if ( !ti ) return nullptr;
         M<Resource> resource = M<Resource>(sc<Resource*>(ti->createFunc(1)));

@@ -25,14 +25,18 @@ namespace fv
         ~ResourceManager();
 
         FV_TS FV_DLL M<Resource> load(u32 type, const String& name);
+        FV_TS FV_DLL M<Resource> create(u32 type, const String& name, bool& wasAlreadyCreated);
         FV_TS FV_DLL void cleanupResourcesWithoutReferences();
 
         template <class T>
         FV_TS M<T> load(const String& name);
 
+        template <class T>
+        FV_TS M<T> create(const String& name, bool& wasAlreadyCreated);
+
     private:
         FV_MO void readResourceConfig(ResourceConfig& config);
-        FV_TS M<Resource> findOrCreateResource(const String& filename, u32 type, Path& loadPath);
+        FV_TS M<Resource> findOrCreateResource(const String& filename, u32 type, bool& wasAlreadyCreated, Path* loadPath); /* loadPath can be null */
         FV_TS bool shouldReimport(const Path& filename);
         void loadThread();
         void fileTimesThread();
@@ -58,6 +62,12 @@ namespace fv
     M<T> ResourceManager::load(const String& name)
     {
         return std::static_pointer_cast<T>( load(T::type(), name) );
+    }
+
+    template <class T>
+    M<T> ResourceManager::create(const String& name, bool& wasAlreadyCreated)
+    {
+        return std::static_pointer_cast<T>( create(T::type(), name, wasAlreadyCreated) );
     }
 
     FV_DLL ResourceManager* resourceManager();

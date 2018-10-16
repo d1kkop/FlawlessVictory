@@ -48,8 +48,7 @@ namespace fv
             // Write import file
             if ( !settings.write(rtl.loadPath) )
             {
-                LOGW("Failed to write import file for %s.", rtl.loadPath.string().c_str());
-                // Continue though.
+                LOGW("Failed to write import file for %s.", rtl.loadPath.string().c_str()); // Continue though
             }
         }
         
@@ -59,7 +58,7 @@ namespace fv
         if ( rtl.reimport || !modelImporter()->loadBinary(binPath, subMeshes ) )
         {
             subMeshes.clear(); // In case binary load succeeded partially.
-            if ( !modelImporter()->reimport(rtl.loadPath, settings, subMeshes) ||
+            if ( !modelImporter()->reimport(rtl.loadPath, settings, subMeshes, materials) ||
                  subMeshes.empty() )
             {
                 LOGW("Failed to load %s.", rtl.loadPath.string().c_str());
