@@ -51,7 +51,6 @@ UTESTBEGIN(ComponentManagerTest)
     {
         u32 k=1000;
         Vector<TestComponent*> comps;
-        comps.reserve(k);
         for ( u32 i=0; i<k; ++i )
         {
             comps.emplace_back(componentManager()->newComponent<TestComponent>());

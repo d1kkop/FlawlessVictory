@@ -503,7 +503,6 @@ namespace fv
     {
         auto& inputs = inputAttribs;
         inputs.clear();
-        inputs.reserve(VertexType::COUNT);
         u32 vertexComponentCount = 0;
         VkVertexInputAttributeDescription input;
 

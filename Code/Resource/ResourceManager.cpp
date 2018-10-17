@@ -163,7 +163,6 @@ namespace fv
             // Copy list to avoid main thread to await the expensinve FileTime function while having lock.
             {
                 scoped_lock lk(m_NameToResourceMutex);
-                m_LoadedResourcesCopy.reserve( m_NameToResource.size() );
                 for ( auto& kvp : m_NameToResource )
                 {
                     LoadedResourceInfo lri = kvp.second;

@@ -29,6 +29,7 @@ namespace fv
         {
             m_StateSignal.wait( lk );
         }
+        assert(m_NumWaiters>0);
         m_NumWaiters--;
     }
 
@@ -66,7 +67,7 @@ namespace fv
 
     void Job::doFree()
     {
-        m_Jm->freeJob(this);
+        m_Jm->freeJob( this );
     }
 
     // ------------- JobManager ------------------------------------------------------------------------------------------------------
@@ -126,16 +127,14 @@ namespace fv
         m_GlobalQueue.emplace_back( job );
         if ( m_NumThreadsSuspended > 0 )
         {
-            m_NumThreadsSuspended--;
             m_ThreadSuspendSignal.notify_one();
         }
     #else
-        assert( cb );
-     //   if ( cb ) cb();
+        cb();
         job->finishWith(JobState::Done);
-        if ( onDoneOrCancelled ) onDoneOrCancelled( job );
     #endif
 
+        if ( autoFree ) return nullptr;
         return job;
     }
 
@@ -146,10 +145,10 @@ namespace fv
 
     void JobManager::freeJob(Job* job)
     {
-        assert(job);
-        job->wait();
+        assert(job && (job->m_State == JobState::Cancelled || job->m_State == JobState::Done));
         // ObjectManager is thread safe created
         freeObject(job);
+        int k = 0; // TODO
     }
 
     bool JobManager::cancelJob(Job* job)
@@ -175,7 +174,7 @@ namespace fv
             {
                 break;
             }
-            if ( m_GlobalQueue.size() )
+            if ( !m_GlobalQueue.empty() )
             {
                 popAndProcessJob( lk );
             }
@@ -183,6 +182,8 @@ namespace fv
             {
                 m_NumThreadsSuspended++;
                 m_ThreadSuspendSignal.wait(lk);
+                assert( m_NumThreadsSuspended > 0 );
+                m_NumThreadsSuspended--;
             }
         }
     }
@@ -190,7 +191,7 @@ namespace fv
     void JobManager::processQueue()
     {
         unique_lock<Mutex> lk(m_QueueMutex);
-        while ( m_GlobalQueue.size() )
+        while ( !m_GlobalQueue.empty() )
         {
             popAndProcessJob(lk);
             lk.lock();

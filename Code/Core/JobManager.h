@@ -52,6 +52,9 @@ namespace fv
     public:
         FV_DLL JobManager();
         FV_DLL ~JobManager();
+
+        /*  NOTE: You cannot wait on a job that auto frees itself.
+            If 'autoFree' is set true, a nullptr is returned as the caller cannot know when the job frees itself. */
         FV_TS FV_DLL Job* addJob( const Function<void ()>& cb, bool autoFree = false, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
         FV_TS FV_DLL u32 numThreads() const;
 

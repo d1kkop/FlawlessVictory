@@ -75,7 +75,7 @@ namespace fv
 
             // Deform all components by type into a single list of arrays_of_components sorted by update priority.
             Map<u32, Vector<ComponentArray>>& allComponents = componentManager()->components();
-            m_SortedListOfComponentArrays.reserve(allComponents.size());
+            m_SortedListOfComponentArrays.clear();
             for ( auto& kvp : allComponents )
             {
                 Vector<ComponentArray>& compArrayList = kvp.second;
