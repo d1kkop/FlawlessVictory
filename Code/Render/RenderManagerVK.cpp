@@ -1,4 +1,3 @@
-#include "PCH.h"
 #include "RenderManagerVK.h"
 #if FV_VULKAN
 #include "HelperVK.h"
@@ -108,6 +107,8 @@ namespace fv
         for ( auto& dv : m_Devices )
         {
             dv->setFormatAndExtent( rc );
+            if (!dv->createAllocators() ) return false;
+            if (!dv->createStagingBuffers() ) return false;
             if (!dv->createStandard( rc )) return false;
             if (!dv->createCommandPools()) return false;
             if (!dv->createRenderImages( rc )) return false;
@@ -117,7 +118,7 @@ namespace fv
         // TODO Temp command buffers
         for ( auto& dv : m_Devices )
         {
-            dv->recordCommandBuffer( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
+            dv->recordDrawCommandBuffer( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
             {
                 VkClearValue cv = { .4f, .3f, .9f, 0.f };
                 HelperVK::startRenderPass(cb, dv->clearPass, ri.frameBuffer, { 0, 0, dv->extent }, &cv);
@@ -309,9 +310,9 @@ namespace fv
         return m_Devices[deviceIdx]->createShader( data, size );
     }
 
-    RSubmesh RenderManagerVK::createSubmesh(u32 deviceIdx, const Submesh& submesh)
+    RSubmesh RenderManagerVK::createSubmesh(u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si)
     {
-        return m_Devices[deviceIdx]->createSubmesh( submesh );
+        return m_Devices[deviceIdx]->createInterleavedSubmesh( submesh, si );
     }
 
     void RenderManagerVK::deleteTexture2D(RTexture2D tex2d)

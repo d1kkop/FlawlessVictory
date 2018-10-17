@@ -24,7 +24,7 @@ namespace fv
     struct DeviceResource
     {
         u32 device = (u32)-1;
-        void* resources[4]{};
+        void* resources[8]{};
     };
 
     using RSubmesh = DeviceResource;
@@ -78,13 +78,16 @@ namespace fv
         Vector<Vec2> uvs;
         Vector<Vec2> lightUVs;
         Vector<Vec4> weights;
-        Vector<byte> boneIndices;
+        Vector<u32>  boneIndices;
         Vector<Vec4> extra1;
         Vector<Vec4> extra2;
         Vector<Vec4> extra3;
         Vector<Vec4> extra4;
         Vec3 bMin {};
         Vec3 bMax {};
+
+        // As vertices are not mandatory, vertices.size() may return 0.
+        u32 getVertexCount() const;
     };
 
     struct SubmeshInput
@@ -96,6 +99,7 @@ namespace fv
         bool lightUvs;
         bool extras[4];
         bool bones;
+        u32 computeNumComponents() const;
     };
 
     struct MaterialData
@@ -115,7 +119,7 @@ namespace fv
 
         FV_TS virtual RTexture2D createTexture2D( u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format ) = 0;
         FV_TS virtual RShader createShader( u32 deviceIdx, const char* data, u32 size ) = 0;
-        FV_TS virtual RSubmesh createSubmesh( u32 deviceIdx, const Submesh& submesh ) = 0;
+        FV_TS virtual RSubmesh createSubmesh( u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si ) = 0;
         FV_TS virtual void deleteTexture2D( RTexture2D tex2d ) = 0;
         FV_TS virtual void deleteShader( RShader shader ) = 0;
         FV_TS virtual void deleteSubmesh( RSubmesh submesh ) = 0;

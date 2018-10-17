@@ -1,4 +1,3 @@
-#include "PCH.h"
 #include "HelperVK.h"
 #if FV_VULKAN
 #include "RenderManager.h" // For RenderConfig
@@ -667,13 +666,13 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer)
+    bool HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer)
     {
         assert( device && commandBuffer );
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        beginInfo.flags = usage;
 
         if ( vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS )
         {

@@ -88,3 +88,8 @@
 #if FV_NLOHMANJSON
 #include "../3rdParty/nlohmann/json.hpp"
 #endif
+
+#if FV_VULKAN
+#include <vulkan/vulkan.h>
+#include "../3rdParty/VulkanAllocator/vk_mem_alloc.h"
+#endif

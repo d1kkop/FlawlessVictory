@@ -158,7 +158,7 @@ namespace fv
         {
             // Between this lock and m_ResourcesNotCopiedMutex.unlock(), resources are copied (ref count incremented).
             // As such, a call to cleanupResourcesWithoutReferences will do nothing as refCount is at least 2.
-            unique_lock rl(m_ResourcesNotCopiedMutex);
+            m_ResourcesNotCopiedMutex.lock();
 
             // Copy list to avoid main thread to await the expensinve FileTime function while having lock.
             {

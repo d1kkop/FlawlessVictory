@@ -1,6 +1,5 @@
-#include "PCH.h"
-#if FV_VULKAN
 #include "PipelineVK.h"
+#if FV_VULKAN
 #include "DeviceVK.h"
 
 namespace fv

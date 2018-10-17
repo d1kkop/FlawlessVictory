@@ -1,17 +1,16 @@
-#include "PCH.h"
-#if FV_VULKAN
 #include "RenderManager.h" // For config
+#if FV_VULKAN
 #include "RenderImageVK.h"
 #include "DeviceVK.h"
 #include "HelperVK.h"
+#include "MemoryHelperVK.h"
 
 namespace fv
 {
     void RenderImageVK::release()
     {
         if (!device ||!device->logical) return;
-        vkDestroyImage(device->logical, image, nullptr);
-        vkFreeMemory(device->logical, imageMemory, nullptr);
+        MemoryHelperVK::freeImage( imageAlloc );
         vkDestroyImageView( device->logical, imgView, nullptr );
         vkDestroyFramebuffer( device->logical, frameBuffer, nullptr );
         vkFreeCommandBuffers( device->logical, device->commandPool, (u32)commandBuffers.size(), commandBuffers.data() );
@@ -19,10 +18,9 @@ namespace fv
 
     bool RenderImageVK::createImage(const struct RenderConfig& rc)
     {
-        // Set format and extent as no swap chain is present.
-        if ( !HelperVK::createImage(device->logical, device->memProperties,
-                                    device->extent, 1, device->format, rc.numSamples, rc.numLayers, false, 
-                                    device->queueIndices.graphics.value(), image, imageMemory ))
+        if ( !MemoryHelperVK::createImage(*device, device->extent.width, device->extent.height, device->format, 1,
+                                          rc.numLayers, rc.numSamples, false, device->queueIndices.graphics.value(),
+                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY, imageAlloc) )
         {
             return false;
         }
@@ -31,7 +29,7 @@ namespace fv
 
     bool RenderImageVK::createImageView(const struct RenderConfig& rc, VkImage swapChainImage)
     {
-        VkImage chosenImage = image;
+        VkImage chosenImage = imageAlloc.image;
         if ( swapChainImage )
             chosenImage = swapChainImage;
         if ( !HelperVK::createImageView(device->logical, chosenImage, device->format, rc.numLayers, imgView) )

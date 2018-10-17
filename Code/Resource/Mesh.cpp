@@ -55,7 +55,7 @@ namespace fv
         // Try load from binary if no import is forced
         Path binPath = Directories::intermediateMeshes() / rtl.loadPath.filename();
         binPath.replace_extension(Assets::meshBinExtension());
-        if ( rtl.reimport || !modelImporter()->loadBinary(binPath, subMeshes ) )
+        if ( rtl.reimport || !modelImporter()->loadBinary(binPath, subMeshes) )
         {
             subMeshes.clear(); // In case binary load succeeded partially.
             if ( !modelImporter()->reimport(rtl.loadPath, settings, subMeshes, materials) ||
@@ -64,12 +64,6 @@ namespace fv
                 LOGW("Failed to load %s (num submeshes %d).", rtl.loadPath.string().c_str(), (u32)subMeshes.size());
                 return;
             }
-        }
-
-        if ( materials.size() != subMeshes.size() )
-        {
-            LOGW("Failed to load mesh %s, materials and subhmeshes do not match.", rtl.loadPath.string().c_str());
-            return;
         }
 
         // Create graphical component of each submesh
@@ -89,7 +83,7 @@ namespace fv
             si.extras[3] = sm.extra4.size();
             si.bones = sm.weights.size() && sm.boneIndices.size();
 
-            RSubmesh graphicSubmesh = renderManager()->createSubmesh( devIdx, sm );
+            RSubmesh graphicSubmesh = renderManager()->createSubmesh( devIdx, sm, si );
             if ( graphicSubmesh.device != -1 )
             {
                 LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
@@ -105,7 +99,7 @@ namespace fv
         // Create a patch to be applied on main thread with new graphical content.
         Patch* patch = patchManager()->createPatch( PatchType::MeshData );
         patch->submeshes = std::move( graphicSubmeshes );
-        patch->materials = std::move( materials );
+        patch->materials = std::move( materials ); // Materials only available on first import
         patch->resource  = rtl.resource;
         if ( settings.keepInRam )
         {

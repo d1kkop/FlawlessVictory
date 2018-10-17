@@ -1,8 +1,7 @@
-#include "PCH.h"
+#include "DeviceVK.h"
 #if FV_VULKAN
 #include "RenderManager.h" // For config
 #include "HelperVK.h"
-#include "DeviceVK.h"
 #include "SwapChainVK.h"
 #include "../Core/Directories.h"
 #include "../Core/LogManager.h"
@@ -11,6 +10,8 @@
 
 namespace fv
 {
+    constexpr u32 STAGING_BUFFER_SIZE = 1024*1024*64; // 64 MB
+
     void DeviceVK::release()
     {
         if ( swapChain ) swapChain->release();
@@ -26,6 +27,12 @@ namespace fv
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
         vkDestroyCommandPool( logical, commandPool, nullptr );
+        if ( stagingBuffer ) 
+        {
+            MemoryHelperVK::freeBuffer( *stagingBuffer );
+            delete stagingBuffer;
+        }
+        vmaDestroyAllocator( allocator );
         vkDestroyDevice( logical, nullptr );
     }
 
@@ -70,11 +77,41 @@ namespace fv
         }
     }
 
+    bool DeviceVK::createAllocators()
+    {
+        assert( physical && logical );
+        VmaAllocatorCreateInfo allocatorInfo = {};
+        allocatorInfo.physicalDevice = physical;
+        allocatorInfo.device = logical;
+        if ( vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS )
+        {
+            LOGC("VK Failed to create vma allocator.");
+            return false;
+        }
+        return true;
+    }
+
     bool DeviceVK::createCommandPools()
     {
         assert( logical && queueIndices.graphics && commandPool==nullptr );
         if ( !HelperVK::createCommandPool(logical, queueIndices.graphics.value(), commandPool) )
         {
+            return false;
+        }
+        return true;
+    }
+
+    bool DeviceVK::createStagingBuffers()
+    {
+        assert( !stagingBuffer );
+        stagingBuffer = new BufferVK;
+        VkBufferUsageFlagBits vkFlags = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT );
+        VmaMemoryUsage vmaFlags = (VmaMemoryUsage) ( VMA_MEMORY_USAGE_CPU_TO_GPU | VMA_MEMORY_USAGE_GPU_TO_CPU );
+        if ( !MemoryHelperVK::createBuffer(*this, STAGING_BUFFER_SIZE, vkFlags, vmaFlags, *stagingBuffer) )
+        {
+            delete stagingBuffer;
+            stagingBuffer = nullptr;
+            LOGC("VK Failed to create staging buffer.");
             return false;
         }
         return true;
@@ -233,7 +270,7 @@ namespace fv
         return true;
     }
 
-    bool DeviceVK::recordCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    bool DeviceVK::recordDrawCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
     {
         assert( logical && commandPool );
         for ( auto& ri : renderImages )
@@ -245,7 +282,7 @@ namespace fv
                 return false;
             }
             ri.commandBuffers.emplace_back( newCbs[0] );
-            if ( !HelperVK::startRecordCommandBuffer(logical, newCbs[0]) )
+            if ( !HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, newCbs[0]) )
             {
                 LOGC("VK Failed to start record command buffer.");
                 return false;
@@ -289,10 +326,86 @@ namespace fv
         return dr;
     }
 
-    RSubmesh DeviceVK::createSubmesh(const Submesh& submesh)
+    RSubmesh DeviceVK::createInterleavedSubmesh(const Submesh& submesh, const SubmeshInput& si)
     {
-     //   assert( false );
-        return {};
+        u32 vCount = submesh.getVertexCount();
+        if ( vCount == 0 || submesh.indices.size()== 0 )
+        {
+            LOGW("VK Failed to create submesh as submesh contains no indices or vertices.");
+            return {};
+        }
+        u32 numComponents  = si.computeNumComponents();
+        u32 bufferSize = numComponents * 4 * vCount;
+        if ( bufferSize > STAGING_BUFFER_SIZE )
+        {
+            LOGW("VK Requested vertex buffer size exceeds staging buffer size (%d bytes). Cannot upload data to GPU.", STAGING_BUFFER_SIZE);
+            return {};
+        }
+        char* vertexBuffer = new char[bufferSize];
+        char* ptr = vertexBuffer;
+        for ( u32 i=0; i<vCount; ++i )
+        {
+            if ( si.positions )
+            {
+                memcpy( ptr, (const char*)&submesh.vertices[i].x, sizeof(Vec3) );
+                ptr += sizeof(Vec3);
+            }
+            if ( si.normals ) 
+            {
+                memcpy( ptr, (const char*)&submesh.normals[i].x, sizeof(Vec3) ); 
+                ptr += sizeof(Vec3);
+            }
+            if ( si.tanBins )
+            {
+                memcpy( ptr, (const char*)&submesh.tangents[i].x, sizeof(Vec3) );
+                ptr += sizeof(Vec3);
+                memcpy( ptr, (const char*)&submesh.bitangents[i].x, sizeof(Vec3) );
+                ptr += sizeof(Vec3);
+            }
+            if ( si.uvs )
+            {
+                memcpy(ptr, (const char*)&submesh.uvs[i].x, sizeof(Vec2));
+                ptr += sizeof(Vec2);
+            }
+            if ( si.lightUvs )
+            {
+                memcpy(ptr, (const char*)&submesh.lightUVs[i].x, sizeof(Vec2));
+                ptr += sizeof(Vec2);
+            }
+            const Vector<Vec4>* extras [] = { &submesh.extra1, &submesh.extra2, &submesh.extra3, &submesh.extra4 };
+            for ( u32 j=0; j<4; ++j )
+            {
+                if ( si.extras[j] )
+                {
+                    memcpy(ptr, (const char*)&(*extras[j])[i].x, sizeof(Vec4));
+                    ptr += sizeof(Vec4);
+                }
+            }
+            if ( si.bones )
+            {
+                memcpy(ptr, (const char*)&submesh.weights[i].x, sizeof(Vec4));
+                ptr += sizeof(Vec4);
+                memcpy(ptr, (const char*)&submesh.boneIndices[i], sizeof(u32));
+                ptr += sizeof(float);
+            }
+        }
+        BufferVK deviceVertexBuffer;
+        VkBufferUsageFlagBits vkFlags = (VkBufferUsageFlagBits) (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT );
+        VmaMemoryUsage vmaFlags = (VmaMemoryUsage) VMA_MEMORY_USAGE_GPU_ONLY;
+        if ( !MemoryHelperVK::createBuffer( *this, bufferSize, vkFlags, vmaFlags, deviceVertexBuffer ) )
+        {
+            delete [] vertexBuffer;
+            return {};
+        }
+        MemoryHelperVK::copyToStagingBuffer( *this, vertexBuffer, bufferSize );
+        delete [] vertexBuffer;
+        MemoryHelperVK::copyBuffer( *this, deviceVertexBuffer, *stagingBuffer );
+        RSubmesh rSubmes;
+        rSubmes.device = idx;
+        rSubmes.resources[0] = deviceVertexBuffer.allocation;
+        rSubmes.resources[1] = deviceVertexBuffer.allocator;
+        rSubmes.resources[2] = deviceVertexBuffer.buffer;
+        return rSubmes;
     }
 
     void DeviceVK::deleteTexture2D(RTexture2D tex2d)

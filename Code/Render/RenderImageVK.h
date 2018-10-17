@@ -1,7 +1,7 @@
 #pragma once
 #include "../Core/Common.h"
 #if FV_VULKAN
-#include "PCH.h"
+#include "MemoryHelperVK.h"
 
 namespace fv
 {
@@ -15,8 +15,7 @@ namespace fv
         bool createFrameBuffer(VkRenderPass renderPass);
 
         struct DeviceVK* device;
-        VkImage image;
-        VkDeviceMemory imageMemory;
+        ImageVK imageAlloc;
         VkImageView imgView;
         VkFramebuffer frameBuffer;
         Vector<VkCommandBuffer> commandBuffers;

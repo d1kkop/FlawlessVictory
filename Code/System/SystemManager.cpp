@@ -16,17 +16,18 @@ namespace fv
     {
         m_Params = params;
 
+        // Initilize os related stuff.
+        if ( !OSInitialize() )
+        {
+            return false;
+        }
+
         // Execute functions/constructors that are thread safe in a sense that their data will never change.
         // Call these before any threads are started.
         resourceManager()->initialize();
 
         StopBeginFase();
 
-        // Initilize os related stuff.
-        if ( !OSInitialize() )
-        {
-            return false;
-        }
 
         // Initialize graphics.
         if ( !renderManager()->initGraphics() )

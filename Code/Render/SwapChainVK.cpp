@@ -1,6 +1,5 @@
-#include "PCH.h"
-#if FV_VULKAN
 #include "SwapChainVK.h"
+#if FV_VULKAN
 #include "DeviceVK.h"
 #include "../Core/LogManager.h"
 

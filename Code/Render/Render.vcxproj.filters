@@ -34,7 +34,9 @@
     <ClInclude Include="PipelineVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
-    <ClInclude Include="PCH.h" />
+    <ClInclude Include="MemoryHelperVK.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">
@@ -60,6 +62,9 @@
     </ClCompile>
     <ClCompile Include="PipelineVK.cpp">
       <Filter>DeviceParts</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryHelperVK.cpp">
+      <Filter>Managers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

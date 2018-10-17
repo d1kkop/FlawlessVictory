@@ -32,7 +32,7 @@ namespace fv
 
         FV_TS RTexture2D createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format) override;
         FV_TS RShader createShader(u32 deviceIdx, const char* data, u32 size) override;
-        FV_TS RSubmesh createSubmesh(u32 deviceIdx, const Submesh& submesh) override;
+        FV_TS RSubmesh createSubmesh(u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si) override;
         FV_TS void deleteTexture2D(RTexture2D tex2d) override;
         FV_TS void deleteShader(RShader shader) override;
         FV_TS void deleteSubmesh(RSubmesh submesh) override;

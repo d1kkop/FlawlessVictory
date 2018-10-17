@@ -58,7 +58,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -80,7 +80,7 @@
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="DeviceVK.h" />
     <ClInclude Include="FrameSyncObjectVK.h" />
-    <ClInclude Include="PCH.h" />
+    <ClInclude Include="MemoryHelperVK.h" />
     <ClInclude Include="PipelineVK.h" />
     <ClInclude Include="RenderImageVK.h" />
     <ClInclude Include="RenderManager.h" />
@@ -100,6 +100,7 @@
     <ClCompile Include="DeviceVK.cpp" />
     <ClCompile Include="FrameSyncObjectVK.cpp" />
     <ClCompile Include="HelperVK.cpp" />
+    <ClCompile Include="MemoryHelperVK.cpp" />
     <ClCompile Include="PipelineVK.cpp" />
     <ClCompile Include="RenderImageVK.cpp" />
     <ClCompile Include="RenderManager.cpp" />

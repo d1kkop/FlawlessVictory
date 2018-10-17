@@ -1,7 +1,6 @@
 #pragma once
 #include "../Core/Common.h"
 #if FV_VULKAN
-#include "PCH.h"
 #include "RenderImageVK.h"
 #include "FrameSyncObjectVK.h"
 #include "PipelineVK.h"
@@ -26,17 +25,19 @@ namespace fv
         void release(); // Do not put in destructor.
         void storeDeviceQueueFamilies(VkSurfaceKHR surface);
         void setFormatAndExtent(const struct RenderConfig& rc);
+        bool createAllocators();
         bool createCommandPools();
+        bool createStagingBuffers();
         bool createSwapChain(const struct RenderConfig& rc, VkSurfaceKHR surface);
         bool createStandard(const struct RenderConfig& rc);
         bool createRenderImages(const struct RenderConfig& rc);
         bool createFrameSyncObjects(const struct RenderConfig& rc);
         bool getOrCreatePipeline(const struct SubmeshInput& sinput, const struct MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut);
-        bool recordCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb);
+        bool recordDrawCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb);
 
         FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format);
         FV_TS RShader createShader(const char* data, u32 size);
-        FV_TS RSubmesh createSubmesh(const Submesh& submesh);
+        FV_TS RSubmesh createInterleavedSubmesh(const Submesh& submesh, const SubmeshInput& si);
         FV_TS void deleteTexture2D(RTexture2D tex2d);
         FV_TS void deleteShader(RShader shader);
         FV_TS void deleteSubmesh(RSubmesh submesh);
@@ -68,6 +69,8 @@ namespace fv
         Vector<DeviceResource> shaders;
         Vector<DeviceResource> submeshes;
         struct SwapChainVK* swapChain;
+        struct BufferVK* stagingBuffer;
+        VmaAllocator allocator;
 
     private:
         Mutex pipelineMutex;

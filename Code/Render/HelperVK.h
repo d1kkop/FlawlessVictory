@@ -1,7 +1,6 @@
 #pragma once
 #include "../Core/Common.h"
 #if FV_VULKAN
-#include "PCH.h"
 
 namespace fv
 {
@@ -43,7 +42,7 @@ namespace fv
 
         // Command buffers
         static bool allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
-        static bool startRecordCommandBuffer(VkDevice device, VkCommandBuffer commandBuffer);
+        static bool startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer);
         static void startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal);
         static void stopRenderPass(VkCommandBuffer commandBuffer);
         static bool stopRecordCommandBuffer(VkCommandBuffer commandBuffer);

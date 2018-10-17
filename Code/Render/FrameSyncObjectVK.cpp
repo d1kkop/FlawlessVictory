@@ -1,6 +1,5 @@
-#include "PCH.h"
-#if FV_VULKAN
 #include "FrameSyncObjectVK.h"
+#if FV_VULKAN
 #include "DeviceVK.h"
 #include "../Core/LogManager.h"
 
