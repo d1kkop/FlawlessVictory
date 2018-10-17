@@ -84,25 +84,17 @@ namespace fv
         ofs = 0;
     }
 
-    inline void ParallelForFinish(Job** jobs, i32 i)
-    {
-        for ( ; i>=0; --i )
-        {
-            jobs[i]->waitAndFree();
-        }
-    }
-
     template <class T, class C, class CB>
     void ParallelComponentFor(const C& collection, const CB& cb)
     {
-        i32 s, nt, pt, ofs;
-        ParallelForPrepare( (i32)collection.size(), s, nt, pt, ofs );
+        i32 kRemaining, kThreads, kPerThread, ofs;
+        ParallelForPrepare( (i32)collection.size(), kRemaining, kThreads, kPerThread, ofs );
         Job* jobs[64];
-        assert(nt<=64);
+        assert(kThreads<=64);
         i32 i;
-        for ( i=0; i<nt && s>0; ++i )
+        for ( i=0; i<kThreads && kRemaining>0; ++i )
         {
-            u32 count = Min(s, pt);
+            u32 count = Min(kRemaining, kPerThread);
             jobs[i] = jobManager()->addJob([=]()
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
@@ -115,26 +107,25 @@ namespace fv
                             cb ( *comp );
                     }
                 }
-            });
-            s -= pt;
-            ofs += pt;
+            }, false);
+            kRemaining -= kPerThread;
+            ofs += kPerThread;
         }
-        i--;
-        ParallelForFinish(jobs, i);
+        for ( i32 a=0; a<i; ++a ) jobs[a]->waitAndFree();
     }
 
 
     template <class C, class CB>
     void ParallelFor(const C& collection, const CB& cb)
     {
-        i32 s, nt, pt, ofs;
-        ParallelForPrepare((i32)collection.size(), s, nt, pt, ofs);
+        i32 kRemaining, kThreads, kPerThread, ofs;
+        ParallelForPrepare((i32)collection.size(), kRemaining, kThreads, kPerThread, ofs);
         Job* jobs[64];
-        assert(nt<=64);
+        assert(kThreads<=64);
         i32 i;
-        for ( i=0; i<nt && s>0; ++i )
+        for ( i=0; i<kThreads && kRemaining>0; ++i )
         {
-            u32 count = Min(s, pt);
+            u32 count = Min(kRemaining, kPerThread);
             jobs[i] = jobManager()->addJob([=]()
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
@@ -142,10 +133,9 @@ namespace fv
                     cb( collection[j] );
                 }
             });
-            s -= pt;
-            ofs += pt;
+            kRemaining -= kPerThread;
+            ofs += kPerThread;
         }
-        i--;
-        ParallelForFinish(jobs, i);
+        for ( i32 a=0; a<i; ++a ) jobs[a]->waitAndFree();
     }
 }

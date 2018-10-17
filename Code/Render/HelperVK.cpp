@@ -171,58 +171,6 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::createImage(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties, 
-                               const VkExtent2D& size, u32 mipLevels, VkFormat format, u32 samples, u32 layers, 
-                               bool shareInQueues, u32 queueIdx,
-                               VkImage& image, VkDeviceMemory& memory)
-    {
-        assert( mipLevels >= 1 && layers >= 1 && size.width > 0 && size.height > 0 && samples >= 1 );
-        VkImageCreateInfo ici {};
-        ici.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        ici.flags = 0;
-        ici.imageType = VK_IMAGE_TYPE_2D;
-        ici.format = format;
-        ici.extent = { size.width, size.width, 1 };
-        ici.mipLevels = mipLevels;
-        ici.arrayLayers = layers;
-        ici.samples = (VkSampleCountFlagBits)samples;
-        ici.tiling = VK_IMAGE_TILING_OPTIMAL;
-        ici.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        ici.sharingMode = shareInQueues ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
-        ici.queueFamilyIndexCount = 1;
-        ici.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        uint32_t queueFamIndices[] = { queueIdx };
-        ici.pQueueFamilyIndices = queueFamIndices;
-        if ( vkCreateImage(device, &ici, nullptr, &image) != VK_SUCCESS )
-        {
-            LOGC("VK Cannot create image for device.");
-            return false;
-        }
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(device, image, &memRequirements);
-        VkMemoryAllocateInfo allocInfo = {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = HelperVK::findMemoryType(memRequirements.memoryTypeBits, memProperties, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        if ( vkAllocateMemory(device, &allocInfo, nullptr, &memory) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to allocate memory for image.");
-            vkDestroyImage( device, image, nullptr );
-            image = nullptr;
-            return false;
-        }
-        if ( vkBindImageMemory(device, image, memory, 0) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to bind image memory.");
-            vkDestroyImage( device, image, nullptr );
-            vkFreeMemory( device, memory, nullptr );
-            image = nullptr;
-            memory = nullptr;
-            return false;
-        }
-        return true;
-    }
-
     bool HelperVK::createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView)
     {
         assert(device && image && format);
@@ -648,7 +596,18 @@ namespace fv
         vertexSize = vertexComponentCount*sizeof(float);
     }
 
-    bool HelperVK::allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers)
+    void HelperVK::allocCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBuffer& commandBuffer)
+    {
+        assert(device && commandPool);
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = commandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = 1;
+        FV_VKCALL ( vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) );
+    }
+
+    void HelperVK::allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers)
     {
         assert(device && commandPool);
         VkCommandBufferAllocateInfo allocInfo = {};
@@ -658,29 +617,16 @@ namespace fv
         allocInfo.commandBufferCount = numCommandBuffers;
         u32 oldSize = (u32)commandBuffers.size();
         commandBuffers.resize(commandBuffers.size() + numCommandBuffers);
-        if ( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data() + oldSize) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to allocate command buffer.");
-            return false;
-        }
-        return true;
+        FV_VKCALL( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data() + oldSize) );
     }
 
-    bool HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer)
+    void HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer)
     {
         assert( device && commandBuffer );
-
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = usage;
-
-        if ( vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to begin command buffer.");
-            return false;
-        }
-
-        return true;
+        FV_VKCALL( vkBeginCommandBuffer(commandBuffer, &beginInfo) );
     }
 
     void HelperVK::startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal)
@@ -692,10 +638,8 @@ namespace fv
         renderPassInfo.framebuffer = frameBuffer;
         renderPassInfo.renderArea.offset = renderArea.offset;
         renderPassInfo.renderArea.extent = renderArea.extent;
-
         renderPassInfo.clearValueCount = clearVal ? 1 : 0;
         renderPassInfo.pClearValues = clearVal;
-
         vkCmdBeginRenderPass( commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
     }
 
@@ -705,15 +649,16 @@ namespace fv
         vkCmdEndRenderPass( commandBuffer );
     }
 
-    bool HelperVK::stopRecordCommandBuffer(VkCommandBuffer commandBuffer)
+    void HelperVK::stopRecordCommandBuffer(VkCommandBuffer commandBuffer)
     {
         assert( commandBuffer );
-        if ( vkEndCommandBuffer(commandBuffer) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to end command buffer.");
-            return false;
-        }
-        return true;
+        FV_VKCALL( vkEndCommandBuffer(commandBuffer) );
+    }
+
+    void HelperVK::freeCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer* buffers, u32 numBuffers)
+    {
+        assert( device && commandPool && buffers && numBuffers > 0 );
+        vkFreeCommandBuffers( device, commandPool, numBuffers, buffers );
     }
 
     void HelperVK::queryRequiredWindowsExtensions(void* pWindow, Vector<const char*>& extensions)

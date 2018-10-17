@@ -270,58 +270,46 @@ namespace fv
         return true;
     }
 
-    bool DeviceVK::recordDrawCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    void DeviceVK::recordDrawCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
     {
         assert( logical && commandPool );
         for ( auto& ri : renderImages )
         {
-            Vector<VkCommandBuffer> newCbs;
-            if ( !HelperVK::allocCommandBuffers(logical, commandPool, 1, newCbs) )
-            {
-                LOGC("Cannot create temporary triangle command buffer.");
-                return false;
-            }
-            ri.commandBuffers.emplace_back( newCbs[0] );
-            if ( !HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, newCbs[0]) )
-            {
-                LOGC("VK Failed to start record command buffer.");
-                return false;
-            }
+            VkCommandBuffer cb;
+            HelperVK::allocCommandBuffer(logical, commandPool, cb);
+            ri.commandBuffers.emplace_back( cb );
+            HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
             // Record actual command buffer by using a callback
-            recordCb( newCbs[0], ri );
-            if ( !HelperVK::stopRecordCommandBuffer(newCbs[0]) )
-            {
-                LOGC("VK Failed to stop recording command buffer.");
-                return false;
-            }
+            recordCb( cb, ri );
+            HelperVK::stopRecordCommandBuffer(cb);
         }
-        return true;
     }
 
-    RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, ImageFormat format)
+    RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, 
+                                         u32 mipLevels, u32 layers, u32 samples, ImageFormat format,
+                                         VkImageUsageFlagBits usageBits, VmaMemoryUsage memUsage)
     {
-        VkImage img;
-        VkDeviceMemory mem;
+        assert( width > 0 && height > 0 && data && size >= width*height && mipLevels > 0 && layers > 0 && samples > 0 && usageBits != 0 );
         VkFormat vkFormat = HelperVK::convert( format );
-        if ( !HelperVK::createImage( logical, memProperties, { width, height }, 1, vkFormat, 1, 1, false, queueIndices.graphics.has_value(), img, mem ) )
+        DeviceResource dr = { idx };
+        if (!MemoryHelperVK::createImage(*this, width, height, vkFormat, mipLevels, layers, samples, 
+                                         false, queueIndices.graphics.value(), usageBits, memUsage, *(ImageVK*) &dr.resources))
         {
             return {};
         }
         scoped_lock lk(tex2dMutex);
-        DeviceResource dr = { idx, img, mem };
         textures2d.emplace_back( dr );
         return dr;
     }
 
     RShader DeviceVK::createShader(const char* data, u32 size)
     {
-        VkShaderModule shader;
-        if ( !HelperVK::createShaderModule( logical, data, size, shader ) )
+        DeviceResource dr = { idx };
+        if ( !HelperVK::createShaderModule( logical, data, size, *(VkShaderModule*)&dr.resources ) )
         {
             return {};
         }
         scoped_lock lk(shaderMutex);
-        DeviceResource dr = { idx, shader };
         shaders.emplace_back( dr );
         return dr;
     }
@@ -410,13 +398,11 @@ namespace fv
 
     void DeviceVK::deleteTexture2D(RTexture2D tex2d)
     {
-        vkDestroyImage( logical, (VkImage) tex2d.resources[0], nullptr );
-        vkFreeMemory( logical, (VkDeviceMemory) tex2d.resources[1], nullptr );
+        MemoryHelperVK::freeImage( *(ImageVK*) &tex2d.resources );
         scoped_lock lk(tex2dMutex);
         Remove_if ( textures2d, [&](auto& t)
         {
-            return ( tex2d.resources[0] == t.resources[0] && /* vkImage */
-                     tex2d.resources[1] == t.resources[1] ); /* vkDeviceMemory */
+            return memcmp( &t, &tex2d, sizeof(t) )==0;
         });
     }
 
@@ -426,7 +412,7 @@ namespace fv
         scoped_lock lk(shaderMutex);
         Remove_if (shaders, [&](auto& s)
         {
-            return (shader.resources[0] == s.resources[0]); /* vkShaderModule */
+            return memcmp( &s, &shader, sizeof(s) )==0;
         });
     }
 

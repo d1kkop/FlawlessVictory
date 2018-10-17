@@ -130,7 +130,8 @@ namespace fv
             m_ThreadSuspendSignal.notify_one();
         }
     #else
-        if ( cb ) cb();
+        assert( cb );
+     //   if ( cb ) cb();
         job->finishWith(JobState::Done);
         if ( onDoneOrCancelled ) onDoneOrCancelled( job );
     #endif
@@ -147,8 +148,6 @@ namespace fv
     {
         assert(job);
         job->wait();
-        job->m_Cb = nullptr; // Set these to null to ensure shared embedded resources are unreffed.
-        job->m_OnDoneOrCancelled = nullptr; 
         // ObjectManager is thread safe created
         freeObject(job);
     }

@@ -9,7 +9,6 @@
 namespace fv
 {
     bool MemoryHelperVK::createBuffer(const struct DeviceVK& device, u32 size, VkBufferUsageFlagBits usage, VmaMemoryUsage vmaUsage, BufferVK& ba)
-
     {
         VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufferInfo.size = size;
@@ -68,53 +67,36 @@ namespace fv
         vmaDestroyImage( imgAllocation.allocator, imgAllocation.image, imgAllocation.allocation );
     }
 
-    bool MemoryHelperVK::copyToStagingBuffer(const struct DeviceVK& device, const void* memory, u32 size)
+    void MemoryHelperVK::copyToStagingBuffer(const struct DeviceVK& device, const void* memory, u32 size)
     {
-        if (!device.stagingBuffer) return false;
+        assert( device.stagingBuffer );
         void* pDest;
-        if ( vmaMapMemory( device.stagingBuffer->allocator, device.stagingBuffer->allocation, &pDest ) == VK_SUCCESS )
-        {
-            memcpy( pDest, memory, size );
-            vmaUnmapMemory( device.stagingBuffer->allocator, device.stagingBuffer->allocation );
-            return true;
-        }
-        return false;
+        FV_VKCALL( vmaMapMemory( device.stagingBuffer->allocator, device.stagingBuffer->allocation, &pDest ) );
+        memcpy( pDest, memory, size );
+        vmaUnmapMemory( device.stagingBuffer->allocator, device.stagingBuffer->allocation );
     }
 
-    bool MemoryHelperVK::copyBuffer(const struct DeviceVK& device, BufferVK& dst, const BufferVK& src)
+    void MemoryHelperVK::copyBuffer(const struct DeviceVK& device, BufferVK& dst, const BufferVK& src)
     {
-        Vector<VkCommandBuffer> newCbs;
-        if ( !HelperVK::allocCommandBuffers(device.logical, device.commandPool, 1, newCbs) )
-        {
-            LOGC("Cannot create temporary triangle command buffer.");
-            return false;
-        }
-        if ( !HelperVK::startRecordCommandBuffer(device.logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, newCbs[0]) )
-        {
-            LOGC("VK Failed to start record command buffer.");
-            return false;
-        }
+        VkCommandBuffer cb;
+        HelperVK::allocCommandBuffer(device.logical, device.commandPool, cb);
+        HelperVK::startRecordCommandBuffer(device.logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
 
         VkBufferCopy copyRegion = {};
         copyRegion.size = src.size;
-        vkCmdCopyBuffer(newCbs[0], src.buffer, dst.buffer, 1, &copyRegion);
+        vkCmdCopyBuffer(cb, src.buffer, dst.buffer, 1, &copyRegion);
 
-        if ( !HelperVK::stopRecordCommandBuffer(newCbs[0]) )
-        {
-            LOGC("VK Failed to stop recording command buffer.");
-            return false;
-        }
+        HelperVK::stopRecordCommandBuffer(cb);
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &newCbs[0];
+        submitInfo.pCommandBuffers = &cb;
 
-        vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(device.graphicsQueue);
-        vkFreeCommandBuffers(device.logical, device.commandPool, 1, &newCbs[0]);
+        FV_VKCALL( vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) );
+        FV_VKCALL( vkQueueWaitIdle(device.graphicsQueue) );
 
-        return true;
+        HelperVK::freeCommandBuffers(device.logical, device.commandPool, &cb, 1);
     }
 
 }

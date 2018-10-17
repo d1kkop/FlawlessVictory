@@ -28,8 +28,8 @@ namespace fv
                                 VkImageUsageFlagBits usage, VmaMemoryUsage vmaUsage, ImageVK& buffAllocation);
         static void freeBuffer(const BufferVK& buffAllocation);
         static void freeImage(const ImageVK& imgAllocation);
-        static bool copyToStagingBuffer( const struct DeviceVK& device, const void* memory, u32 size );
-        static bool copyBuffer( const struct DeviceVK& device, BufferVK& dst, const BufferVK& src );
+        static void copyToStagingBuffer( const struct DeviceVK& device, const void* memory, u32 size );
+        static void copyBuffer( const struct DeviceVK& device, BufferVK& dst, const BufferVK& src );
 
     };
 }

@@ -10,7 +10,7 @@ namespace fv
     void RenderImageVK::release()
     {
         if (!device ||!device->logical) return;
-        MemoryHelperVK::freeImage( imageAlloc );
+        if ( imageAlloc.allocation ) MemoryHelperVK::freeImage( imageAlloc ); /* If has swap chain, images are from not set up. */
         vkDestroyImageView( device->logical, imgView, nullptr );
         vkDestroyFramebuffer( device->logical, frameBuffer, nullptr );
         vkFreeCommandBuffers( device->logical, device->commandPool, (u32)commandBuffers.size(), commandBuffers.data() );

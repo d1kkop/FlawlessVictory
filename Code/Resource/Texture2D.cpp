@@ -34,7 +34,8 @@ namespace fv
             return;
         }
 
-        RTexture2D graphic = renderManager()->createTexture2D( 0, width, height, (const char*)data.data(), (u32)data.size(), format );
+        RTexture2D graphic = renderManager()->createTexture2D(0, width, height, (const char*)data.data(), (u32)data.size(),
+                                                              1, 1, 1, format );
         if ( graphic.device == -1 )
         {
             LOGW("Cannot create graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());

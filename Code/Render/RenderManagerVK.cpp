@@ -300,9 +300,11 @@ namespace fv
         return retVal % numDevices();
     }
 
-    RTexture2D RenderManagerVK::createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format)
+    RTexture2D RenderManagerVK::createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
+                                                u32 mipLevels, u32 layers, u32 samples, ImageFormat format)
     {
-        return m_Devices[deviceIdx]->createTexture2D( width, height, data, size, format );
+        return m_Devices[deviceIdx]->createTexture2D( width, height, data, size, mipLevels, layers, samples, format, 
+                                                     VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY );
     }
 
     RShader RenderManagerVK::createShader(u32 deviceIdx, const char* data, u32 size)

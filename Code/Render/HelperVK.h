@@ -2,6 +2,12 @@
 #include "../Core/Common.h"
 #if FV_VULKAN
 
+#if FV_DEBUG
+#define FV_VKCALL( exp ) assert( exp==VK_SUCCESS )
+#else
+#define FV_VKCALL( exp ) exp
+#endif
+
 namespace fv
 {
     using DebugCallbackVK = VKAPI_ATTR VkBool32 (VKAPI_CALL*)
@@ -21,10 +27,6 @@ namespace fv
                                     const struct RenderConfig& rc, const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
                                     VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
                                     VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain);
-        static bool createImage(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties,
-                                const VkExtent2D& size, u32 mipLevels, VkFormat format, u32 samples, u32 layers,
-                                bool shareInQueues, u32 queueIdx,
-                                VkImage& image, VkDeviceMemory& memory);
         static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule);
@@ -41,11 +43,13 @@ namespace fv
         static void createVertexAttribs(const struct SubmeshInput& sinput, Vector<VkVertexInputAttributeDescription>& inputAttribs, u32& vertexSize);
 
         // Command buffers
-        static bool allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
-        static bool startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer);
+        static void allocCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBuffer& commandBuffer);
+        static void allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
+        static void startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer);
         static void startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal);
         static void stopRenderPass(VkCommandBuffer commandBuffer);
-        static bool stopRecordCommandBuffer(VkCommandBuffer commandBuffer);
+        static void stopRecordCommandBuffer(VkCommandBuffer commandBuffer);
+        static void freeCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer* buffers, u32 numBuffers);
        
         // Checks and validation.
         static void queryRequiredWindowsExtensions(void* pWindow, Vector<const char*>& listToFill);

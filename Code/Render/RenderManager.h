@@ -24,7 +24,7 @@ namespace fv
     struct DeviceResource
     {
         u32 device = (u32)-1;
-        void* resources[8]{};
+        void* resources[6]{};
     };
 
     using RSubmesh = DeviceResource;
@@ -117,7 +117,8 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
 
-        FV_TS virtual RTexture2D createTexture2D( u32 deviceIdx, u32 width, u32 height, const char* data, u32 size, ImageFormat format ) = 0;
+        FV_TS virtual RTexture2D createTexture2D( u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
+                                                  u32 mipLevels, u32 layers, u32 samples, ImageFormat format ) = 0;
         FV_TS virtual RShader createShader( u32 deviceIdx, const char* data, u32 size ) = 0;
         FV_TS virtual RSubmesh createSubmesh( u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si ) = 0;
         FV_TS virtual void deleteTexture2D( RTexture2D tex2d ) = 0;
