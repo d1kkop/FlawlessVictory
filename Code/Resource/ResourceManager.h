@@ -51,8 +51,9 @@ namespace fv
         Vector<LoadedResourceInfo> m_LoadedResourcesCopy;
         Map<Path, Path> m_CachedFilenameToDirectories;
         Map<String, u64> m_CachedFiletimes;
-        Mutex m_NameToResourceMutex;
         Thread m_ResourceThread;
+        Mutex m_NameToResourceMutex;
+        Mutex m_ResourcesNotCopiedMutex;
         ResourceConfig m_Config{};
         Atomic<bool> m_Closing = false;
 

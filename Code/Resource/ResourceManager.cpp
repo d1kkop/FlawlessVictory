@@ -23,6 +23,7 @@ namespace fv
 
     void ResourceManager::cleanupResourcesWithoutReferences()
     {
+        scoped_lock cl(m_ResourcesNotCopiedMutex);
         scoped_lock lk(m_NameToResourceMutex);
         for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); )
         {
@@ -155,8 +156,11 @@ namespace fv
     {
         while ( !m_Closing )
         {
+            // Between this lock and m_ResourcesNotCopiedMutex.unlock(), resources are copied (ref count incremented).
+            // As such, a call to cleanupResourcesWithoutReferences will do nothing as refCount is at least 2.
+            unique_lock rl(m_ResourcesNotCopiedMutex);
+
             // Copy list to avoid main thread to await the expensinve FileTime function while having lock.
-            m_LoadedResourcesCopy.clear();
             {
                 scoped_lock lk(m_NameToResourceMutex);
                 m_LoadedResourcesCopy.reserve( m_NameToResource.size() );
@@ -182,6 +186,10 @@ namespace fv
                     rsi.resource->load( rtl );
                 }
             }
+
+            // Reduces ref count. As such, calling cleanupResourcesWithoutReferences() may cleanup resources.
+            m_LoadedResourcesCopy.clear(); 
+            m_ResourcesNotCopiedMutex.unlock();
 
             // If any file times were updated, write back cached file. So that next
             // startup of engine, changes in mean time can be detected against cached file.
