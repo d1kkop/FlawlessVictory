@@ -118,7 +118,7 @@ namespace fv
         // TODO Temp command buffers
         for ( auto& dv : m_Devices )
         {
-            dv->recordDrawCommandBuffer( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
+            dv->addFrameCmd( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
             {
                 VkClearValue cv = { .4f, .3f, .9f, 0.f };
                 HelperVK::startRenderPass(cb, dv->clearPass, ri.frameBuffer, { 0, 0, dv->extent }, &cv);
@@ -179,10 +179,23 @@ namespace fv
             submitInfo.pWaitSemaphores = waitSemaphores;
             submitInfo.pWaitDstStageMask = waitStages;
 
+            Vector<VkCommandBuffer> cbs;
+
             // Execute command buffers
             auto& ri = dv->renderImages[imageIndex];
-            submitInfo.commandBufferCount = (u32)ri.commandBuffers.size();
-            submitInfo.pCommandBuffers = ri.commandBuffers.data();
+            for ( auto& cb : ri.commandBuffers ) cbs.emplace_back( cb );
+            dv->singleTimeCmdsMutex.lock();
+            if ( dv->singleTimeCmds.size() )
+            {
+                for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
+                dv->singleTimeCmds.clear();
+            }
+            dv->singleTimeCmdsMutex.unlock();
+
+            //submitInfo.commandBufferCount = (u32)ri.commandBuffers.size();
+            //submitInfo.pCommandBuffers = ri.commandBuffers.data();
+            submitInfo.commandBufferCount = (u32)cbs.size();
+            submitInfo.pCommandBuffers = cbs.data();
 
             VkSemaphore signalSemaphores[] = { so.imageFinishedSemaphore };
             submitInfo.signalSemaphoreCount = 1;

@@ -105,12 +105,15 @@ namespace fv
     {
         assert( !stagingBuffer );
         stagingBuffer = new BufferVK;
-        VkBufferUsageFlagBits vkFlags = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT );
-        VmaMemoryUsage vmaFlags = (VmaMemoryUsage) ( VMA_MEMORY_USAGE_CPU_TO_GPU | VMA_MEMORY_USAGE_GPU_TO_CPU );
-        if ( !MemoryHelperVK::createBuffer(*this, STAGING_BUFFER_SIZE, vkFlags, vmaFlags, *stagingBuffer) )
+        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT );
+        VmaMemoryUsage vmaUsage = (VmaMemoryUsage) ( VMA_MEMORY_USAGE_CPU_TO_GPU );
+        VmaAllocationCreateFlags vmaFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        if ( !MemoryHelperVK::createBuffer(*this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, vmaFlags, false,
+                                           queueIndices.graphics.value(), *stagingBuffer, &stagingMemory) )
         {
             delete stagingBuffer;
             stagingBuffer = nullptr;
+            stagingMemory = nullptr;
             LOGC("VK Failed to create staging buffer.");
             return false;
         }
@@ -270,7 +273,7 @@ namespace fv
         return true;
     }
 
-    void DeviceVK::recordDrawCommandBuffer(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    void DeviceVK::addFrameCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
     {
         assert( logical && commandPool );
         for ( auto& ri : renderImages )
@@ -285,7 +288,18 @@ namespace fv
         }
     }
 
-    RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size, 
+    void DeviceVK::addSingleTimeCmd(const Function<void (VkCommandBuffer)>& recordCb)
+    {
+        VkCommandBuffer cb;
+        HelperVK::allocCommandBuffer(logical, commandPool, cb);
+        HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
+        recordCb(cb);
+        HelperVK::stopRecordCommandBuffer(cb);
+        scoped_lock lk(singleTimeCmdsMutex);
+        singleTimeCmds.emplace_back( cb );
+    }
+
+    RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size,
                                          u32 mipLevels, u32 layers, u32 samples, ImageFormat format,
                                          VkImageUsageFlagBits usageBits, VmaMemoryUsage memUsage)
     {
@@ -378,16 +392,16 @@ namespace fv
             }
         }
         BufferVK deviceVertexBuffer;
-        VkBufferUsageFlagBits vkFlags = (VkBufferUsageFlagBits) (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT );
-        VmaMemoryUsage vmaFlags = (VmaMemoryUsage) VMA_MEMORY_USAGE_GPU_ONLY;
-        if ( !MemoryHelperVK::createBuffer( *this, bufferSize, vkFlags, vmaFlags, deviceVertexBuffer ) )
+        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT );
+        VmaMemoryUsage vmaUsage = (VmaMemoryUsage) VMA_MEMORY_USAGE_GPU_ONLY;
+        VkMemoryAllocateFlags vmaFlags = 0;
+        if ( !MemoryHelperVK::createBuffer( *this, bufferSize, vkUsage, vmaUsage, vmaFlags, false, queueIndices.graphics.value(), deviceVertexBuffer ) )
         {
             delete [] vertexBuffer;
             return {};
         }
-        MemoryHelperVK::copyToStagingBuffer( *this, vertexBuffer, bufferSize );
+        MemoryHelperVK::copyToDevice( *this, deviceVertexBuffer, vertexBuffer, bufferSize );
         delete [] vertexBuffer;
-        MemoryHelperVK::copyBuffer( *this, deviceVertexBuffer, *stagingBuffer );
         RSubmesh rSubmes;
         rSubmes.device = idx;
         rSubmes.resources[0] = deviceVertexBuffer.allocation;
