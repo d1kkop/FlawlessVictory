@@ -91,7 +91,7 @@ namespace fv
         for ( i=0; i<kThreads && kRemaining>0; ++i )
         {
             u32 count = Min(kRemaining, kPerThread);
-            jobs[i] = jobManager()->addJob([=]()
+            jobs[i] = jobManager()->addJob([=,&collection,&cb]()
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
                 {
@@ -122,7 +122,7 @@ namespace fv
         for ( i=0; i<kThreads && kRemaining>0; ++i )
         {
             u32 count = Min(kRemaining, kPerThread);
-            jobs[i] = jobManager()->addJob([=]()
+            jobs[i] = jobManager()->addJob([=,&collection,&cb]()
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
                 {
