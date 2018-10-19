@@ -2,6 +2,7 @@
 #include "LogManager.h"
 #include "Functions.h"
 #include "Directories.h"
+#include "IncWindows.h"
 using namespace std;
 
 namespace fv

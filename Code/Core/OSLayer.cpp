@@ -2,6 +2,9 @@
 #include "OSLayer.h"
 #include "Platform.h"
 #include "LogManager.h"
+#include "IncWindows.h"
+#include "IncSDL.h"
+
 
 namespace fv
 {

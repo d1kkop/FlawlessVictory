@@ -111,6 +111,8 @@
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />
+    <ClInclude Include="IncSDL.h" />
+    <ClInclude Include="IncWindows.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="JobManager.h" />

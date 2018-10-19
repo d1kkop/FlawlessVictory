@@ -20,7 +20,7 @@ namespace fv
     {
         if ( !MemoryHelperVK::createImage(*device, device->extent.width, device->extent.height, device->format, 1,
                                           rc.numLayers, rc.numSamples, false, device->queueIndices.graphics.value(),
-                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY, imageAlloc) )
+                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, imageAlloc) )
         {
             return false;
         }

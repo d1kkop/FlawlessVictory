@@ -19,6 +19,9 @@
     <Filter Include="BaseObjects">
       <UniqueIdentifier>{d6867278-0721-4204-8430-8d16130271ee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Inc">
+      <UniqueIdentifier>{2e593a6c-b7f9-4ec4-a04e-b20ecc3d89ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TypeManager.cpp">
@@ -166,5 +169,11 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="PCH.h" />
+    <ClInclude Include="IncWindows.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="IncSDL.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,5 +1,12 @@
 #pragma once
 #include "../Core/Common.h"
+#if FV_ASSIMP
+    #include <assimp/cimport.h>
+    #include <assimp/scene.h>
+    #include <assimp/postprocess.h>
+    #include <assimp/Importer.hpp>
+    #pragma comment(lib, "../3rdParty/Assimp/lib/x64/assimp-vc140-mt.lib")
+#endif
 
 namespace fv
 {

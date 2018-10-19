@@ -187,8 +187,8 @@ namespace fv
             dv->singleTimeCmdsMutex.lock();
             if ( dv->singleTimeCmds.size() )
             {
-                for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
-                dv->singleTimeCmds.clear();
+       //         for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
+      //          dv->singleTimeCmds.clear();
             }
             dv->singleTimeCmdsMutex.unlock();
 
@@ -317,7 +317,7 @@ namespace fv
                                                 u32 mipLevels, u32 layers, u32 samples, ImageFormat format)
     {
         return m_Devices[deviceIdx]->createTexture2D( width, height, data, size, mipLevels, layers, samples, format, 
-                                                     VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY );
+                                                     VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY );
     }
 
     RShader RenderManagerVK::createShader(u32 deviceIdx, const char* data, u32 size)

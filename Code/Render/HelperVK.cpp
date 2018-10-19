@@ -4,6 +4,7 @@
 #include "../Core/Algorithm.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
+#include "../Core/IncSDL.h"
 
 namespace fv
 {

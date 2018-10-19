@@ -1,9 +1,15 @@
 #include "PCH.h"
 #include "Functions.h"
-#if FV_SDL
-#include "../3rdParty/SDL/include/SDL.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include "IncWindows.h"
+#include "IncSDL.h"
+#ifndef WIN32
+    #include <unistd.h>
 #endif
-#include <fstream>
+#ifdef WIN32
+#define stat _stat
+#endif
 using namespace std;
 using namespace chrono;
 

@@ -80,6 +80,7 @@
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="DeviceVK.h" />
     <ClInclude Include="FrameSyncObjectVK.h" />
+    <ClInclude Include="IncVulkan.h" />
     <ClInclude Include="MemoryHelperVK.h" />
     <ClInclude Include="PipelineVK.h" />
     <ClInclude Include="RenderImageVK.h" />

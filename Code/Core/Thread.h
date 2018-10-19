@@ -2,6 +2,16 @@
 #include "PCH.h"
 #include "Common.h"
 #include "LogManager.h"
+#include <sstream>
+
+#define FV_TRACEJOBSYSTEM( type, yes ) \
+{\
+	std::stringstream ss;\
+    std::this_thread::get_id()._To_text(ss);\
+    LOG("Thread %s %s %s.", ss.str().c_str(), #type, #yes); \
+}
+
+#define FV_USEJOBSYSTEM 1
 
 #if FV_DEBUG
     #define FV_CHECK_MO() \

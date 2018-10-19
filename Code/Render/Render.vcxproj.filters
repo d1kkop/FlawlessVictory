@@ -37,6 +37,9 @@
     <ClInclude Include="MemoryHelperVK.h">
       <Filter>Managers</Filter>
     </ClInclude>
+    <ClInclude Include="IncVulkan.h">
+      <Filter>DeviceParts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">

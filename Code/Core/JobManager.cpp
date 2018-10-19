@@ -21,7 +21,7 @@ namespace fv
             return;
         // While there are other jobs in queue, process them first to not stall the thread and avoid waiting for a child job
         // that will never run.
-        m_Jm->processQueue();
+        jobManager()->processQueue();
         // Wait on the requested job now.
         unique_lock<Mutex> lk(m_StateMutex);
         m_NumWaiters++;
@@ -33,26 +33,15 @@ namespace fv
         m_NumWaiters--;
     }
 
-    void Job::waitAndFree()
-    {
-        wait();
-        doFree();
-    }
-
     bool Job::cancel()
     {
-        return m_Jm->cancelJob(this);
-    }
-
-    bool Job::cancelAndFree()
-    {
-        bool bRes = cancel();
-        waitAndFree();
-        return bRes;
+        return jobManager()->cancelJob(this);
     }
 
     void Job::finishWith(JobState newState)
     {
+        assert( newState == JobState::Cancelled || newState == JobState::Done );
+        if ( m_OnDoneOrCancelled ) m_OnDoneOrCancelled( this );
         {
             scoped_lock lk(m_StateMutex);
             m_State = newState;
@@ -61,13 +50,6 @@ namespace fv
                 m_StateSignal.notify_all();
             }
         }
-        if  ( m_OnDoneOrCancelled ) m_OnDoneOrCancelled( this );
-        if ( m_AutoFree ) doFree();
-    }
-
-    void Job::doFree()
-    {
-        m_Jm->freeJob( this );
     }
 
     // ------------- JobManager ------------------------------------------------------------------------------------------------------
@@ -97,30 +79,28 @@ namespace fv
         {
             scoped_lock lk(m_QueueMutex);
             m_IsClosing = true;
-            m_NumThreadsSuspended = 0;
             m_ThreadSuspendSignal.notify_all();
         }
         for ( auto& t : m_Threads )
         {
             if ( t.joinable() ) t.join();
         }
+        assert(m_NumThreadsSuspended == 0);
         // If still had jobs in queue, process them ST
         processQueue();
     }
 
-    Job* JobManager::addJob(const Function<void ()>& cb, bool autoFree, const Function<void (Job*)>& onDoneOrCancelled)
+    M<Job> JobManager::addJob(const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled)
     {
         assert( cb );
 
         // ObjectManager IS thread safe created
-        Job* job = newObject();
+        M<Job> job =  M<Job>(newObject(), freeJob);
         
-        job->m_Jm = this;
-        job->m_State = JobState::Scheduled;
         job->m_Cb = cb;
         job->m_OnDoneOrCancelled = onDoneOrCancelled;
-        job->m_NumWaiters = 0;
-        job->m_AutoFree = autoFree;
+        assert( job->m_State == JobState::Scheduled );
+        assert( job->m_NumWaiters == 0 );
 
     #if FV_USEJOBSYSTEM
         scoped_lock lk(m_QueueMutex);
@@ -134,7 +114,6 @@ namespace fv
         job->finishWith(JobState::Done);
     #endif
 
-        if ( autoFree ) return nullptr;
         return job;
     }
 
@@ -143,21 +122,13 @@ namespace fv
         return (u32)m_Threads.size();
     }
 
-    void JobManager::freeJob(Job* job)
-    {
-        assert(job && (job->m_State == JobState::Cancelled || job->m_State == JobState::Done));
-        // ObjectManager is thread safe created
-        freeObject(job);
-        int k = 0; // TODO
-    }
-
     bool JobManager::cancelJob(Job* job)
     {
         assert(job);
         unique_lock<Mutex> lk(m_QueueMutex);
         if ( job->m_State == JobState::Scheduled )
         {
-            Remove( m_GlobalQueue, job );
+            Remove_if( m_GlobalQueue, [job](auto& mjob) { return mjob.get()==job; } );
             lk.unlock();
             job->finishWith( JobState::Cancelled );
             return true;
@@ -169,20 +140,21 @@ namespace fv
     {
         while ( true )
         {
-            unique_lock<Mutex> lk( m_QueueMutex );
-            if ( m_IsClosing )
+            unique_lock<Mutex> lk(m_QueueMutex);
+            if ( m_IsClosing ) return;
+            M<Job> job;
+            if ( extractJob(job) )
             {
-                break;
-            }
-            if ( !m_GlobalQueue.empty() )
-            {
-                popAndProcessJob( lk );
+                lk.unlock();
+                assert(job->m_Cb);
+                if ( job->m_Cb ) job->m_Cb();
+                job->finishWith(JobState::Done);
             }
             else
             {
                 m_NumThreadsSuspended++;
                 m_ThreadSuspendSignal.wait(lk);
-                assert( m_NumThreadsSuspended > 0 );
+                assert(m_NumThreadsSuspended > 0);
                 m_NumThreadsSuspended--;
             }
         }
@@ -193,23 +165,38 @@ namespace fv
         unique_lock<Mutex> lk(m_QueueMutex);
         while ( !m_GlobalQueue.empty() )
         {
-            popAndProcessJob(lk);
-            lk.lock();
+            M<Job> job;
+            if ( extractJob(job) )
+            {
+                lk.unlock();
+                assert(job->m_Cb);
+                if ( job->m_Cb ) job->m_Cb();
+                job->finishWith(JobState::Done);
+                lk.lock();
+            }
+            else break;
         }
     }
 
-    void JobManager::popAndProcessJob(unique_lock<Mutex>& lk)
+    bool JobManager::extractJob(M<Job>& job)
     {
-        Job* job = m_GlobalQueue.front();
-        m_GlobalQueue.pop_front();
-        // Should not need jobState lock for this state swap
-        job->m_State = JobState::InProgress;
-        lk.unlock();
-        assert(job->m_Cb);
-        if ( job->m_Cb ) job->m_Cb();
-        job->finishWith(JobState::Done);
+        if ( m_GlobalQueue.size() )
+        {
+            job = m_GlobalQueue.front();
+            m_GlobalQueue.pop_front();
+            // Should not need state lock for this. Has global queue mutex, so state cannot changed to cancelled.
+            job->m_State = JobState::InProgress;
+            return true;
+        }
+        return false;
     }
 
+    void JobManager::freeJob(Job* job)
+    {
+        assert(job && (job->m_State == JobState::Cancelled || job->m_State == JobState::Done) && job->m_NumWaiters==0);
+        // ObjectManager is thread safe created
+        jobManager()->freeObject(job);
+    }
 
     JobManager* g_JobManager = nullptr;
     JobManager* jobManager() { return CreateOnce(g_JobManager); }

@@ -1,6 +1,7 @@
 #pragma once
 #include "../Core/Common.h"
 #if FV_VULKAN
+#include "IncVulkan.h"
 
 namespace fv
 {

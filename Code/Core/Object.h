@@ -14,6 +14,8 @@ namespace fv
 
     private:
         u32 m_Version = 0;
+        // TODO make private
+    public:
         bool m_Freed  = true;
 
         template <class T>

@@ -2,6 +2,12 @@
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
 #include "../Render/RenderManager.h"
+#if FV_FREEIMAGE
+    #include "../3rdParty/FreeImage/Dist/x64/FreeImage.h"
+    #if _MSC_VER
+    #pragma comment(lib, "../3rdParty/FreeImage/Dist/x64/FreeImage.lib")
+    #endif
+#endif
 
 namespace fv
 {
@@ -67,13 +73,13 @@ namespace fv
         width       = FreeImage_GetWidth(dibConverted);
         height      = FreeImage_GetHeight(dibConverted);
         // Sanity checks
-        if ( (bits == nullptr) || (width == 0) || (height == 0) )
+        if ( (bits == nullptr) || (width == 0) || (height == 0) || (bpp % 8 != 0) )
         {
             LOGW("Texture %s has invalid data. Loading failed.", filename);
             FreeImage_Unload(dibConverted);
             return false;
         }
-        u32 size = width*height *bpp;
+        u32 size = width*height*(bpp>>3);
         data.resize( size );
         memcpy( data.data(), bits, size );
         FreeImage_Unload(dibConverted);

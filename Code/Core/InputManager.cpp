@@ -3,6 +3,7 @@
 #include "Functions.h"
 #include "Thread.h"
 #include <cassert>
+#include "IncSDL.h"
 
 namespace fv
 {

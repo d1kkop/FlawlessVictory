@@ -2,7 +2,8 @@
 #include "Common.h"
 using namespace std;
 #if FV_NLOHMANJSON
-using json = nlohmann::json;
+    #include "../3rdParty/nlohmann/json.hpp"
+    using json = nlohmann::json;
 #endif
 
 

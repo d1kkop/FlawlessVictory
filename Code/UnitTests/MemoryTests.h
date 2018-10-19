@@ -134,7 +134,7 @@ void addJob1AndWait()
     u32 v = g_JobRecursion;
  //   printf("Job %d executed \n", v);
 
-    jobManager()->addJob( addJob2AndWait )->waitAndFree();
+    jobManager()->addJob( addJob2AndWait )->wait();
 }
 void addJob2AndWait()
 {
@@ -146,7 +146,7 @@ UTESTBEGIN(JobManagerRecursionTest)
     for ( u32 i=0; i<10; i++ )
     {
         g_JobRecursion = 0;
-        jobManager()->addJob( addJob1AndWait )->waitAndFree();
+        jobManager()->addJob( addJob1AndWait )->wait();
     }
     return true;
 }
@@ -165,18 +165,16 @@ void addJob1()
         jobManager()->addJob([v]() {
           //  printf("Job %d executed \n", v);        
             addJob2(); 
-    })->waitAndFree();
+    })->wait();
     else
     {
-        Job* jChild = jobManager()->addJob([v]() {
+        M<Job> jChild = jobManager()->addJob([v]() {
          //   printf("Job %d executed \n", v);
             addJob2();
         });
 
         Suspend(0.0001);
         if ( Random() % 2 == 0 )
-           if ( jChild->cancelAndFree() ) { /* printf("Job %d cancelled\n", v);*/ }
-        else
            if ( jChild->cancel() ) { /* printf("Job %d cancelled\n", v); */ }
     }
 }
@@ -190,7 +188,7 @@ UTESTBEGIN(JobManagerNonRecursionTest)
     for ( u32 i=0; i<10; i++ )
     {
         g_JobRecursion = 0;
-        jobManager()->addJob(addJob1)->waitAndFree();
+        jobManager()->addJob(addJob1)->wait();
     }
     return true;
 }

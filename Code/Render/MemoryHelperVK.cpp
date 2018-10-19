@@ -44,7 +44,7 @@ namespace fv
         ici.flags = 0;
         ici.imageType = VK_IMAGE_TYPE_2D;
         ici.format = format;
-        ici.extent = { width, width, 1 };
+        ici.extent = { width, height, 1 };
         ici.mipLevels = mipLevels;
         ici.arrayLayers = layers;
         ici.samples = (VkSampleCountFlagBits)samples;
@@ -59,7 +59,7 @@ namespace fv
         allocInfo.usage = vmaUsage;
         if ( vmaCreateImage(device.allocator, &ici, &allocInfo, &ia.image, &ia.allocation, nullptr) != VK_SUCCESS )
         {
-            LOGW("VK Failed buffer allocation");
+            LOGW("VK Failed image allocation");
             return false;
         }
         ia.allocator = device.allocator;

@@ -1,6 +1,8 @@
 #pragma once
 #include "../Core/Common.h"
 #if FV_VULKAN
+#include "IncVulkan.h"
+#include "../3rdParty/VulkanAllocator/vk_mem_alloc.h"
 
 namespace fv
 {
