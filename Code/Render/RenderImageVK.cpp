@@ -13,7 +13,7 @@ namespace fv
         if ( imageAlloc.allocation ) MemoryHelperVK::freeImage( imageAlloc ); /* If has swap chain, images are from not set up. */
         vkDestroyImageView( device->logical, imgView, nullptr );
         vkDestroyFramebuffer( device->logical, frameBuffer, nullptr );
-        vkFreeCommandBuffers( device->logical, device->commandPool, (u32)commandBuffers.size(), commandBuffers.data() );
+        vkFreeCommandBuffers( device->logical, device->graphicsPool, (u32)commandBuffers.size(), commandBuffers.data() );
     }
 
     bool RenderImageVK::createImage(const struct RenderConfig& rc)

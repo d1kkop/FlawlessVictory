@@ -185,11 +185,11 @@ namespace fv
             auto& ri = dv->renderImages[imageIndex];
             for ( auto& cb : ri.commandBuffers ) cbs.emplace_back( cb );
             dv->singleTimeCmdsMutex.lock();
-            if ( dv->singleTimeCmds.size() )
-            {
-     //           for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
-   //            dv->singleTimeCmds.clear();
-            }
+            //if ( dv->singleTimeCmds.size() )
+            //{
+            //    for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
+            //    dv->singleTimeCmds.clear();
+            //}
             dv->singleTimeCmdsMutex.unlock();
 
             //submitInfo.commandBufferCount = (u32)ri.commandBuffers.size();
@@ -217,7 +217,7 @@ namespace fv
         }
 
         // Device indepentent variables
-        m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
+  //      m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
         m_CurrentDrawImage = (m_CurrentDrawImage + 1) % m_RenderConfig.numImages;
     }
 

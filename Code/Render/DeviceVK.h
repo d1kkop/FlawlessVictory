@@ -34,6 +34,7 @@ namespace fv
         bool createFrameSyncObjects(const struct RenderConfig& rc);
         void addFrameCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb);
         FV_TS VkCommandBuffer addSingleTimeCmd(const Function<void (VkCommandBuffer)>& recordCb);
+        FV_TS void addSingleTimeCmd2(const Function<void (VkCommandBuffer)>& recordCb);
         FV_TS bool getOrCreatePipeline(const struct SubmeshInput& sinput, const struct MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut);
 
         FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, u32 mipLevels, u32 layers, u32 samples,
@@ -57,7 +58,8 @@ namespace fv
         VkPhysicalDeviceMemoryProperties memProperties;
         VkPhysicalDeviceFeatures features;
         QueueFamilyIndicesVK queueIndices;
-        VkCommandPool commandPool;
+        VkCommandPool graphicsPool;
+        VkCommandPool transferPool;
         VkExtent2D extent;
         VkFormat format;
         VkShaderModule standardFrag;

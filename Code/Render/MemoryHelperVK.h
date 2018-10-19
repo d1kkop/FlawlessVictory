@@ -26,7 +26,7 @@ namespace fv
     public:
         static bool createBuffer(const struct DeviceVK& device, u32 size,
                                  VkBufferUsageFlagBits usage, VmaMemoryUsage vmaUsage, VkMemoryAllocateFlags flags,
-                                 bool shareInQueue, u32 queueIdx, BufferVK& buffAllocation, void** pMapped=nullptr);
+                                 bool shareInQueue, const u32* queueIdxs, u32 numQueueIdxs, BufferVK& buffAllocation, void** pMapped=nullptr);
         static bool createImage(const struct DeviceVK& device, u32 width, u32 height, VkFormat format,
                                 u32 mipLevels, u32 layers, u32 samples, bool shareInQueues, u32 queueIdx,
                                 VkImageUsageFlagBits usage, VmaMemoryUsage vmaUsage, ImageVK& buffAllocation);

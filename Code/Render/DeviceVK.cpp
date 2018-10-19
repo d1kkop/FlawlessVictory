@@ -26,7 +26,8 @@ namespace fv
         vkDestroyRenderPass( logical, clearPass, nullptr );
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
-        vkDestroyCommandPool( logical, commandPool, nullptr );
+        vkDestroyCommandPool( logical, graphicsPool, nullptr );
+        vkDestroyCommandPool( logical, transferPool, nullptr );
         if ( stagingBuffer ) 
         {
             MemoryHelperVK::freeBuffer( *stagingBuffer );
@@ -93,8 +94,9 @@ namespace fv
 
     bool DeviceVK::createCommandPools()
     {
-        assert( logical && queueIndices.graphics && commandPool==nullptr );
-        if ( !HelperVK::createCommandPool(logical, queueIndices.graphics.value(), commandPool) )
+        assert( logical && queueIndices.graphics && graphicsPool==nullptr );
+        if ( !HelperVK::createCommandPool(logical, queueIndices.graphics.value(), graphicsPool) ||
+             !HelperVK::createCommandPool(logical, queueIndices.transfer.value(), transferPool) )
         {
             return false;
         }
@@ -108,8 +110,10 @@ namespace fv
         VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT );
         VmaMemoryUsage vmaUsage = (VmaMemoryUsage) ( VMA_MEMORY_USAGE_CPU_TO_GPU );
         VmaAllocationCreateFlags vmaFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-        if ( !MemoryHelperVK::createBuffer(*this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, vmaFlags, false,
-                                           queueIndices.graphics.value(), *stagingBuffer, &stagingMemory) )
+        // TODO
+        u32 queuIndices [] = { queueIndices.graphics.value(), queueIndices.transfer.value() };
+        if ( !MemoryHelperVK::createBuffer(*this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, vmaFlags, true /* TODO use in multiple queues? */,
+                                           queuIndices, 2, *stagingBuffer, &stagingMemory) )
         {
             delete stagingBuffer;
             stagingBuffer = nullptr;
@@ -275,11 +279,11 @@ namespace fv
 
     void DeviceVK::addFrameCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
     {
-        assert( logical && commandPool );
+        assert( logical && graphicsPool );
         for ( auto& ri : renderImages )
         {
             VkCommandBuffer cb;
-            HelperVK::allocCommandBuffer(logical, commandPool, cb);
+            HelperVK::allocCommandBuffer(logical, graphicsPool, cb);
             ri.commandBuffers.emplace_back( cb );
             HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
             recordCb( cb, ri );
@@ -290,13 +294,34 @@ namespace fv
     VkCommandBuffer DeviceVK::addSingleTimeCmd(const Function<void (VkCommandBuffer)>& recordCb)
     {
         VkCommandBuffer cb;
-        HelperVK::allocCommandBuffer(logical, commandPool, cb);
+        HelperVK::allocCommandBuffer(logical, graphicsPool, cb);
         HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
         recordCb(cb);
         HelperVK::stopRecordCommandBuffer(cb);
         scoped_lock lk(singleTimeCmdsMutex);
         singleTimeCmds.emplace_back( cb );
         return cb;
+    }
+
+    void DeviceVK::addSingleTimeCmd2(const Function<void (VkCommandBuffer)>& recordCb)
+    {
+        VkCommandBuffer cb;
+        HelperVK::allocCommandBuffer(logical, transferPool, cb);
+        HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
+        recordCb(cb);
+        HelperVK::stopRecordCommandBuffer(cb);
+        VkFenceCreateInfo fCreateInfo = {};
+        fCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        VkFence fence;
+        vkCreateFence( logical, &fCreateInfo, nullptr, &fence );
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pCommandBuffers = &cb;
+        submitInfo.commandBufferCount = 1;
+        vkQueueSubmit( transferQueue, 1, &submitInfo, fence );
+        vkWaitForFences( logical, 1, &fence, VK_TRUE, -1 );
+        vkFreeCommandBuffers( logical, transferPool, 1, &cb );
+        vkDestroyFence( logical, fence, nullptr );
     }
 
     RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size,
@@ -395,7 +420,9 @@ namespace fv
         VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT );
         VmaMemoryUsage vmaUsage = (VmaMemoryUsage) VMA_MEMORY_USAGE_GPU_ONLY;
         VkMemoryAllocateFlags vmaFlags = 0;
-        if ( !MemoryHelperVK::createBuffer( *this, bufferSize, vkUsage, vmaUsage, vmaFlags, false, queueIndices.graphics.value(), deviceVertexBuffer ) )
+        // TODO
+        u32 queuIndices [] = { queueIndices.graphics.value(), queueIndices.transfer.value() };
+        if ( !MemoryHelperVK::createBuffer( *this, bufferSize, vkUsage, vmaUsage, vmaFlags, true, queuIndices, 2, deviceVertexBuffer ) )
         {
             delete [] vertexBuffer;
             return {};
@@ -430,7 +457,7 @@ namespace fv
         BufferVK buff;
         memcpy( &buff, &submesh.resources, sizeof(BufferVK) );
         MemoryHelperVK::freeBuffer( buff );
-        HelperVK::freeCommandBuffers( logical, commandPool, (VkCommandBuffer*) &submesh.resources[3], 1 );
+        HelperVK::freeCommandBuffers( logical, graphicsPool, (VkCommandBuffer*) &submesh.resources[3], 1 );
         scoped_lock lk(submeshMutex);
         if ( removeFromList ) RemoveMemCmp( submeshes, submesh );
     }

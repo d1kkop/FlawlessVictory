@@ -10,14 +10,15 @@ namespace fv
 {
     bool MemoryHelperVK::createBuffer(const struct DeviceVK& device, u32 size, 
                                       VkBufferUsageFlagBits usage, VmaMemoryUsage vmaUsage, VkMemoryAllocateFlags flags,
-                                      bool shareInQueues, u32 queueIdx, BufferVK& ba, void** pMapped)
+                                      bool shareInQueues, const u32* queueIdxs, u32 numQueueIdxs, BufferVK& ba, void** pMapped)
     {
+        assert( queueIdxs && numQueueIdxs >= 1 && size != 0 );
         VkBufferCreateInfo bufferInfo {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
         bufferInfo.usage = usage;
-        bufferInfo.pQueueFamilyIndices = (uint32_t*) &queueIdx;
-        bufferInfo.queueFamilyIndexCount = 1;
+        bufferInfo.pQueueFamilyIndices = (const uint32_t*) queueIdxs;
+        bufferInfo.queueFamilyIndexCount = numQueueIdxs;
         bufferInfo.sharingMode = shareInQueues ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
         VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = vmaUsage;
@@ -80,7 +81,7 @@ namespace fv
     {
         assert( device.stagingBuffer && device.stagingMemory );
         memcpy( device.stagingMemory, memory, size );
-        vmaFlushAllocation( device.allocator, device.stagingBuffer->allocation, 0, size );
+        // vmaFlushAllocation( device.allocator, device.stagingBuffer->allocation, 0, size );
     }
 
     VkCommandBuffer MemoryHelperVK::copyBuffer(struct DeviceVK& device, BufferVK& dst, const BufferVK& src)
@@ -90,10 +91,31 @@ namespace fv
         HelperVK::startRecordCommandBuffer(device.logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
 */
         //vkCmdUpdateBuffer( 
-        VkCommandBuffer cb = device.addSingleTimeCmd( [&](VkCommandBuffer cb)
+        // VkCommandBuffer cb = device.addSingleTimeCmd( [&](VkCommandBuffer cb)
+        device.addSingleTimeCmd2( [&](VkCommandBuffer cb)
         {
             VkBufferCopy copyRegion = {};
             copyRegion.size = src.size;
+            VkBufferMemoryBarrier bm = {};
+            bm.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            bm.buffer = dst.buffer;
+            bm.size = dst.size;
+            bm.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+            bm.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT;
+            bm.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            bm.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            VkBufferMemoryBarrier bm2 = {};
+            bm2.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            bm2.buffer = src.buffer;
+            bm2.size = src.size;
+            bm2.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+            bm2.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT;
+            bm2.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            bm2.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            VkBufferMemoryBarrier bms [] = { bm, bm2 };
+            vkCmdPipelineBarrier(cb, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0,
+                                 nullptr, 2, bms, 0, nullptr );
+
             vkCmdCopyBuffer(cb, src.buffer, dst.buffer, 1, &copyRegion);
         });
 
@@ -109,7 +131,7 @@ namespace fv
 
         //HelperVK::freeCommandBuffers(device.logical, device.commandPool, &cb, 1);
 
-        return cb;
+        return nullptr;
     }
 
     VkCommandBuffer MemoryHelperVK::copyToDevice(struct DeviceVK& device, BufferVK& dst, const void* src, u32 size)
