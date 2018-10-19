@@ -33,8 +33,8 @@ namespace fv
         static void freeBuffer(const BufferVK& buffAllocation);
         static void freeImage(const ImageVK& imgAllocation);
         static void copyToStagingBuffer( const struct DeviceVK& device, const void* memory, u32 size );
-        static void copyBuffer( struct DeviceVK& device, BufferVK& dst, const BufferVK& src );
-        FV_TS static void copyToDevice( struct DeviceVK& device, BufferVK&  dst, const void* src, u32 size );
+        static VkCommandBuffer copyBuffer( struct DeviceVK& device, BufferVK& dst, const BufferVK& src );
+        FV_TS static VkCommandBuffer copyToDevice( struct DeviceVK& device, BufferVK&  dst, const void* src, u32 size );
 
     private:
         static Mutex m_CopyToDeviceMtx;

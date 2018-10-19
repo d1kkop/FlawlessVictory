@@ -91,6 +91,7 @@ namespace fv
                 {
                     renderManager()->deleteSubmesh( gsm );
                 }
+                renderManager()->deleteSubmesh( graphicSubmesh );
                 return;
             }
             graphicSubmeshes.emplace_back( graphicSubmesh );

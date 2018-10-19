@@ -187,7 +187,7 @@ namespace fv
             dv->singleTimeCmdsMutex.lock();
             if ( dv->singleTimeCmds.size() )
             {
-       //         for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
+      //          for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
       //          dv->singleTimeCmds.clear();
             }
             dv->singleTimeCmdsMutex.unlock();
@@ -217,7 +217,7 @@ namespace fv
         }
 
         // Device indepentent variables
-        m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
+ //       m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
         m_CurrentDrawImage = (m_CurrentDrawImage + 1) % m_RenderConfig.numImages;
     }
 

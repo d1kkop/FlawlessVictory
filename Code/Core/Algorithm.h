@@ -28,14 +28,29 @@ namespace fv
     }
 
     template <class Container, class Value>
+    bool RemoveMemCmp(Container& c, Value& v)
+    {
+        auto it = Find_if(c, [&](auto& e)
+        {
+            return memcmp(&e, &v, sizeof(Value))==0;
+        });
+        if ( it != c.end() )
+        {
+            c.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    template <class Container, class Value>
     bool Contains(const Container& c, const Value& v)
     {
-        return Find_if ( c, [v](auto& cl) { return v==cl; } ) != c.end();
+        return Find_if ( c, [&](auto& cl) { return v==cl; } ) != c.end();
     }
 
     template <class Container, class Value>
     void Remove(Container& c, const Value& v)
     {
-        Remove_if( c, [v](auto& cl) { return v==cl; });
+        Remove_if( c, [&](auto& cl) { return v==cl; });
     }
 }

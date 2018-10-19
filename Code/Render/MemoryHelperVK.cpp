@@ -83,13 +83,13 @@ namespace fv
         vmaFlushAllocation( device.allocator, device.stagingBuffer->allocation, 0, size );
     }
 
-    void MemoryHelperVK::copyBuffer(struct DeviceVK& device, BufferVK& dst, const BufferVK& src)
+    VkCommandBuffer MemoryHelperVK::copyBuffer(struct DeviceVK& device, BufferVK& dst, const BufferVK& src)
     {
         /*VkCommandBuffer cb;
         HelperVK::allocCommandBuffer(device.logical, device.commandPool, cb);
         HelperVK::startRecordCommandBuffer(device.logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
 */
-        device.addSingleTimeCmd( [&](VkCommandBuffer cb)
+        VkCommandBuffer cb = device.addSingleTimeCmd( [&](VkCommandBuffer cb)
         {
             VkBufferCopy copyRegion = {};
             copyRegion.size = src.size;
@@ -107,14 +107,16 @@ namespace fv
         //FV_VKCALL( vkQueueWaitIdle(device.graphicsQueue) );
 
         //HelperVK::freeCommandBuffers(device.logical, device.commandPool, &cb, 1);
+
+        return cb;
     }
 
-    void MemoryHelperVK::copyToDevice(struct DeviceVK& device, BufferVK& dst, const void* src, u32 size)
+    VkCommandBuffer MemoryHelperVK::copyToDevice(struct DeviceVK& device, BufferVK& dst, const void* src, u32 size)
     {
         assert( size == dst.size );
         scoped_lock lk(m_CopyToDeviceMtx);
         copyToStagingBuffer( device, src, size );
-        copyBuffer( device, dst, *device.stagingBuffer );
+        return copyBuffer( device, dst, *device.stagingBuffer );
     }
 
     Mutex MemoryHelperVK::m_CopyToDeviceMtx;

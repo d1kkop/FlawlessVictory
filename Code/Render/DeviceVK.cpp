@@ -282,13 +282,12 @@ namespace fv
             HelperVK::allocCommandBuffer(logical, commandPool, cb);
             ri.commandBuffers.emplace_back( cb );
             HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
-            // Record actual command buffer by using a callback
             recordCb( cb, ri );
             HelperVK::stopRecordCommandBuffer(cb);
         }
     }
 
-    void DeviceVK::addSingleTimeCmd(const Function<void (VkCommandBuffer)>& recordCb)
+    VkCommandBuffer DeviceVK::addSingleTimeCmd(const Function<void (VkCommandBuffer)>& recordCb)
     {
         VkCommandBuffer cb;
         HelperVK::allocCommandBuffer(logical, commandPool, cb);
@@ -297,6 +296,7 @@ namespace fv
         HelperVK::stopRecordCommandBuffer(cb);
         scoped_lock lk(singleTimeCmdsMutex);
         singleTimeCmds.emplace_back( cb );
+        return cb;
     }
 
     RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size,
@@ -400,13 +400,16 @@ namespace fv
             delete [] vertexBuffer;
             return {};
         }
-        MemoryHelperVK::copyToDevice( *this, deviceVertexBuffer, vertexBuffer, bufferSize );
+        VkCommandBuffer cb = MemoryHelperVK::copyToDevice( *this, deviceVertexBuffer, vertexBuffer, bufferSize );
         delete [] vertexBuffer;
         RSubmesh rSubmes;
         rSubmes.device = idx;
-        rSubmes.resources[0] = deviceVertexBuffer.allocation;
-        rSubmes.resources[1] = deviceVertexBuffer.allocator;
-        rSubmes.resources[2] = deviceVertexBuffer.buffer;
+        rSubmes.resources[0] = deviceVertexBuffer.buffer;
+        rSubmes.resources[1] = deviceVertexBuffer.allocation;
+        rSubmes.resources[2] = deviceVertexBuffer.allocator;
+        rSubmes.resources[3] = cb;
+        scoped_lock lk(submeshMutex);
+        submeshes.emplace_back(rSubmes);
         return rSubmes;
     }
 
@@ -414,25 +417,23 @@ namespace fv
     {
         MemoryHelperVK::freeImage( *(ImageVK*) &tex2d.resources );
         scoped_lock lk(tex2dMutex);
-        Remove_if ( textures2d, [&](auto& t)
-        {
-            return memcmp( &t, &tex2d, sizeof(t) )==0;
-        });
+        RemoveMemCmp( textures2d, tex2d );
     }
 
     void DeviceVK::deleteShader(RShader shader)
     {
         vkDestroyShaderModule( logical, (VkShaderModule) shader.resources[0], nullptr );
         scoped_lock lk(shaderMutex);
-        Remove_if (shaders, [&](auto& s)
-        {
-            return memcmp( &s, &shader, sizeof(s) )==0;
-        });
+        RemoveMemCmp( shaders, shader );
     }
 
     void DeviceVK::deleteSubmesh(RSubmesh submesh)
     {
-        assert(false);
+        BufferVK buff = { (VkBuffer) submesh.resources[0], (VmaAllocation) submesh.resources[1], (VmaAllocator) submesh.resources[2] };
+        MemoryHelperVK::freeBuffer( buff );
+        HelperVK::freeCommandBuffers( logical, commandPool, (VkCommandBuffer*) &submesh.resources[3], 1 );
+        scoped_lock lk(submeshMutex);
+        RemoveMemCmp( submeshes, submesh );
     }
 
 }
