@@ -39,10 +39,10 @@ namespace fv
         FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, u32 mipLevels, u32 layers, u32 samples,
                                          ImageFormat format, VkImageUsageFlagBits imageUsageBits, VmaMemoryUsage memoryUsage);
         FV_TS RShader createShader(const char* data, u32 size);
-        FV_TS RSubmesh createInterleavedSubmesh(const Submesh& submesh, const SubmeshInput& si);
-        FV_TS void deleteTexture2D(RTexture2D tex2d);
-        FV_TS void deleteShader(RShader shader);
-        FV_TS void deleteSubmesh(RSubmesh submesh);
+        FV_TS RSubmesh createSubmesh(const Submesh& submesh, const SubmeshInput& si);
+        FV_TS void deleteTexture2D(RTexture2D tex2d, bool removeFromList);
+        FV_TS void deleteShader(RShader shader, bool removeFromList);
+        FV_TS void deleteSubmesh(RSubmesh submesh, bool removeFromList);
 
         u32 idx;
         VkInstance instance;

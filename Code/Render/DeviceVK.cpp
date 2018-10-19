@@ -18,9 +18,9 @@ namespace fv
         delete swapChain; swapChain = nullptr;
         for ( auto& ri : renderImages ) ri.release();
         for ( auto& fo : frameSyncObjects) fo.release();
-        for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d );
-        for ( auto& shad: shaders) deleteShader( shad );
-        for ( auto& subm : submeshes ) deleteSubmesh( subm );
+        for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d, false );
+        for ( auto& shad: shaders) deleteShader( shad, false );
+        for ( auto& subm : submeshes) deleteSubmesh( subm, false );
         for ( auto& kvp : pipelines ) kvp.second.release();
         // clearPipeline.release(); // No need, is in map of pipelines 
         vkDestroyRenderPass( logical, clearPass, nullptr );
@@ -328,7 +328,7 @@ namespace fv
         return dr;
     }
 
-    RSubmesh DeviceVK::createInterleavedSubmesh(const Submesh& submesh, const SubmeshInput& si)
+    RSubmesh DeviceVK::createSubmesh(const Submesh& submesh, const SubmeshInput& si)
     {
         u32 vCount = submesh.getVertexCount();
         if ( vCount == 0 || submesh.indices.size()== 0 )
@@ -336,7 +336,7 @@ namespace fv
             LOGW("VK Failed to create submesh as submesh contains no indices or vertices.");
             return {};
         }
-        u32 numComponents  = si.computeNumComponents();
+        u32 numComponents = si.computeNumComponents();
         u32 bufferSize = numComponents * 4 * vCount;
         if ( bufferSize > STAGING_BUFFER_SIZE )
         {
@@ -404,36 +404,35 @@ namespace fv
         delete [] vertexBuffer;
         RSubmesh rSubmes;
         rSubmes.device = idx;
-        rSubmes.resources[0] = deviceVertexBuffer.buffer;
-        rSubmes.resources[1] = deviceVertexBuffer.allocation;
-        rSubmes.resources[2] = deviceVertexBuffer.allocator;
+        memcpy( &rSubmes.resources, &deviceVertexBuffer, sizeof(BufferVK) );
         rSubmes.resources[3] = cb;
         scoped_lock lk(submeshMutex);
         submeshes.emplace_back(rSubmes);
         return rSubmes;
     }
 
-    void DeviceVK::deleteTexture2D(RTexture2D tex2d)
+    void DeviceVK::deleteTexture2D(RTexture2D tex2d, bool removeFromList)
     {
         MemoryHelperVK::freeImage( *(ImageVK*) &tex2d.resources );
         scoped_lock lk(tex2dMutex);
-        RemoveMemCmp( textures2d, tex2d );
+        if ( removeFromList ) RemoveMemCmp( textures2d, tex2d );
     }
 
-    void DeviceVK::deleteShader(RShader shader)
+    void DeviceVK::deleteShader(RShader shader, bool removeFromList)
     {
         vkDestroyShaderModule( logical, (VkShaderModule) shader.resources[0], nullptr );
         scoped_lock lk(shaderMutex);
-        RemoveMemCmp( shaders, shader );
+        if ( removeFromList ) RemoveMemCmp( shaders, shader );
     }
 
-    void DeviceVK::deleteSubmesh(RSubmesh submesh)
+    void DeviceVK::deleteSubmesh(RSubmesh submesh, bool removeFromList)
     {
-        BufferVK buff = { (VkBuffer) submesh.resources[0], (VmaAllocation) submesh.resources[1], (VmaAllocator) submesh.resources[2] };
+        BufferVK buff;
+        memcpy( &buff, &submesh.resources, sizeof(BufferVK) );
         MemoryHelperVK::freeBuffer( buff );
         HelperVK::freeCommandBuffers( logical, commandPool, (VkCommandBuffer*) &submesh.resources[3], 1 );
         scoped_lock lk(submeshMutex);
-        RemoveMemCmp( submeshes, submesh );
+        if ( removeFromList ) RemoveMemCmp( submeshes, submesh );
     }
 
 }

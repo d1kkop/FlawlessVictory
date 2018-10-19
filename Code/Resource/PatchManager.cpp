@@ -13,7 +13,6 @@ namespace fv
     Patch* PatchManager::createPatch(PatchType type)
     {
         Patch* p = m_PatchPool.newObject();
-        memset(p, 0, sizeof(*p));
         p->patchType = type;
         return p;
     }

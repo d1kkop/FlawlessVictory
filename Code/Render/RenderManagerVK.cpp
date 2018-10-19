@@ -187,8 +187,8 @@ namespace fv
             dv->singleTimeCmdsMutex.lock();
             if ( dv->singleTimeCmds.size() )
             {
-      //          for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
-      //          dv->singleTimeCmds.clear();
+     //           for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
+   //            dv->singleTimeCmds.clear();
             }
             dv->singleTimeCmdsMutex.unlock();
 
@@ -217,7 +217,7 @@ namespace fv
         }
 
         // Device indepentent variables
- //       m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
+        m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
         m_CurrentDrawImage = (m_CurrentDrawImage + 1) % m_RenderConfig.numImages;
     }
 
@@ -327,25 +327,25 @@ namespace fv
 
     RSubmesh RenderManagerVK::createSubmesh(u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si)
     {
-        return m_Devices[deviceIdx]->createInterleavedSubmesh( submesh, si );
+        return m_Devices[deviceIdx]->createSubmesh( submesh, si );
     }
 
     void RenderManagerVK::deleteTexture2D(RTexture2D tex2d)
     {
         if ( tex2d.device == -1 ) return;
-        m_Devices[tex2d.device]->deleteTexture2D( tex2d );
+        m_Devices[tex2d.device]->deleteTexture2D( tex2d, true );
     }
 
     void RenderManagerVK::deleteShader(RShader shader)
     {
         if ( shader.device == -1 ) return;
-        m_Devices[shader.device]->deleteShader(shader);
+        m_Devices[shader.device]->deleteShader( shader, true );
     }
 
     void RenderManagerVK::deleteSubmesh(RSubmesh submesh)
     {
         if ( submesh.device == -1 ) return;
-        m_Devices[submesh.device]->deleteSubmesh(submesh);
+        m_Devices[submesh.device]->deleteSubmesh( submesh, true );
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

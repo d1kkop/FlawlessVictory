@@ -24,7 +24,7 @@ namespace fv
     struct DeviceResource
     {
         u32 device = (u32)-1;
-        void* resources[6]{};
+        void* resources[4]{};
     };
 
     using RSubmesh = DeviceResource;

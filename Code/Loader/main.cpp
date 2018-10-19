@@ -21,8 +21,8 @@ void shutdown()
 {
     SetEngineClosing();
     // delete all managers
-    deleteJobManager();      
     deleteResourceManager();
+    deleteJobManager();
     deletePatchManager();
     // Delete components and game object manager so that refcount of resources is deduced.
     deleteComponentManager();

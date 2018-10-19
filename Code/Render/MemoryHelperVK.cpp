@@ -89,6 +89,7 @@ namespace fv
         HelperVK::allocCommandBuffer(device.logical, device.commandPool, cb);
         HelperVK::startRecordCommandBuffer(device.logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
 */
+        //vkCmdUpdateBuffer( 
         VkCommandBuffer cb = device.addSingleTimeCmd( [&](VkCommandBuffer cb)
         {
             VkBufferCopy copyRegion = {};

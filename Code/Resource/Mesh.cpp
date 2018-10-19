@@ -84,7 +84,7 @@ namespace fv
             si.bones = sm.weights.size() && sm.boneIndices.size();
 
             RSubmesh graphicSubmesh = renderManager()->createSubmesh( devIdx, sm, si );
-            if ( graphicSubmesh.device != -1 )
+            if ( graphicSubmesh.device == -1 )
             {
                 LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
                 for ( auto& gsm : graphicSubmeshes )
