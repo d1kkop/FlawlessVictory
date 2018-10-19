@@ -23,7 +23,7 @@ namespace fv
 
     void ResourceManager::cleanupResourcesWithoutReferences()
     {
-        scoped_lock cl(m_ResourcesNotCopiedMutex);
+        scoped_lock cl(m_ResourcesNotCopiedMutex); // Ensure reources are not copied during this check as otherwise the refcount is never 1.
         scoped_lock lk(m_NameToResourceMutex);
         for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); )
         {
@@ -178,7 +178,7 @@ namespace fv
                 if ( rsi.path.empty() ) continue; // Skip not found resources
                 u64 diskFiletime   = FileModifiedTime( rsi.path.string().c_str() );
                 u64 cachedFiletime = getAndUpdateCachedFiletime( rsi.path.filename().string(), diskFiletime, fileTimesWereUpdated );
-                bool reimport = ( diskFiletime != cachedFiletime || cachedFiletime == -1);
+                bool reimport = ( diskFiletime != cachedFiletime || cachedFiletime == -1 );
                 if ( reimport || !rsi.loaded )
                 {
                     ResourceToLoad rtl = { rsi.resource, rsi.path, reimport };
