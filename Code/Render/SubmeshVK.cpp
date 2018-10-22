@@ -33,4 +33,14 @@ namespace fv
         return s;
     }
 
+    void SubmeshVK::recordDraw(VkCommandBuffer cb)
+    {
+        assert( cb );
+        VkBuffer vBuffers [] = { m_VertexBuffer.buffer() };
+        VkDeviceSize offsets [] = {0};
+        vkCmdBindVertexBuffers( cb, 0, 1, vBuffers, offsets );
+        vkCmdBindIndexBuffer( cb, m_IndexBuffer.buffer(), offsets[0], VK_INDEX_TYPE_UINT32 );
+        vkCmdDrawIndexed( cb, m_IndexBuffer.size()>>2, 1, 0, 0, 0 );
+    }
+
 }

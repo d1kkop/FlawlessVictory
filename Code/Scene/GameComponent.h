@@ -21,10 +21,11 @@ namespace fv
         virtual void updateMT(float dt) { }
         virtual void physicsUpdateMT(float dt) { }
         virtual void networkUpdateMT(float dt) { }
+        virtual void cullMT() { }
+        virtual void drawMT() { }
 
     protected:
         bool m_HasBegun = false;
-        bool m_DoUpdate = false;
         i32  m_UpdatePriority = 0;
 
     private:

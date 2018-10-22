@@ -15,7 +15,6 @@ namespace fv
 
         SceneComponent()
         {
-            m_DoUpdate = true;
             m_UpdatePriority = FV_SCENECOMPONENT_PRIORITY;
         }
 

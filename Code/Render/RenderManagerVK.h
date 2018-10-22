@@ -29,6 +29,7 @@ namespace fv
         bool createDevices(VkSurfaceKHR mainSurface);
         u32 numDevices() const override { return (u32) m_Devices.size(); }
         u32 autoDeviceIdx() override;
+        void drawWorld();
 
         FV_TS RTexture2D createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
                                          u32 mipLevels, u32 layers, u32 samples, ImageFormat format) override;

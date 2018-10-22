@@ -12,7 +12,7 @@ namespace fv
         m_Components.clear();
     }
 
-    FV_MO GameComponent* GameObject::addComponent(u32 type)
+    GameComponent* GameObject::addComponent(u32 type)
     {
         FV_CHECK_MO();
         GameComponent* c = getComponent(type);
@@ -31,7 +31,7 @@ namespace fv
         return c;
     }
 
-    FV_MO GameComponent* GameObject::getComponent(u32 type)
+    GameComponent* GameObject::getComponent(u32 type)
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find( type );
@@ -42,13 +42,13 @@ namespace fv
         return nullptr;
     }
 
-    FV_MO bool GameObject::hasComponent(u32 type)
+    bool GameObject::hasComponent(u32 type)
     {
         FV_CHECK_MO();
         return m_Components.count(type)!=0;
     }
 
-    FV_MO bool GameObject::removeComponent(u32 type)
+    bool GameObject::removeComponent(u32 type)
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find(type);
@@ -59,6 +59,16 @@ namespace fv
             return true;
         }
         return false;
+    }
+
+    void GameObject::removeAllComponents()
+    {
+        FV_CHECK_MO();
+        for ( auto& kvp : m_Components )
+        {
+            componentManager()->freeComponent( kvp.second );
+        }
+        m_Components.clear();
     }
 
     u32 GameObject::numComponents()
@@ -78,4 +88,13 @@ namespace fv
         if ( addSceneComponent ) go->addComponent<SceneComponent>();
         return go;
     }
+
+    void DestroyGameObject(GameObject* go)
+    {
+        FV_CHECK_MO();
+        if ( !go ) return;
+        go->removeAllComponents();
+        gameObjectManager()->freeObject( go );
+    }
+
 }

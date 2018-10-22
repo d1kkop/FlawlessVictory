@@ -10,9 +10,10 @@ namespace fv
         ~SubmeshVK();
         void deleteSelf();
         static SubmeshVK* create( struct DeviceVK& device, const void* vertices, u32 vertexBufferSize, const u32* indices, u32 indexBufferSize );
+        void recordDraw(VkCommandBuffer cb);
+        struct DeviceVK* device() const { return m_VertexBuffer.device(); }
         const BufferVK& vertexBuffer() const { return m_VertexBuffer; }
         const BufferVK& indexBuffer() const { return m_IndexBuffer; }
-        struct DeviceVK* device() const { return m_VertexBuffer.device(); }
 
     private:
         BufferVK m_VertexBuffer;

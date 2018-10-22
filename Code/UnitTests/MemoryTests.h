@@ -37,7 +37,6 @@ class TestUpdComponent: public TestComponent
 public:
     TestUpdComponent()
     {
-        m_DoUpdate = true;
     }
 
     ~TestUpdComponent() override { }

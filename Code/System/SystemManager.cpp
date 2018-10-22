@@ -73,30 +73,10 @@ namespace fv
             if (!inputManager()->update())
                 break;
 
-            // Deform all components by type into a single list of arrays_of_components sorted by update priority.
-            Map<u32, Vector<ComponentArray>>& allComponents = componentManager()->components();
-            m_SortedListOfComponentArrays.clear();
-            for ( auto& kvp : allComponents )
-            {
-                Vector<ComponentArray>& compArrayList = kvp.second;
-                for ( auto& compArray : compArrayList )
-                {
-                    if ( compArray.size > 0 && ((GameComponent&)compArray.elements[0]).m_DoUpdate )
-                    {
-                        m_SortedListOfComponentArrays.emplace_back( compArray );
-                    }
-                }
-            }
-
-            // Deformed, now sort it.
-            Sort(m_SortedListOfComponentArrays, [](const ComponentArray& a, const ComponentArray& b)
-            {
-                assert( a.size && b.size );
-                return ((GameComponent&)a.elements[0]).m_UpdatePriority < ((GameComponent&)b.elements[0]).m_UpdatePriority;
-            });
+            prepareSortListFor( componentManager()->updateComponents(), m_SortedUpdatables );
 
             // Call begin (Single threaded).
-            ComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+            ComponentFor<GameComponent>( m_SortedUpdatables, [](GameComponent& gc)
             {
                 if ( !gc.m_HasBegun )
                 {
@@ -109,7 +89,8 @@ namespace fv
             if ( Time::elapsed() - lastNetworkUpdate )
             {
                 lastNetworkUpdate = Time::elapsed();
-                ParallelComponentFor<GameComponent>( m_SortedListOfComponentArrays, []( GameComponent& gc)
+                prepareSortListFor( componentManager()->networkComponents(), m_SortedOthers );
+                ParallelComponentFor<GameComponent>( m_SortedOthers, []( GameComponent& gc)
                 {
                     gc.networkUpdateMT( Time::networkDt() );
                 });
@@ -119,25 +100,40 @@ namespace fv
             if ( Time::elapsed() - lastPhysicsUpdate )
             {
                 lastPhysicsUpdate = Time::elapsed();
-                ParallelComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+                prepareSortListFor( componentManager()->physicsComponents(), m_SortedOthers );
+                ParallelComponentFor<GameComponent>( m_SortedOthers, [](GameComponent& gc)
                 {
                     gc.physicsUpdateMT(Time::physicsDt());
                 });
             }
 
             // Call MT update on components
-            ParallelComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+            ParallelComponentFor<GameComponent>( m_SortedUpdatables, [](GameComponent& gc)
             {
                 gc.updateMT( Time::networkDt() );
             });
 
             // Call ST update on components
-            ComponentFor<GameComponent>( m_SortedListOfComponentArrays, [](GameComponent& gc)
+            ComponentFor<GameComponent>( m_SortedUpdatables, [](GameComponent& gc)
             {
                 gc.update( Time::dt() );
             });
 
-            renderManager()->drawFrame();
+
+            // -- Rendering --
+            prepareSortListFor( componentManager()->drawComponents(), m_SortedOthers );
+
+            // Cull
+            ParallelComponentFor<GameComponent>(m_SortedOthers, [](GameComponent& gc)
+            {
+                gc.cullMT();
+            });
+
+            // Draw
+            ParallelComponentFor<GameComponent>(m_SortedOthers, [](GameComponent& gc)
+            {
+                gc.drawMT();
+            });
 
             // Update timings
             TimeUpdate();
@@ -146,6 +142,27 @@ namespace fv
         renderManager()->waitOnDeviceIdle();
     }
 
+
+    void SystemManager::prepareSortListFor(Map<u32, Vector<ComponentArray>>& components, Vector<ComponentArray>& sortedList)
+    {
+        sortedList.clear();
+        for ( auto& kvp : components )
+        {
+            Vector<ComponentArray>& compArrayList = kvp.second;
+            for ( auto& compArray : compArrayList )
+            {
+                if ( compArray.size > 0 )
+                {
+                    sortedList.emplace_back(compArray);
+                }
+            }
+        }
+        Sort(sortedList, [](const ComponentArray& a, const ComponentArray& b)
+        {
+            assert(a.size && b.size);
+            return ((GameComponent&)a.elements[0]).m_UpdatePriority < ((GameComponent&)b.elements[0]).m_UpdatePriority;
+        });
+    }
 
     SystemManager* g_SystemManager {};
     SystemManager* systemManager() { return CreateOnce(g_SystemManager); }

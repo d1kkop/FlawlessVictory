@@ -50,6 +50,11 @@ namespace fv
             auto& comps = m_Components[type];
             ComponentArray ca = { newComps, m_ComponentBufferSize, ti->size };
             comps.emplace_back( ca ); 
+            // check base types
+            if ( ti->flags & FV_UPDATE ) m_UpdateComponents[type].emplace_back( ca );
+            if ( ti->flags & FV_PHYSICS ) m_PhysicsComponents[type].emplace_back( ca );
+            if ( ti->flags & FV_NETWORK ) m_NetworkComponents[type].emplace_back( ca );
+            if ( ti->flags & FV_DRAW ) m_DrawComponents[type].emplace_back( ca );
         }
         Component* c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
@@ -121,6 +126,30 @@ namespace fv
     {
         FV_CHECK_MO();
         return m_Components;
+    }
+
+    Map<u32, Vector<ComponentArray>>& ComponentManager::updateComponents()
+    {
+        FV_CHECK_MO();
+        return m_UpdateComponents;
+    }
+
+    Map<u32, Vector<ComponentArray>>& ComponentManager::physicsComponents()
+    {
+        FV_CHECK_MO();
+        return m_PhysicsComponents;
+    }
+
+    Map<u32, Vector<ComponentArray>>& ComponentManager::networkComponents()
+    {
+        FV_CHECK_MO();
+        return m_NetworkComponents;
+    }
+
+    Map<u32, Vector<ComponentArray>>& ComponentManager::drawComponents()
+    {
+        FV_CHECK_MO();
+        return m_DrawComponents;
     }
 
     Vector<ComponentArray>& ComponentManager::componentsOfType(u32 type)

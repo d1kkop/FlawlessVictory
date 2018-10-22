@@ -14,6 +14,10 @@ namespace fv
         FV_MO FV_DLL Component* newComponent(u32 type);
         FV_MO FV_DLL void growComponents(u32 type);
         FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& components();
+        FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& updateComponents();
+        FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& physicsComponents();
+        FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& networkComponents();
+        FV_MO FV_DLL Map<u32, Vector<ComponentArray>>& drawComponents();
         FV_MO FV_DLL Vector<ComponentArray>& componentsOfType(u32 type);
         FV_MO FV_DLL void freeComponent(Component* c); // Dangerous function. All raw ptrs to these types are not nulled! Refs are!
         FV_MO FV_DLL void freeAllOfType(u32 type); // Dangerous function. All raw ptrs to these types are not nulled! Refs are!
@@ -27,7 +31,11 @@ namespace fv
 
     private:
         Map<u32, Vector<ComponentArray>> m_Components;
-        Map<u32, Set<Component*>> m_FreeComponents;
+        Map<u32, Vector<ComponentArray>> m_UpdateComponents;
+        Map<u32, Vector<ComponentArray>> m_PhysicsComponents;
+        Map<u32, Vector<ComponentArray>> m_NetworkComponents;
+        Map<u32, Vector<ComponentArray>> m_DrawComponents;
+        Map<u32, Set<Component*>> m_FreeComponents; // Use set instead of Unsorted_set as otherwise lower addresses are not selected first (which is better).
         u32 m_NumComponents = 0;
         u32 m_ComponentBufferSize = 128;
     };

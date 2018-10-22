@@ -18,9 +18,12 @@ namespace fv
         const SystemParams& startParams() const { return m_Params; }
 
     private:
+        void prepareSortListFor( Map<u32, Vector<ComponentArray>>& components, Vector<ComponentArray>& sortedList );
+
         bool m_Done = false;
         SystemParams m_Params {};
-        Vector<ComponentArray> m_SortedListOfComponentArrays;
+        Vector<ComponentArray> m_SortedUpdatables;
+        Vector<ComponentArray> m_SortedOthers;
     };
 
     FV_DLL class SystemManager* systemManager();

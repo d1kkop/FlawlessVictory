@@ -12,9 +12,10 @@ namespace fv
         bool map(void** pData);
         void unmap();
         void flush();
+        bool copyFrom(const void* pData, u32 size);
+
         VkBuffer buffer() const { return m_Buffer; }
         u32 size() const { return m_Size; }
-        bool copyFrom(const void* pData, u32 size);
         bool valid() const { return m_Valid; }
         DeviceVK* device() const { return m_Device; }
 

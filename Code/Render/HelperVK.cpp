@@ -115,7 +115,7 @@ namespace fv
 
         if ( !(graphicsQueueIdx.has_value() && presentQueueIdx.has_value()) )
         {
-            LOGW("VK Invalid queue indices to set up swap chain.");
+            LOG("VK Invalid queue indices to set up swap chain.");
             return false;
         }
 

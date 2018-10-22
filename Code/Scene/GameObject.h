@@ -30,6 +30,9 @@ namespace fv
         template <class T>
         FV_MO bool removeComponent();
 
+        // Ensure that ptrs to components are nulled or keep Ref<ComponentType> handles.
+        FV_MO void removeAllComponents();
+
         FV_MO FV_DLL u32 numComponents();
 
     private:
@@ -67,4 +70,7 @@ namespace fv
     FV_DLL void deleteGameObjectManager();
 
     FV_DLL GameObject* NewGameObject(bool addSceneComponent=true);
+
+    // Ensure that every ptr to game object is nulled or keep a Ref<GameObject> handle.
+    FV_DLL void DestroyGameObject( GameObject* go );
 }

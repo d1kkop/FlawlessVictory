@@ -26,6 +26,7 @@ namespace fv
         CreateFunc createFunc;
         ResetFunc resetFunc;
         const String* name;
+        u32 flags;
     };
 
     /*  Retrieving type info from typemanager is thread safe as it is initialized upon static object initialization. No further changes
@@ -36,7 +37,7 @@ namespace fv
     class TypeManager
     {
     public:
-        FV_DLL u32 registerType(const char* typeName, u32 size, CreateFunc cfunc, ResetFunc rfunc);
+        FV_DLL u32 registerType(const char* typeName, u32 size, CreateFunc cfunc, ResetFunc rfunc, u32 flags);
         FV_DLL const TypeInfo* typeInfo(const char* typeName);
         FV_DLL const TypeInfo* typeInfo(u32 hash);
         FV_DLL Type* createTypes(u32 type, u32 num);

@@ -13,7 +13,6 @@ namespace fv
     public:
         Camera() 
         {
-            m_DoUpdate = true;
             m_UpdatePriority = FV_CAMERA_PRIORITY;
         }
 

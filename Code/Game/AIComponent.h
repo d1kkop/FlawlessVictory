@@ -8,13 +8,12 @@ namespace game
 {
     class AIComponent: public GameComponent
     {
-        FV_TYPE(AIComponent)
+        FV_TYPE_FLAGS(AIComponent, FV_UPDATE | FV_DRAW)
 
     public:
         AIComponent()
         {
             m_UpdatePriority = 10;
-            m_DoUpdate = true;
         }
 
         void begin() override;

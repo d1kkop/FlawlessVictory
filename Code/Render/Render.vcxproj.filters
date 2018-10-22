@@ -7,6 +7,9 @@
     <Filter Include="DeviceParts">
       <UniqueIdentifier>{3a0a2efd-ada8-4d5d-9851-37483575bef5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components">
+      <UniqueIdentifier>{2810b301-b756-467c-9e52-d478686e445b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
@@ -46,6 +49,9 @@
     <ClInclude Include="SubmeshVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
+    <ClInclude Include="MeshRenderer.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">
@@ -80,6 +86,15 @@
     </ClCompile>
     <ClCompile Include="SubmeshVK.cpp">
       <Filter>DeviceParts</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPassVK.h">
+      <Filter>DeviceParts</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPassVK.cpp">
+      <Filter>DeviceParts</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshRenderer.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

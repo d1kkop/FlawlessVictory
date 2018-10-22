@@ -125,7 +125,7 @@ namespace fv
             {
                 VkClearValue cv = { .4f, .3f, .9f, 0.f };
                 HelperVK::startRenderPass(cb, dv->clearPass, ri.frameBuffer, { 0, 0, dv->extent }, &cv);
-                vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv->clearPipeline.pipeline);
+                vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv->clearPipeline.m_Pipeline);
                 //vkCmdBindVertexBuffers( cb, 0, 1, 
                 vkCmdDraw(cb, 3, 1, 0, 0);
                 HelperVK::stopRenderPass(cb);
@@ -181,6 +181,8 @@ namespace fv
             submitInfo.waitSemaphoreCount = 1;
             submitInfo.pWaitSemaphores = waitSemaphores;
             submitInfo.pWaitDstStageMask = waitStages;
+
+            drawWorld();
 
             // Execute command buffers
             auto& ri = dv->renderImages[imageIndex];
@@ -302,6 +304,11 @@ namespace fv
     {
         u32 retVal = m_AutoDeviceIdx++;
         return retVal % numDevices();
+    }
+
+    void RenderManagerVK::drawWorld()
+    {
+        //componentManager()->componentsOfType
     }
 
     RTexture2D RenderManagerVK::createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,

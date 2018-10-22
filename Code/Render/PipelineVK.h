@@ -10,10 +10,14 @@ namespace fv
     public:
         PipelineVK() = default;
         void release(); // Do not put in destructor.
+        struct DeviceVK& device() const { return *m_Device; }
+        VkPipeline pipeline() const { return m_Pipeline; }
+        VkPipelineLayout layout() const { return m_Layout; }
 
-        struct DeviceVK* device;
-        VkPipeline pipeline;
-        VkPipelineLayout layout;
+    // TODO private:
+        struct DeviceVK* m_Device;
+        VkPipeline m_Pipeline;
+        VkPipelineLayout m_Layout;
     };
 }
 #endif

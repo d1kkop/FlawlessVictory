@@ -82,6 +82,7 @@
     <ClInclude Include="FrameSyncObjectVK.h" />
     <ClInclude Include="IncVulkan.h" />
     <ClInclude Include="MemoryHelperVK.h" />
+    <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="PipelineVK.h" />
     <ClInclude Include="RenderImageVK.h" />
     <ClInclude Include="RenderManager.h" />
@@ -105,10 +106,13 @@
     <ClCompile Include="FrameSyncObjectVK.cpp" />
     <ClCompile Include="HelperVK.cpp" />
     <ClCompile Include="MemoryHelperVK.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="PipelineVK.cpp" />
     <ClCompile Include="RenderImageVK.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderManagerVK.cpp" />
+    <ClCompile Include="RenderPassVK.cpp" />
+    <ClCompile Include="RenderPassVK.h" />
     <ClCompile Include="SubmeshVK.cpp" />
     <ClCompile Include="SwapChainVK.cpp" />
   </ItemGroup>

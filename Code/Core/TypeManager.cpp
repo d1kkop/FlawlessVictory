@@ -6,7 +6,7 @@
 
 namespace fv
 {
-    u32 TypeManager::registerType(const char* name, u32 size, CreateFunc cfunc, ResetFunc rfunc)
+    u32 TypeManager::registerType(const char* name, u32 size, CreateFunc cfunc, ResetFunc rfunc, u32 flags)
     {
         assert( name && size && cfunc && rfunc );
         auto nIt = m_NameToType.find(name);
@@ -30,6 +30,7 @@ namespace fv
                 ti.createFunc=cfunc;
                 ti.resetFunc=rfunc;
                 ti.name=nullptr; // Name stored in m_NameToType, ptr assigned to that value below.
+                ti.flags = flags;
             }
             m_NameToType[name] = ti;
             m_HashToType[hash] = &m_NameToType[name];

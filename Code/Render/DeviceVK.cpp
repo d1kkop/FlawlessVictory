@@ -243,9 +243,9 @@ namespace fv
                 return false;
             }
 
-            pipelineOut.device = this;
-            pipelineOut.pipeline = pipeline;
-            pipelineOut.layout = layout;
+            pipelineOut.m_Device = this;
+            pipelineOut.m_Pipeline = pipeline;
+            pipelineOut.m_Layout = layout;
 
             pipelines[pipelineHash] = pipelineOut;
         }
@@ -365,6 +365,8 @@ namespace fv
             LOGW("VK Requested vertex buffer size exceeds staging buffer size (%d bytes). Cannot upload data to GPU.", STAGING_BUFFER_SIZE);
             return {};
         }
+
+        // Make interleaved vertex buffer.
         char* vertexBuffer = new char[bufferSize];
         char* ptr = vertexBuffer;
         for ( u32 i=0; i<vCount; ++i )
