@@ -84,14 +84,13 @@ namespace fv
             si.bones = sm.weights.size() && sm.boneIndices.size();
 
             RSubmesh graphicSubmesh = renderManager()->createSubmesh( devIdx, sm, si );
-            if ( graphicSubmesh.device == -1 )
+            if ( !graphicSubmesh )
             {
                 LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
                 for ( auto& gsm : graphicSubmeshes )
                 {
                     renderManager()->deleteSubmesh( gsm );
                 }
-                renderManager()->deleteSubmesh( graphicSubmesh );
                 return;
             }
             graphicSubmeshes.emplace_back( graphicSubmesh );

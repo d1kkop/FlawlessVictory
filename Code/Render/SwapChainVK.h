@@ -9,17 +9,33 @@ namespace fv
     {
     public:
         SwapChainVK() = default;
-        void release(); // Do not put in destructor.
-        bool createImages(u32 numLayers);
+        ~SwapChainVK();
+        static SwapChainVK* create(struct DeviceVK& device, VkSurfaceKHR surface,
+                                   u32 width, u32 height, u32 numImages, u32 numLayers,
+                                   const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx);
+        FV_MO void acquireNextImage(u32& imageIndex, VkSemaphore semaphore, VkFence fence);
 
-        struct DeviceVK* device;
-        VkSurfaceKHR surface;
-        VkExtent2D extent;
-        VkPresentModeKHR presentMode;
-        VkSurfaceFormatKHR surfaceFormat;
-        VkSwapchainKHR swapChain;
-        VkSwapchainKHR oldSwapChain;
-        Vector<VkImage> images;
+
+        struct DeviceVK& device() { return *m_Device; }
+        VkSurfaceKHR surface() const { return m_Surface; }
+        VkExtent2D extent() const { return m_Extent; }
+        VkPresentModeKHR presentMode() const { return m_PresentMode; }
+        VkSurfaceFormatKHR surfaceFormat() const { return m_SurfaceFormat; }
+        VkSwapchainKHR swapChain() const { return m_SwapChain; }
+        VkSwapchainKHR oldSwapChain() const { return m_OldSwapChain; }
+        const Vector<VkImage>& images() const { return m_Images; }
+
+    private:
+        bool getImages();
+
+        struct DeviceVK* m_Device;
+        VkSurfaceKHR m_Surface;
+        VkExtent2D m_Extent;
+        VkPresentModeKHR m_PresentMode;
+        VkSurfaceFormatKHR m_SurfaceFormat;
+        VkSwapchainKHR m_SwapChain;
+        VkSwapchainKHR m_OldSwapChain;
+        Vector<VkImage> m_Images;
     };
 }
 #endif

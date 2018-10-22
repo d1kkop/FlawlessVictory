@@ -25,7 +25,8 @@ namespace fv
                                  const Vector<const char*>& requiredExtensions, const Vector<const char*>& requiredLayers, VkDevice& logical);
         static bool createSurface(VkInstance instance, const void* wHandle, VkSurfaceKHR& surface);
         static bool createSwapChain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
-                                    const struct RenderConfig& rc, const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
+                                    u32 width, u32 height, u32 numImages, u32 numLayers,
+                                    const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
                                     VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
                                     VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain);
         static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);

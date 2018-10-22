@@ -5,15 +5,16 @@
 namespace fv
 {
     template <class T>
-    class ObjectManager
+    class SparseArray
     {
     public:
-        ObjectManager(u32 objBufferSize=128, bool threadSafe=false);
-        ~ObjectManager();
+        SparseArray(u32 objBufferSize=128, bool threadSafe=false);
+        ~SparseArray();
         void purge();
 
         T* newObject();
         void freeObject(T* object);
+        const Vector<ObjectArray>& allElements() const { return m_ObjectArrays; }
 
     private:
         void growObjects();
@@ -27,20 +28,20 @@ namespace fv
 
 
     template <class T>
-    ObjectManager<T>::ObjectManager(u32 objBufferSize, bool threadSafe):
+    SparseArray<T>::SparseArray(u32 objBufferSize, bool threadSafe):
         m_ObjectBufferSize(objBufferSize),
         m_ThreadSafe(threadSafe)
     {
     }
 
     template <class T>
-    ObjectManager<T>::~ObjectManager()
+    SparseArray<T>::~SparseArray()
     {
         purge();
     }
 
     template <class T>
-    void fv::ObjectManager<T>::purge()
+    void fv::SparseArray<T>::purge()
     {
         for ( auto& objArray : m_ObjectArrays )
         {
@@ -53,7 +54,7 @@ namespace fv
     }
 
     template <class T>
-    T* ObjectManager<T>::newObject()
+    T* SparseArray<T>::newObject()
     {
         if ( m_ThreadSafe )
         {
@@ -87,7 +88,7 @@ namespace fv
     }
 
     template <class T>
-    void ObjectManager<T>::freeObject(T* o)
+    void SparseArray<T>::freeObject(T* o)
     {
         if ( !o->m_Freed )
         {

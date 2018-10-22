@@ -2,7 +2,7 @@
 #include "SceneComponent.h"
 #include "../Core/Functions.h"
 #include "../Core/Reflection.h"
-#include "../Core/ObjectManager.h"
+#include "../Core/SparseArray.h"
 
 namespace fv
 {
@@ -67,8 +67,8 @@ namespace fv
         return (u32)m_Components.size();
     }
 
-    ObjectManager<GameObject>* g_GameObjectManager {};
-    ObjectManager<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
+    SparseArray<GameObject>* g_GameObjectManager {};
+    SparseArray<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
     void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
 
     GameObject* NewGameObject(bool addSceneComponent)

@@ -3,10 +3,13 @@
 #include "RenderManager.h" // For config
 #include "HelperVK.h"
 #include "SwapChainVK.h"
+#include "BufferVK.h"
+#include "SubmeshVK.h"
 #include "../Core/Directories.h"
 #include "../Core/LogManager.h"
 #include "../Core/Functions.h"
 #include "../Core/Algorithm.h"
+#include "../Core/Thread.h"
 
 namespace fv
 {
@@ -14,8 +17,7 @@ namespace fv
 
     void DeviceVK::release()
     {
-        if ( swapChain ) swapChain->release();
-        delete swapChain; swapChain = nullptr;
+        delete m_SwapChain; m_SwapChain = nullptr;
         for ( auto& ri : renderImages ) ri.release();
         for ( auto& fo : frameSyncObjects) fo.release();
         for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d, false );
@@ -23,16 +25,12 @@ namespace fv
         for ( auto& subm : submeshes) deleteSubmesh( subm, false );
         for ( auto& kvp : pipelines ) kvp.second.release();
         // clearPipeline.release(); // No need, is in map of pipelines 
+        m_StagingBuffer.release();
         vkDestroyRenderPass( logical, clearPass, nullptr );
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
         vkDestroyCommandPool( logical, graphicsPool, nullptr );
         vkDestroyCommandPool( logical, transferPool, nullptr );
-        if ( stagingBuffer ) 
-        {
-            MemoryHelperVK::freeBuffer( *stagingBuffer );
-            delete stagingBuffer;
-        }
         vmaDestroyAllocator( allocator );
         vkDestroyDevice( logical, nullptr );
     }
@@ -66,10 +64,10 @@ namespace fv
 
     void DeviceVK::setFormatAndExtent(const RenderConfig& rc)
     {
-        if ( swapChain )
+        if ( m_SwapChain )
         {
-            format = swapChain->surfaceFormat.format;
-            extent = swapChain->extent;
+            format = m_SwapChain->surfaceFormat().format;
+            extent = m_SwapChain->extent();
         }
         else
         {
@@ -105,20 +103,15 @@ namespace fv
 
     bool DeviceVK::createStagingBuffers()
     {
-        assert( !stagingBuffer );
-        stagingBuffer = new BufferVK;
-        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT );
         VmaMemoryUsage vmaUsage = (VmaMemoryUsage) ( VMA_MEMORY_USAGE_CPU_TO_GPU );
-        VmaAllocationCreateFlags vmaFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-        // TODO
-        u32 queuIndices [] = { queueIndices.graphics.value(), queueIndices.transfer.value() };
-        if ( !MemoryHelperVK::createBuffer(*this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, vmaFlags, true /* TODO use in multiple queues? */,
-                                           queuIndices, 2, *stagingBuffer, &stagingMemory) )
+        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | 
+                                                                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+                                                                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT );
+        u32 queueIdxs [] = { queueIndices.transfer.value() };
+        m_StagingBuffer = BufferVK::create( *this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, false, queueIdxs, 1, nullptr );
+        if ( !m_StagingBuffer.valid() )
         {
-            delete stagingBuffer;
-            stagingBuffer = nullptr;
-            stagingMemory = nullptr;
-            LOGC("VK Failed to create staging buffer.");
+            LOGC("VK Failed to create staging buffer(s).");
             return false;
         }
         return true;
@@ -126,24 +119,10 @@ namespace fv
 
     bool DeviceVK::createSwapChain(const RenderConfig& rc, VkSurfaceKHR surface)
     {
-        assert(logical && physical && surface && !swapChain);
-        swapChain = new SwapChainVK();
-        swapChain->surface = surface;
-        swapChain->device = this;
-        if ( !HelperVK::createSwapChain(logical, physical, surface,
-                                        rc,
-                                        queueIndices.graphics,
-                                        queueIndices.present,
-                                        swapChain->surfaceFormat, swapChain->presentMode, swapChain->extent,
-                                        swapChain->swapChain) )
-        {
-            // NOTE: Creation may fail if required settings are not available.
-            swapChain->release();
-            delete swapChain;
-            swapChain = nullptr;
-            return false;
-        }
-        return true;
+        assert(logical && physical && surface && !m_SwapChain);
+        m_SwapChain = SwapChainVK::create(*this, surface, rc.windowWidth, rc.windowHeight, rc.numImages, rc.numLayers, 
+                                          queueIndices.graphics, queueIndices.present);
+        return m_SwapChain != nullptr;
     }
 
     bool DeviceVK::createStandard( const RenderConfig& rc )
@@ -184,14 +163,14 @@ namespace fv
         {
             ri.device = this;
             VkImage swapChainImg = nullptr;
-            if ( !ri.device->swapChain )
+            if ( !ri.device->m_SwapChain )
             {
                 if ( !ri.createImage( rc ) ) return false;
             } 
             else
             {
-                assert( swapChain->images.size() == rc.numImages );
-                swapChainImg = ri.device->swapChain->images[i++];
+                assert( m_SwapChain->images().size() == rc.numImages );
+                swapChainImg = ri.device->m_SwapChain->images()[i++];
             }
             if ( !ri.createImageView( rc, swapChainImg ) ) return false;
             if ( !ri.createFrameBuffer( clearPass ) ) return false;
@@ -277,8 +256,30 @@ namespace fv
         return true;
     }
 
-    void DeviceVK::addFrameCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    bool DeviceVK::mapStagingBuffer(BufferVK& staging, void** pMapped)
     {
+        assert( pMapped );
+        m_StagingBufferMutex.lock();
+        if ( !m_StagingBuffer.map( pMapped ) || !(*pMapped) )
+        {
+            m_StagingBufferMutex.unlock();
+            LOGC("VK Failed to map staging buffer.");
+            return false;
+        }
+        staging = m_StagingBuffer;
+        return true;
+    }
+
+    void DeviceVK::unmapStagingBuffer()
+    {
+        m_StagingBuffer.unmap();
+        m_StagingBuffer.flush();
+        m_StagingBufferMutex.unlock();
+    }
+
+    void DeviceVK::addDrawCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    {
+        FV_CHECK_MO();
         assert( logical && graphicsPool );
         for ( auto& ri : renderImages )
         {
@@ -291,37 +292,33 @@ namespace fv
         }
     }
 
-    VkCommandBuffer DeviceVK::addSingleTimeCmd(const Function<void (VkCommandBuffer)>& recordCb)
+    void DeviceVK::submitImmediateCommand(VkCommandPool pool, VkQueue queue, VkCommandBufferUsageFlags usage, const Function<void (VkCommandBuffer)>& callback)
     {
-        VkCommandBuffer cb;
-        HelperVK::allocCommandBuffer(logical, graphicsPool, cb);
-        HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
-        recordCb(cb);
-        HelperVK::stopRecordCommandBuffer(cb);
-        scoped_lock lk(singleTimeCmdsMutex);
-        singleTimeCmds.emplace_back( cb );
-        return cb;
-    }
+        assert(logical && pool && queue && callback );
 
-    void DeviceVK::addSingleTimeCmd2(const Function<void (VkCommandBuffer)>& recordCb)
-    {
         VkCommandBuffer cb;
-        HelperVK::allocCommandBuffer(logical, transferPool, cb);
-        HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
-        recordCb(cb);
-        HelperVK::stopRecordCommandBuffer(cb);
-        VkFenceCreateInfo fCreateInfo = {};
-        fCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        HelperVK::allocCommandBuffer( logical, pool, cb );
+        HelperVK::startRecordCommandBuffer( logical, (VkCommandBufferUsageFlags) usage, cb );
+
+        callback( cb );
+
+        HelperVK::stopRecordCommandBuffer( cb );
+  
         VkFence fence;
-        vkCreateFence( logical, &fCreateInfo, nullptr, &fence );
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.pCommandBuffers = &cb;
-        submitInfo.commandBufferCount = 1;
-        vkQueueSubmit( transferQueue, 1, &submitInfo, fence );
-        vkWaitForFences( logical, 1, &fence, VK_TRUE, -1 );
-        vkFreeCommandBuffers( logical, transferPool, 1, &cb );
-        vkDestroyFence( logical, fence, nullptr );
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        FV_VKCALL( vkCreateFence(logical, &fenceInfo, nullptr, &fence) );
+
+        VkSubmitInfo submit = {};
+        submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit.pCommandBuffers = &cb;
+        submit.commandBufferCount = 1;
+        VkResult res = vkQueueSubmit(queue, 1, &submit, fence);
+        assert( res == VK_SUCCESS );
+
+        while ( vkWaitForFences(logical, 1, &fence, VK_TRUE, -1) == VK_TIMEOUT );
+        vkDestroyFence(logical, fence, nullptr);
+        HelperVK::freeCommandBuffers( logical, pool, &cb, 1 );
     }
 
     RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size,
@@ -416,26 +413,18 @@ namespace fv
                 ptr += sizeof(float);
             }
         }
-        BufferVK deviceVertexBuffer;
-        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT );
-        VmaMemoryUsage vmaUsage = (VmaMemoryUsage) VMA_MEMORY_USAGE_GPU_ONLY;
-        VkMemoryAllocateFlags vmaFlags = 0;
-        // TODO
-        u32 queuIndices [] = { queueIndices.graphics.value(), queueIndices.transfer.value() };
-        if ( !MemoryHelperVK::createBuffer( *this, bufferSize, vkUsage, vmaUsage, vmaFlags, true, queuIndices, 2, deviceVertexBuffer ) )
+
+        SubmeshVK* submeshVK = SubmeshVK::create( *this, vertexBuffer, bufferSize, submesh.indices.data(), (u32) submesh.indices.size()*sizeof(u32) );
+        delete [] vertexBuffer;
+        if ( !submeshVK )
         {
-            delete [] vertexBuffer;
             return {};
         }
-        VkCommandBuffer cb = MemoryHelperVK::copyToDevice( *this, deviceVertexBuffer, vertexBuffer, bufferSize );
-        delete [] vertexBuffer;
-        RSubmesh rSubmes;
-        rSubmes.device = idx;
-        memcpy( &rSubmes.resources, &deviceVertexBuffer, sizeof(BufferVK) );
-        rSubmes.resources[3] = cb;
+        
         scoped_lock lk(submeshMutex);
-        submeshes.emplace_back(rSubmes);
-        return rSubmes;
+        submeshes.emplace_back( submeshVK );
+
+        return submeshVK;
     }
 
     void DeviceVK::deleteTexture2D(RTexture2D tex2d, bool removeFromList)
@@ -454,12 +443,10 @@ namespace fv
 
     void DeviceVK::deleteSubmesh(RSubmesh submesh, bool removeFromList)
     {
-        BufferVK buff;
-        memcpy( &buff, &submesh.resources, sizeof(BufferVK) );
-        MemoryHelperVK::freeBuffer( buff );
-        HelperVK::freeCommandBuffers( logical, graphicsPool, (VkCommandBuffer*) &submesh.resources[3], 1 );
+        SubmeshVK* s = (SubmeshVK*)submesh;
+        delete s;
         scoped_lock lk(submeshMutex);
-        if ( removeFromList ) RemoveMemCmp( submeshes, submesh );
+        if ( removeFromList ) Remove( submeshes, submesh );
     }
 
 }

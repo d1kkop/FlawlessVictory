@@ -106,15 +106,16 @@ namespace fv
     }
 
     bool HelperVK::createSwapChain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
-                                   const RenderConfig& rc, const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
+                                   u32 width, u32 height, u32 numImages, u32 numLayers,
+                                   const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
                                    VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
                                    VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain)
     {
-        assert(device && physicalDevice && surface && rc.windowWidth != 0 && 
-               rc.windowHeight != 0 && rc.numImages >= 1 && rc.numLayers >= 1 && rc.numSamples >= 1);
+        assert(device && physicalDevice && surface && width > 0 && height > 0 && numImages > 0 && numLayers > 0 );
 
         if ( !(graphicsQueueIdx.has_value() && presentQueueIdx.has_value()) )
         {
+            LOGW("VK Invalid queue indices to set up swap chain.");
             return false;
         }
 
@@ -122,17 +123,17 @@ namespace fv
         Vector<VkSurfaceFormatKHR> formats;
         VkSurfaceCapabilitiesKHR capabilities;
         querySwapChainInfo(physicalDevice, surface, formats, capabilities, presentModes);
-        if ( !chooseSwapChain(rc.windowWidth, rc.windowHeight, formats, capabilities, presentModes, chosenFormat, chosenPresentMode, surfaceExtend) )
+        if ( !chooseSwapChain(width, height, formats, capabilities, presentModes, chosenFormat, chosenPresentMode, surfaceExtend) )
         {
             return false;
         }
 
-        u32 imageCount = Max<u32>(rc.numImages, capabilities.minImageCount);
+        u32 imageCount = Max<u32>(numImages, capabilities.minImageCount);
         if ( capabilities.maxImageCount != 0 ) // Only clamp to max if specified. Some GPU's do not specify.
         {
             imageCount = Min<u32>(imageCount, capabilities.maxImageCount);
         }
-        u32 imageArrayLayerCount = Clamp<u32>(rc.numLayers, 1U, (u32)capabilities.maxImageArrayLayers);
+        u32 imageArrayLayerCount = Clamp<u32>(numLayers, 1U, (u32)capabilities.maxImageArrayLayers);
 
         VkSwapchainCreateInfoKHR createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

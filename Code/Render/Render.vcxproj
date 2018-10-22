@@ -87,7 +87,9 @@
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="RenderManagerVK.h" />
     <ClInclude Include="HelperVK.h" />
+    <ClInclude Include="SubmeshVK.h" />
     <ClInclude Include="SwapChainVK.h" />
+    <ClInclude Include="BufferVK.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -98,6 +100,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BufferVK.cpp" />
     <ClCompile Include="DeviceVK.cpp" />
     <ClCompile Include="FrameSyncObjectVK.cpp" />
     <ClCompile Include="HelperVK.cpp" />
@@ -106,6 +109,7 @@
     <ClCompile Include="RenderImageVK.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderManagerVK.cpp" />
+    <ClCompile Include="SubmeshVK.cpp" />
     <ClCompile Include="SwapChainVK.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

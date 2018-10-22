@@ -4,6 +4,7 @@
 #include "FrameSyncObjectVK.h"
 #include "PipelineVK.h"
 #include "RenderImageVK.h"
+#include "SubmeshVK.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
 #include "../Core/Directories.h"
@@ -90,17 +91,19 @@ namespace fv
         if ( m_Window )
         {
             // Find device that can present 
+            bool bCreatedSwapChain = false;
             for ( auto& dv : m_Devices )
             {
                 if ( dv->createSwapChain( rc, surface ) )
                 {
-                    if ( !dv->swapChain->createImages( rc.numLayers ) )
-                    {
-                        LOGC("VK Swap chain creation failed.");
-                        return false;
-                    }
+                    bCreatedSwapChain = true;
                     break;
                 }
+            }
+            if ( !bCreatedSwapChain )
+            {
+                LOGC("VK Swap chain creation failed.");
+                return false;
             }
         }
 
@@ -118,7 +121,7 @@ namespace fv
         // TODO Temp command buffers
         for ( auto& dv : m_Devices )
         {
-            dv->addFrameCmd( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
+            dv->addDrawCmd( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
             {
                 VkClearValue cv = { .4f, .3f, .9f, 0.f };
                 HelperVK::startRenderPass(cb, dv->clearPass, ri.frameBuffer, { 0, 0, dv->extent }, &cv);
@@ -157,13 +160,13 @@ namespace fv
         for ( auto& dv : m_Devices )
         {
             auto& so = dv->frameSyncObjects[m_FrameImageIdx];
-            vkWaitForFences(dv->logical, 1, &so.frameFence, VK_TRUE, (u64)-1);
+            while ( vkWaitForFences(dv->logical, 1, &so.frameFence, VK_TRUE, (u64)-1) == VK_TIMEOUT );
             vkResetFences(dv->logical, 1, &so.frameFence);
 
-            uint32_t imageIndex; // Iterates from 0 to numImages-1 in swap chain.
-            if ( dv->swapChain )
+            u32 imageIndex; // Iterates from 0 to numImages-1 in swap chain.
+            if ( dv->swapChain() )
             {
-                vkAcquireNextImageKHR(dv->logical, dv->swapChain->swapChain, (u64)-1, so.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+                dv->swapChain()->acquireNextImage(imageIndex, so.imageAvailableSemaphore, nullptr);
             }
             else
             {
@@ -174,28 +177,15 @@ namespace fv
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
             VkSemaphore waitSemaphores[] = { so.imageAvailableSemaphore };
-            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
             submitInfo.waitSemaphoreCount = 1;
             submitInfo.pWaitSemaphores = waitSemaphores;
             submitInfo.pWaitDstStageMask = waitStages;
 
-            Vector<VkCommandBuffer> cbs;
-
             // Execute command buffers
             auto& ri = dv->renderImages[imageIndex];
-            for ( auto& cb : ri.commandBuffers ) cbs.emplace_back( cb );
-            dv->singleTimeCmdsMutex.lock();
-            //if ( dv->singleTimeCmds.size() )
-            //{
-            //    for ( auto& cb : dv->singleTimeCmds ) cbs.emplace_back( cb );
-            //    dv->singleTimeCmds.clear();
-            //}
-            dv->singleTimeCmdsMutex.unlock();
-
-            //submitInfo.commandBufferCount = (u32)ri.commandBuffers.size();
-            //submitInfo.pCommandBuffers = ri.commandBuffers.data();
-            submitInfo.commandBufferCount = (u32)cbs.size();
-            submitInfo.pCommandBuffers = cbs.data();
+            submitInfo.commandBufferCount = (u32)ri.commandBuffers.size();
+            submitInfo.pCommandBuffers = ri.commandBuffers.data();
 
             VkSemaphore signalSemaphores[] = { so.imageFinishedSemaphore };
             submitInfo.signalSemaphoreCount = 1;
@@ -203,21 +193,22 @@ namespace fv
 
             vkQueueSubmit(dv->graphicsQueue, 1, &submitInfo, so.frameFence);
 
-            if ( dv->swapChain )
+            if ( dv->swapChain() )
             {
                 VkPresentInfoKHR presentInfo = {};
                 presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
                 presentInfo.waitSemaphoreCount = 1;
                 presentInfo.pWaitSemaphores = signalSemaphores;
-                presentInfo.swapchainCount = 1;
-                presentInfo.pSwapchains = &dv->swapChain->swapChain;
-                presentInfo.pImageIndices = &imageIndex;
+                presentInfo.swapchainCount  = 1;
+                VkSwapchainKHR swapChains [] = { dv->swapChain()->swapChain() };
+                presentInfo.pSwapchains = swapChains;
+                presentInfo.pImageIndices = (uint32_t*)&imageIndex;
                 vkQueuePresentKHR(dv->presentQueue, &presentInfo);
             }
         }
 
         // Device indepentent variables
-  //      m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
+        m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
         m_CurrentDrawImage = (m_CurrentDrawImage + 1) % m_RenderConfig.numImages;
     }
 
@@ -344,8 +335,8 @@ namespace fv
 
     void RenderManagerVK::deleteSubmesh(RSubmesh submesh)
     {
-        if ( submesh.device == -1 ) return;
-        m_Devices[submesh.device]->deleteSubmesh( submesh, true );
+        SubmeshVK* s = (SubmeshVK*)submesh;
+        s->device()->deleteSubmesh( submesh, true );
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

@@ -27,7 +27,7 @@ namespace fv
         void* resources[4]{};
     };
 
-    using RSubmesh = DeviceResource;
+    using RSubmesh = void*;
     using RShader = DeviceResource;
     using RTexture2D = DeviceResource;
     using RMaterial = DeviceResource;

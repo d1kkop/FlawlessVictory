@@ -1,5 +1,5 @@
 #pragma once
-#include "../Core/ObjectManager.h"
+#include "../Core/SparseArray.h"
 #include "Patch.h"
 
 namespace fv
@@ -19,7 +19,7 @@ namespace fv
     private:
         Mutex m_PatchSubmitMutex;
         Vector<Patch*> m_PatchSubmitList;
-        ObjectManager<Patch> m_PatchPool;
+        SparseArray<Patch> m_PatchPool;
     };
 
 

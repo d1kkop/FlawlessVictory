@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "Thread.h"
 #include "Functions.h"
-#include "ObjectManager.h"
+#include "SparseArray.h"
 
 namespace fv
 {
@@ -39,10 +39,10 @@ namespace fv
         u32 m_NumWaiters = 0;
 
         friend class JobManager;
-        friend class ObjectManager<Job>;
+        friend class SparseArray<Job>;
     };
 
-    class JobManager: public ObjectManager<Job>
+    class JobManager: public SparseArray<Job>
     {
     public:
         FV_DLL JobManager();

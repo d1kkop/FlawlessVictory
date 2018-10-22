@@ -40,6 +40,12 @@
     <ClInclude Include="IncVulkan.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
+    <ClInclude Include="BufferVK.h">
+      <Filter>DeviceParts</Filter>
+    </ClInclude>
+    <ClInclude Include="SubmeshVK.h">
+      <Filter>DeviceParts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">
@@ -68,6 +74,12 @@
     </ClCompile>
     <ClCompile Include="MemoryHelperVK.cpp">
       <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferVK.cpp">
+      <Filter>DeviceParts</Filter>
+    </ClCompile>
+    <ClCompile Include="SubmeshVK.cpp">
+      <Filter>DeviceParts</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

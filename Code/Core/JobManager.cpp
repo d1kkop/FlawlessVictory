@@ -55,7 +55,7 @@ namespace fv
     // ------------- JobManager ------------------------------------------------------------------------------------------------------
 
     JobManager::JobManager():
-        ObjectManager<Job>(16, true)
+        SparseArray<Job>(16, true)
     {
         u32 numThreads = std::thread::hardware_concurrency();
         m_Threads.resize( numThreads );

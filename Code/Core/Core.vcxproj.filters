@@ -132,9 +132,6 @@
     <ClInclude Include="OSLayer.h">
       <Filter>OSLayer</Filter>
     </ClInclude>
-    <ClInclude Include="ObjectManager.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
     <ClInclude Include="Directories.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -174,6 +171,9 @@
     </ClInclude>
     <ClInclude Include="IncSDL.h">
       <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="SparseArray.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

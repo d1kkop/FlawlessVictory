@@ -17,7 +17,7 @@ namespace fv
         bool m_Freed  = true;
 
         template <class T>
-        friend class ObjectManager;
+        friend class SparseArray;
         friend class ComponentManager;
         friend class ComponentManager2;
     };
@@ -51,4 +51,5 @@ namespace fv
         T* m_Object{};
         u32 m_CachedVersion = 0;
     };
+
 }
