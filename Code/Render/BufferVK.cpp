@@ -104,11 +104,7 @@ namespace fv
             memcpy(pStage, data, size);
             m_Device->unmapStagingBuffer();
 
-            m_Device->submitImmediateCommand(
-                m_Device->transferPool,
-                m_Device->transferQueue,
-                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                [&](VkCommandBuffer cb)
+            m_Device->submitOnetimeTransferCommand([&](VkCommandBuffer cb)
             {
                 VkBufferCopy region = {};
                 region.size = m_Size;

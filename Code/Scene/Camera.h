@@ -6,6 +6,8 @@
 
 namespace fv
 {
+    class TextSerializer;
+
     class Camera: public GameComponent
     {
         FV_TYPE(Camera)
@@ -24,6 +26,9 @@ namespace fv
         void setHeight(float height);
         void setPerspective(bool isPerspective);
         Mat4 projection() const;
+
+    protected:
+        FV_DLL void serialize( TextSerializer& ts ) override;
 
     private:
         float m_Fov = 90;

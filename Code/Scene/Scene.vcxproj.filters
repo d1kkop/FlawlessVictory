@@ -19,6 +19,10 @@
     <ClInclude Include="GameComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="SceneList.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameObject.cpp">
@@ -33,5 +37,9 @@
     <ClCompile Include="GameComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="SceneList.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneManager.cpp" />
   </ItemGroup>
 </Project>

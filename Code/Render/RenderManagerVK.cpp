@@ -1,7 +1,7 @@
 #include "RenderManagerVK.h"
 #if FV_VULKAN
 #include "HelperVK.h"
-#include "FrameSyncObjectVK.h"
+#include "FrameObject.h"
 #include "PipelineVK.h"
 #include "RenderImageVK.h"
 #include "SubmeshVK.h"
@@ -9,6 +9,7 @@
 #include "../Core/LogManager.h"
 #include "../Core/Directories.h"
 #include "../Core/OSLayer.h"
+#include "../Core/JobManager.h"
 
 namespace fv
 {
@@ -84,7 +85,7 @@ namespace fv
         }
 
         // Note, surface can be null in case there is no mainWindow.
-        if ( !createDevices(surface) )
+        if ( !createDevices(surface, jobManager()->numThreads()) )
             return false;
 
         // See if want swap chain
@@ -115,21 +116,7 @@ namespace fv
             if (!dv->createStandard( rc )) return false;
             if (!dv->createCommandPools()) return false;
             if (!dv->createRenderImages( rc )) return false;
-            if (!dv->createFrameSyncObjects( rc )) return false;
-        }
-
-        // TODO Temp command buffers
-        for ( auto& dv : m_Devices )
-        {
-            dv->addDrawCmd( [dv](VkCommandBuffer cb, const RenderImageVK& ri)
-            {
-                VkClearValue cv = { .4f, .3f, .9f, 0.f };
-                HelperVK::startRenderPass(cb, dv->clearPass, ri.frameBuffer, { 0, 0, dv->extent }, &cv);
-                vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, dv->clearPipeline.m_Pipeline);
-                //vkCmdBindVertexBuffers( cb, 0, 1, 
-                vkCmdDraw(cb, 3, 1, 0, 0);
-                HelperVK::stopRenderPass(cb);
-            });
+            if (!dv->createFrameObjects( rc )) return false;
         }
 
         LOG("VK Initialized succesful.");
@@ -159,48 +146,29 @@ namespace fv
     {
         for ( auto& dv : m_Devices )
         {
-            auto& so = dv->frameSyncObjects[m_FrameImageIdx];
-            while ( vkWaitForFences(dv->logical, 1, &so.frameFence, VK_TRUE, (u64)-1) == VK_TIMEOUT );
-            vkResetFences(dv->logical, 1, &so.frameFence);
+            auto& frameObject = dv->frameObjects[m_FrameImageIdx];
+            frameObject.waitForFences();
+            frameObject.resetFences();
 
             u32 imageIndex; // Iterates from 0 to numImages-1 in swap chain.
+            VkSemaphore imageAvailable = {};
             if ( dv->swapChain() )
             {
-                dv->swapChain()->acquireNextImage(imageIndex, so.imageAvailableSemaphore, nullptr);
+                 imageAvailable = dv->swapChain()->acquireNextImage(imageIndex, nullptr);
             }
             else
             {
                 imageIndex = m_CurrentDrawImage;
             }
 
-            VkSubmitInfo submitInfo = {};
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-            VkSemaphore waitSemaphores[] = { so.imageAvailableSemaphore };
-            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
-            submitInfo.waitSemaphoreCount = 1;
-            submitInfo.pWaitSemaphores = waitSemaphores;
-            submitInfo.pWaitDstStageMask = waitStages;
-
-            drawWorld();
-
-            // Execute command buffers
-            auto& ri = dv->renderImages[imageIndex];
-            submitInfo.commandBufferCount = (u32)ri.commandBuffers.size();
-            submitInfo.pCommandBuffers = ri.commandBuffers.data();
-
-            VkSemaphore signalSemaphores[] = { so.imageFinishedSemaphore };
-            submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores = signalSemaphores;
-
-            vkQueueSubmit(dv->graphicsQueue, 1, &submitInfo, so.frameFence);
+            frameObject.submitCommandBuffers( imageAvailable, dv->graphicsQueues );
 
             if ( dv->swapChain() )
             {
                 VkPresentInfoKHR presentInfo = {};
                 presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-                presentInfo.waitSemaphoreCount = 1;
-                presentInfo.pWaitSemaphores = signalSemaphores;
+                presentInfo.waitSemaphoreCount = jobManager()->numThreads();
+                presentInfo.pWaitSemaphores = frameObject.finishedSemaphores();
                 presentInfo.swapchainCount  = 1;
                 VkSwapchainKHR swapChains [] = { dv->swapChain()->swapChain() };
                 presentInfo.pSwapchains = swapChains;
@@ -222,8 +190,10 @@ namespace fv
         }
     }
 
-    bool RenderManagerVK::createDevices(VkSurfaceKHR surface)
+    bool RenderManagerVK::createDevices(VkSurfaceKHR surface, u32 numGraphicsQueues)
     {
+        assert( numGraphicsQueues > 0 );
+
         uint32_t deviceCount = 0;
         Vector<VkPhysicalDevice> physicalDevices;
         vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
@@ -263,7 +233,7 @@ namespace fv
             {
                 VkDeviceQueueCreateInfo dqci {};
                 dqci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                dqci.queueCount = 1;
+                dqci.queueCount = (uIdx == dv.queueIndices.graphics.value()) ? numGraphicsQueues : 1;
                 dqci.queueFamilyIndex = uIdx;
                 dqci.pQueuePriorities = &priorities;
                 queueCreateInfos.emplace_back( dqci );
@@ -274,7 +244,15 @@ namespace fv
                 break;
             }
 
-            if ( dv.queueIndices.graphics ) vkGetDeviceQueue(dv.logical, *dv.queueIndices.graphics, 0, &dv.graphicsQueue);
+            if ( dv.queueIndices.graphics )
+            {
+                for ( u32 i=0; i< numGraphicsQueues; ++i )
+                {
+                    VkQueue graphicsQueue;
+                    vkGetDeviceQueue(dv.logical, *dv.queueIndices.graphics, i, &graphicsQueue);
+                    dv.graphicsQueues.emplace_back( graphicsQueue );
+                }
+            }
             if ( dv.queueIndices.compute )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.compute, 0, &dv.computeQueue);
             if ( dv.queueIndices.transfer ) vkGetDeviceQueue(dv.logical, *dv.queueIndices.transfer, 0, &dv.transferQueue);
             if ( dv.queueIndices.sparse )   vkGetDeviceQueue(dv.logical, *dv.queueIndices.sparse, 0, &dv.sparseQueue);

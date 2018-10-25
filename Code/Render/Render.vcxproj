@@ -79,7 +79,7 @@
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="DeviceVK.h" />
-    <ClInclude Include="FrameSyncObjectVK.h" />
+    <ClInclude Include="FrameObject.h" />
     <ClInclude Include="IncVulkan.h" />
     <ClInclude Include="MemoryHelperVK.h" />
     <ClInclude Include="MeshRenderer.h" />
@@ -103,7 +103,7 @@
   <ItemGroup>
     <ClCompile Include="BufferVK.cpp" />
     <ClCompile Include="DeviceVK.cpp" />
-    <ClCompile Include="FrameSyncObjectVK.cpp" />
+    <ClCompile Include="FrameObject.cpp" />
     <ClCompile Include="HelperVK.cpp" />
     <ClCompile Include="MemoryHelperVK.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />

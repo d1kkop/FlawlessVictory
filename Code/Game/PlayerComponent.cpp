@@ -4,6 +4,11 @@ namespace game
 {
     FV_TYPE_IMPL(PlayerComponent)
 
+    void PlayerComponent::serialize(TextSerializer& ts)
+    {
+
+    }
+
     void PlayerComponent::updateMT(float t)
     {
  

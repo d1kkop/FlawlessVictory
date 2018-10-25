@@ -27,4 +27,9 @@ namespace fv
         // Update materials.. ?
     }
 
+    void MeshRenderer::serialize(TextSerializer& ts)
+    {
+
+    }
+
 }

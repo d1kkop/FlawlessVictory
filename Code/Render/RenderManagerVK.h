@@ -26,7 +26,7 @@ namespace fv
             void* pUserData);
 
     private:
-        bool createDevices(VkSurfaceKHR mainSurface);
+        bool createDevices(VkSurfaceKHR mainSurface, u32 numGraphicsQueues);
         u32 numDevices() const override { return (u32) m_Devices.size(); }
         u32 autoDeviceIdx() override;
         void drawWorld();

@@ -12,6 +12,14 @@ namespace fv
                                      const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx)
     {
         assert( width > 0 && height > 0 && numImages > 0 && numLayers > 0 );
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        VkSemaphore imageAvailableSemaphore;
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        if ( vkCreateSemaphore(device.logical, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS )
+        {
+            LOGC("VK Cannot create swap chain image available semaphore.");
+            return nullptr;
+        }
         VkSurfaceFormatKHR chosenFormat;
         VkPresentModeKHR chosenPresentMode;
         VkExtent2D surfaceExtend;
@@ -30,6 +38,7 @@ namespace fv
         sc->m_PresentMode = chosenPresentMode;
         sc->m_SurfaceFormat = chosenFormat;
         sc->m_SwapChain = swapChain;
+        sc->m_ImageAvailableSemaphore = imageAvailableSemaphore;
         if ( !sc->getImages() )
         {
             vkDestroySwapchainKHR(device.logical, swapChain, nullptr);
@@ -45,6 +54,7 @@ namespace fv
         // No need to delete images
         vkDestroySwapchainKHR(m_Device->logical, m_SwapChain, nullptr);
         vkDestroySwapchainKHR(m_Device->logical, m_OldSwapChain, nullptr);
+        vkDestroySemaphore(m_Device->logical, m_ImageAvailableSemaphore, nullptr);
         vkDestroySurfaceKHR(m_Device->instance, m_Surface, nullptr);
     }
 
@@ -66,11 +76,12 @@ namespace fv
         return true;
     }
 
-    void SwapChainVK::acquireNextImage(u32& imageIndex, VkSemaphore semaphore, VkFence fence)
+    VkSemaphore SwapChainVK::acquireNextImage(u32& imageIndex, VkFence fence)
     {
         FV_CHECK_MO();
-        assert( m_Device && m_Device->logical && m_SwapChain && semaphore );
-        vkAcquireNextImageKHR(m_Device->logical, m_SwapChain, (u64)-1, semaphore, fence, (uint32_t*)&imageIndex);
+        assert( m_Device && m_Device->logical && m_SwapChain );
+        FV_VKCALL( vkAcquireNextImageKHR(m_Device->logical, m_SwapChain, (u64)-1, m_ImageAvailableSemaphore, fence, (uint32_t*)&imageIndex) );
+        return m_ImageAvailableSemaphore;
     }
 
 }

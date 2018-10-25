@@ -4,6 +4,7 @@
 namespace fv
 {
     class Mesh;
+    class TextSerializer;
 
     class MeshRenderer: public GameComponent
     {
@@ -16,6 +17,7 @@ namespace fv
     protected:
         void cullMT() override;
         void drawMT() override;
+        void serialize( TextSerializer& ts ) override;
 
     private:
         M<Mesh> m_Mesh;

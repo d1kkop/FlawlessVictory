@@ -88,4 +88,9 @@ namespace fv
         return m_ProjectionMatrix;
     }
 
+    void Camera::serialize(TextSerializer& ts)
+    {
+
+    }
+
 }

@@ -8,6 +8,7 @@
 namespace fv
 {
     class SceneWorld;
+    class TextSerializer;
 
     class SceneComponent: public GameComponent
     {
@@ -34,6 +35,9 @@ namespace fv
         FV_MO FV_DLL void detachParent();
         FV_MO FV_DLL void detachChildren();
 
+        FV_DLL void serialize(TextSerializer& ts) override;
+        FV_MO u64 sceneBits() const;
+
     private:
         FV_MO bool computeLocalToWorld();
         FV_MO void computeWorldToLocal();
@@ -48,6 +52,9 @@ namespace fv
         Mat4 m_WorldToLocal = Mat4::identity();
         bool m_MatrixDirty{};
         bool m_WorldToLocalDirty{};
+        u64 m_SceneBits = 1;
+
+        friend class SceneManager;
     };
 
 }

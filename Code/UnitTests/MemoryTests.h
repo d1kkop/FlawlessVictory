@@ -23,6 +23,8 @@ class TestComponent: public GameComponent
         static int k = 0;
     //    printf("TestComp destr called %d\n", k++);
     }
+
+    void serialize( TextSerializer& ts ) override { }
     
 
 public:
@@ -35,11 +37,10 @@ class TestUpdComponent: public TestComponent
 {
     FV_TYPE(TestUpdComponent)
 public:
-    TestUpdComponent()
-    {
-    }
+    TestUpdComponent() { }
 
     ~TestUpdComponent() override { }
+    void serialize( TextSerializer& ts ) override { }
 };
 FV_TYPE_IMPL(TestUpdComponent)
 

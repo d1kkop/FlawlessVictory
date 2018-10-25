@@ -10,6 +10,7 @@
 #include "../Core/Functions.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Thread.h"
+#include "../Core/JobManager.h"
 
 namespace fv
 {
@@ -19,7 +20,7 @@ namespace fv
     {
         delete m_SwapChain; m_SwapChain = nullptr;
         for ( auto& ri : renderImages ) ri.release();
-        for ( auto& fo : frameSyncObjects) fo.release();
+        for ( auto& fo : frameObjects) fo.release();
         for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d, false );
         for ( auto& shad: shaders) deleteShader( shad, false );
         for ( auto& subm : submeshes) deleteSubmesh( subm, false );
@@ -29,8 +30,8 @@ namespace fv
         vkDestroyRenderPass( logical, clearPass, nullptr );
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
-        vkDestroyCommandPool( logical, graphicsPool, nullptr );
         vkDestroyCommandPool( logical, transferPool, nullptr );
+        for ( auto& gp : graphicsPools ) vkDestroyCommandPool( logical, gp, nullptr );
         vmaDestroyAllocator( allocator );
         vkDestroyDevice( logical, nullptr );
     }
@@ -92,11 +93,19 @@ namespace fv
 
     bool DeviceVK::createCommandPools()
     {
-        assert( logical && queueIndices.graphics && graphicsPool==nullptr );
-        if ( !HelperVK::createCommandPool(logical, queueIndices.graphics.value(), graphicsPool) ||
-             !HelperVK::createCommandPool(logical, queueIndices.transfer.value(), transferPool) )
+        assert( logical && queueIndices.graphics && graphicsPools.empty() && queueIndices.transfer && transferPool==nullptr && graphicsQueues.size()>0 );
+        if ( !HelperVK::createCommandPool(logical, queueIndices.transfer.value(), transferPool) )
         {
             return false;
+        }
+        for ( u32 i=0; i<(u32)graphicsQueues.size(); ++i )
+        {
+            VkCommandPool graphicsPool;
+            if ( !HelperVK::createCommandPool(logical, queueIndices.graphics.value(), graphicsPool) )
+            {
+                return false;
+            }
+            graphicsPools.emplace_back( graphicsPool );
         }
         return true;
     }
@@ -161,31 +170,22 @@ namespace fv
         u32 i=0;
         for ( auto& ri : renderImages )
         {
-            ri.device = this;
-            VkImage swapChainImg = nullptr;
-            if ( !ri.device->m_SwapChain )
+            VkImage swapChainImg = swapChain() ? swapChain()->images()[i++] : nullptr;
+            if ( !ri.initialize( *this, rc, swapChainImg, clearPass ) )
             {
-                if ( !ri.createImage( rc ) ) return false;
-            } 
-            else
-            {
-                assert( m_SwapChain->images().size() == rc.numImages );
-                swapChainImg = ri.device->m_SwapChain->images()[i++];
+                return false;
             }
-            if ( !ri.createImageView( rc, swapChainImg ) ) return false;
-            if ( !ri.createFrameBuffer( clearPass ) ) return false;
         }
         return true;
     }
 
-    bool DeviceVK::createFrameSyncObjects(const struct RenderConfig& rc)
+    bool DeviceVK::createFrameObjects(const struct RenderConfig& rc)
     {
-        assert(frameSyncObjects.size() == 0 && rc.numFramesBehind >= 1 );
-        frameSyncObjects.resize( rc.numFramesBehind );
-        for ( auto& fso : frameSyncObjects )
+        assert(frameObjects.size() == 0 && rc.numFramesBehind >= 1 );
+        frameObjects.resize( rc.numFramesBehind );
+        for ( auto& fo : frameObjects )
         {
-            fso.device = this;
-            if ( !fso.create() ) return false;
+            if ( !fo.initialize(*this, jobManager()->numThreads()) ) return false;
         }
         return true;
     }
@@ -277,28 +277,33 @@ namespace fv
         m_StagingBufferMutex.unlock();
     }
 
-    void DeviceVK::addDrawCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb)
+    void DeviceVK::createDrawObject(Vector<VkCommandBuffer>& cmdsOut, const Function<void (VkCommandBuffer)>& recordCb)
     {
         FV_CHECK_MO();
-        assert( logical && graphicsPool );
-        for ( auto& ri : renderImages )
+        assert( logical );
+
+        for ( u32 i=0; i<(u32)frameObjects.size(); ++i )
         {
-            VkCommandBuffer cb;
-            HelperVK::allocCommandBuffer(logical, graphicsPool, cb);
-            ri.commandBuffers.emplace_back( cb );
-            HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
-            recordCb( cb, ri );
-            HelperVK::stopRecordCommandBuffer(cb);
+            for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
+            {
+                VkCommandBuffer cb;
+                HelperVK::allocCommandBuffer(logical, graphicsPools[j], cb);
+                // TODO should be one time submit command buffer
+                HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
+                recordCb(cb);
+                HelperVK::stopRecordCommandBuffer(cb);
+                cmdsOut.emplace_back( cb ); 
+            }
         }
     }
 
-    void DeviceVK::submitImmediateCommand(VkCommandPool pool, VkQueue queue, VkCommandBufferUsageFlags usage, const Function<void (VkCommandBuffer)>& callback)
+    void DeviceVK::submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback)
     {
-        assert(logical && pool && queue && callback );
+        assert(logical && transferQueue && transferPool && callback );
 
         VkCommandBuffer cb;
-        HelperVK::allocCommandBuffer( logical, pool, cb );
-        HelperVK::startRecordCommandBuffer( logical, (VkCommandBufferUsageFlags) usage, cb );
+        HelperVK::allocCommandBuffer( logical, transferPool, cb );
+        HelperVK::startRecordCommandBuffer( logical, (VkCommandBufferUsageFlags) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb );
 
         callback( cb );
 
@@ -313,12 +318,12 @@ namespace fv
         submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit.pCommandBuffers = &cb;
         submit.commandBufferCount = 1;
-        VkResult res = vkQueueSubmit(queue, 1, &submit, fence);
+        VkResult res = vkQueueSubmit(transferQueue, 1, &submit, fence);
         assert( res == VK_SUCCESS );
 
         while ( vkWaitForFences(logical, 1, &fence, VK_TRUE, -1) == VK_TIMEOUT );
         vkDestroyFence(logical, fence, nullptr);
-        HelperVK::freeCommandBuffers( logical, pool, &cb, 1 );
+        HelperVK::freeCommandBuffers( logical, transferPool, &cb, 1 );
     }
 
     RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size,

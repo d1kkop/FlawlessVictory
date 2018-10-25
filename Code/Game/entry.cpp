@@ -11,7 +11,13 @@ extern "C"
 
     FV_DLL void entry()
     {
-        g = NewGameObject();
-        g->addComponent<PlayerComponent>()->addComponent<AIComponent>();
+        for ( u32 i =0; i <3; i ++)
+        {
+            g = NewGameObject();
+            g->addComponent<PlayerComponent>()->addComponent<AIComponent>();
+            
+        }
+
+        sceneManager()->addScene( "FirstScene" ).serialize( "myscene", true );
     }
 }

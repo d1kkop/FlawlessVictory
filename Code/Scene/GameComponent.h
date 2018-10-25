@@ -3,17 +3,23 @@
 
 namespace fv
 {
+    class GameObject;
+    class TextSerializer;
+
     class GameComponent: public Component
     {
     public:
-        FV_DLL GameComponent* addComponent(u32 type);
-        FV_DLL GameComponent* getComponent(u32 type);
-        FV_DLL bool hasComponent(u32 type);
-        FV_DLL bool removeComponent(u32 type);
+        FV_MO FV_DLL GameComponent* addComponent(u32 type);
+        FV_MO FV_DLL GameComponent* getComponent(u32 type);
+        FV_MO FV_DLL bool hasComponent(u32 type);
+        FV_MO FV_DLL bool removeComponent(u32 type);
+        FV_MO FV_DLL GameObject* gameObject() const;
         template <class T> T* addComponent();
         template <class T> T* getComponent();
         template <class T> bool hasComponent();
         template <class T> bool removeComponent();
+
+        virtual void serialize( TextSerializer& ts ) = 0;
 
     private:
         virtual void begin() { }

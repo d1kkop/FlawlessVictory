@@ -1,5 +1,6 @@
 #include "GameObject.h"
 #include "SceneComponent.h"
+#include "../Core/TextSerializer.h"
 #include "../Core/Functions.h"
 #include "../Core/Reflection.h"
 #include "../Core/SparseArray.h"
@@ -75,6 +76,38 @@ namespace fv
     {
         FV_CHECK_MO();
         return (u32)m_Components.size();
+    }
+
+    u32 GameObject::prototypeId() const
+    {
+        FV_CHECK_MO();
+        return m_PrototypeId;
+    }
+
+    const String& GameObject::name() const
+    {
+        FV_CHECK_MO();
+        return m_Name;
+    }
+
+    u32 GameObject::id() const
+    {
+        FV_CHECK_MO();
+        return m_Id;
+    }
+
+    void GameObject::serialize(TextSerializer& ts)
+    {
+        FV_CHECK_MO();
+        ts.serialize( "id", m_Id );
+        for ( auto& kvp : m_Components )
+        {
+            const TypeInfo* ti = typeManager()->typeInfo( kvp.second->type() );
+            if ( !ti ) continue;
+            ts.pushObject();
+                kvp.second->serialize( ts );
+            ts.popObject( *ti->name );
+        }
     }
 
     SparseArray<GameObject>* g_GameObjectManager {};

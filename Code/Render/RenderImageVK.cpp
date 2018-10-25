@@ -7,20 +7,29 @@
 
 namespace fv
 {
+    bool RenderImageVK::initialize(DeviceVK& device, const struct RenderConfig& rc, VkImage swapChainImage, VkRenderPass renderPass)
+    {
+        m_Device = &device;
+
+        if ( !swapChainImage && !createImage(rc) )
+            return false;
+
+      return createImageView(rc, swapChainImage) && createFrameBuffer(renderPass);
+    }
+
     void RenderImageVK::release()
     {
-        if (!device ||!device->logical) return;
-        if ( imageAlloc.allocation ) MemoryHelperVK::freeImage( imageAlloc ); /* If has swap chain, images are from not set up. */
-        vkDestroyImageView( device->logical, imgView, nullptr );
-        vkDestroyFramebuffer( device->logical, frameBuffer, nullptr );
-        vkFreeCommandBuffers( device->logical, device->graphicsPool, (u32)commandBuffers.size(), commandBuffers.data() );
+        if (!m_Device ||!m_Device->logical) return;
+        if ( m_Image.allocation ) MemoryHelperVK::freeImage( m_Image ); /* If has swap chain, images are from not set up. */
+        vkDestroyImageView( m_Device->logical, m_ImageView, nullptr );
+        vkDestroyFramebuffer( m_Device->logical, m_FrameBuffer, nullptr );
     }
 
     bool RenderImageVK::createImage(const struct RenderConfig& rc)
     {
-        if ( !MemoryHelperVK::createImage(*device, device->extent.width, device->extent.height, device->format, 1,
-                                          rc.numLayers, rc.numSamples, false, device->queueIndices.graphics.value(),
-                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, imageAlloc) )
+        if ( !MemoryHelperVK::createImage(*m_Device, m_Device->extent.width, m_Device->extent.height, m_Device->format, 1,
+                                          rc.numLayers, rc.numSamples, false, m_Device->queueIndices.graphics.value(),
+                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, m_Image) )
         {
             return false;
         }
@@ -29,10 +38,13 @@ namespace fv
 
     bool RenderImageVK::createImageView(const struct RenderConfig& rc, VkImage swapChainImage)
     {
-        VkImage chosenImage = imageAlloc.image;
+        VkImage chosenImage = m_Image.image;
         if ( swapChainImage )
+        {
+            assert( !chosenImage );
             chosenImage = swapChainImage;
-        if ( !HelperVK::createImageView(device->logical, chosenImage, device->format, rc.numLayers, imgView) )
+        }
+        if ( !HelperVK::createImageView(m_Device->logical, chosenImage, m_Device->format, rc.numLayers, m_ImageView) )
         {
             return false;
         }
@@ -42,8 +54,8 @@ namespace fv
     bool RenderImageVK::createFrameBuffer(VkRenderPass renderPass)
     {
         assert(renderPass);
-        Vector<VkImageView> attachments = { imgView };
-        if ( !HelperVK::createFramebuffer(device->logical, device->extent, renderPass, attachments, frameBuffer) )
+        Vector<VkImageView> attachments = { m_ImageView };
+        if ( !HelperVK::createFramebuffer(m_Device->logical, m_Device->extent, renderPass, attachments, m_FrameBuffer) )
         {
             return false;
         }

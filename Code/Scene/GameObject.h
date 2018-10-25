@@ -5,6 +5,8 @@
 
 namespace fv
 {
+    class TextSerializer;
+
     class GameObject: public Object
     {
     public:
@@ -34,9 +36,16 @@ namespace fv
         FV_MO void removeAllComponents();
 
         FV_MO FV_DLL u32 numComponents();
+        FV_MO FV_DLL u32 prototypeId() const;
+        FV_MO FV_DLL const String& name() const;
+        FV_MO FV_DLL u32 id() const;
+
+        FV_MO FV_DLL void serialize(TextSerializer& ts);
 
     private:
         u32 m_Id = -1;
+        u32 m_PrototypeId = -1;
+        String m_Name;
         Map<u32, GameComponent*> m_Components;
     };
 

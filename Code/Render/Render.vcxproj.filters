@@ -31,9 +31,6 @@
     <ClInclude Include="SwapChainVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
-    <ClInclude Include="FrameSyncObjectVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
     <ClInclude Include="PipelineVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
@@ -51,6 +48,9 @@
     </ClInclude>
     <ClInclude Include="MeshRenderer.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameObject.h">
+      <Filter>DeviceParts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -70,9 +70,6 @@
       <Filter>DeviceParts</Filter>
     </ClCompile>
     <ClCompile Include="SwapChainVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameSyncObjectVK.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
     <ClCompile Include="PipelineVK.cpp">
@@ -95,6 +92,9 @@
     </ClCompile>
     <ClCompile Include="MeshRenderer.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameObject.cpp">
+      <Filter>DeviceParts</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include "../Core/Math.h"
 #include "../Core/Thread.h"
 #include "../Core/Reflection.h"
+#include "../Core/TextSerializer.h"
 #include <cassert>
 
 namespace fv
@@ -107,6 +108,27 @@ namespace fv
             c->computeTRSWorldToLocal();
             c->m_Parent = nullptr;
         }
+    }
+
+    void SceneComponent::serialize(TextSerializer& ts)
+    {
+        FV_CHECK_MO();
+        u32 parentId = m_Parent ? ( m_Parent->gameObject() ? m_Parent->gameObject()->id() : -1 ) : -1;
+        ts.serialize( "parent", parentId );
+        ts.serialize( "position", m_Position );
+        ts.serialize( "quat", m_Rotation );
+        ts.serialize( "scale", m_Scale );
+        ts.serialize( "sceneBits", m_SceneBits );
+        // TODO
+        if ( ts.isWriting() )
+        {
+        }
+    }
+
+    u64 SceneComponent::sceneBits() const
+    {
+        FV_CHECK_MO();
+        return m_SceneBits;
     }
 
     bool SceneComponent::computeLocalToWorld()

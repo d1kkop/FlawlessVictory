@@ -2,7 +2,7 @@
 #include "../Core/Common.h"
 #if FV_VULKAN
 #include "RenderImageVK.h"
-#include "FrameSyncObjectVK.h"
+#include "FrameObject.h"
 #include "PipelineVK.h"
 #include "BufferVK.h"
 #include "RenderManager.h"
@@ -32,13 +32,13 @@ namespace fv
         bool createSwapChain(const struct RenderConfig& rc, VkSurfaceKHR surface);
         bool createStandard(const struct RenderConfig& rc);
         bool createRenderImages(const struct RenderConfig& rc);
-        bool createFrameSyncObjects(const struct RenderConfig& rc);
+        bool createFrameObjects(const struct RenderConfig& rc);
 
         // Cmd's
-        FV_MO void addDrawCmd(const Function<void (VkCommandBuffer, const RenderImageVK&)>& recordCb);
+        FV_MO void createDrawObject(Vector<VkCommandBuffer>& buffersOut, const Function<void (VkCommandBuffer)>& recordCb);
 
         // Resource creation/deletion
-        void submitImmediateCommand(VkCommandPool pool, VkQueue queue, VkCommandBufferUsageFlags usage, const Function<void (VkCommandBuffer)>& callback);
+        void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
         FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, u32 mipLevels, u32 layers, u32 samples, ImageFormat format, VkImageUsageFlagBits imageUsageBits, VmaMemoryUsage memoryUsage);
         FV_TS RShader createShader(const char* data, u32 size);
         FV_TS RSubmesh createSubmesh(const Submesh& submesh, const SubmeshInput& si);
@@ -56,7 +56,6 @@ namespace fv
         VkInstance instance;
         VkDevice logical;
         VkPhysicalDevice physical;
-        VkQueue graphicsQueue;
         VkQueue computeQueue;
         VkQueue transferQueue;
         VkQueue sparseQueue;
@@ -65,7 +64,6 @@ namespace fv
         VkPhysicalDeviceMemoryProperties memProperties;
         VkPhysicalDeviceFeatures features;
         QueueFamilyIndicesVK queueIndices;
-        VkCommandPool graphicsPool;
         VkCommandPool transferPool;
         VkExtent2D extent;
         VkFormat format;
@@ -73,9 +71,11 @@ namespace fv
         VkShaderModule standardVert;
         VkRenderPass clearPass;
         PipelineVK clearPipeline;
+        Vector<VkCommandPool> graphicsPools;
+        Vector<VkQueue> graphicsQueues;
         Map<u32, PipelineVK> pipelines;
         Vector<RenderImageVK> renderImages;
-        Vector<FrameSyncObjectVK> frameSyncObjects;
+        Vector<FrameObject> frameObjects;
         Vector<DeviceResource> textures2d;
         Vector<DeviceResource> shaders;
         Vector<RSubmesh> submeshes;

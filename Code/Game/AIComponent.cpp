@@ -46,4 +46,9 @@ namespace game
         //}
     }
 
+    void AIComponent::serialize(TextSerializer& ts)
+    {
+
+    }
+
 }

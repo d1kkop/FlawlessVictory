@@ -20,6 +20,9 @@ namespace game
         void updateMT(float t) override;
         void update(float t) override;
 
+    protected:
+        void serialize( class fv::TextSerializer& ts ) override;
+
     private:
         M<Shader> m_FragShader;
         M<Shader> m_VertShader;
