@@ -1,4 +1,8 @@
 #include "MeshRenderer.h"
+#include "../Core/Thread.h"
+#include "../Core/TextSerializer.h"
+#include "../Resource/Mesh.h"
+#include "../Resource/ResourceManager.h"
 
 namespace fv
 {
@@ -29,7 +33,21 @@ namespace fv
 
     void MeshRenderer::serialize(TextSerializer& ts)
     {
-
+        FV_CHECK_MO();
+        if ( ts.isWriting() )
+        {
+            if ( m_Mesh )
+            {
+                String filename = m_Mesh->filename();
+                ts.serialize("filename", filename );
+            }
+        }
+        else
+        {
+            String filename;
+            ts.serialize("filename", filename);
+            m_Mesh = resourceManager()->load<Mesh>( filename );
+        }
     }
 
 }

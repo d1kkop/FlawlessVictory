@@ -4,6 +4,9 @@
     <Filter Include="Components">
       <UniqueIdentifier>{2b4acfac-a42b-42c2-91f5-d364f4b33241}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{ca69e55f-7d1a-42d0-89c6-25b03d513262}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Scene.h" />
@@ -19,10 +22,15 @@
     <ClInclude Include="GameComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="SceneList.h">
+    <ClInclude Include="MeshRenderer.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="SceneList.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameObject.cpp">
@@ -37,9 +45,14 @@
     <ClCompile Include="GameComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="SceneList.cpp">
+    <ClCompile Include="MeshRenderer.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="SceneList.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneManager.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

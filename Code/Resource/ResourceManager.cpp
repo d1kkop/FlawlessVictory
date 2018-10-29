@@ -117,6 +117,7 @@ namespace fv
         M<Resource> resource = M<Resource>(sc<Resource*>(ti->createFunc(1)));
         if (!resource) return nullptr; // Type to static create function failed.
         m_NameToResource[filename] = { resource, filenameToDirectory(filename) }; // Store while having lock.
+        resource->m_Filename = filename;
         return resource;
     }
 

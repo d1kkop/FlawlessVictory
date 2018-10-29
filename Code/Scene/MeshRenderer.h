@@ -1,5 +1,5 @@
 #pragma once
-#include "../Scene/GameComponent.h"
+#include "GameComponent.h"
 
 namespace fv
 {
@@ -17,7 +17,7 @@ namespace fv
     protected:
         void cullMT() override;
         void drawMT() override;
-        void serialize( TextSerializer& ts ) override;
+        FV_MO void serialize( TextSerializer& ts ) override;
 
     private:
         M<Mesh> m_Mesh;

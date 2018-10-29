@@ -1,5 +1,7 @@
 #include "Camera.h"
 #include "../Core/LogManager.h"
+#include "../Core/TextSerializer.h"
+#include "../Core/Thread.h"
 
 namespace fv
 {
@@ -90,7 +92,20 @@ namespace fv
 
     void Camera::serialize(TextSerializer& ts)
     {
-
+        FV_CHECK_MO();
+        ts.serialize( "fov", m_Fov );
+        ts.serialize( "aspect", m_Aspect );
+        ts.serialize( "near", m_Near );
+        ts.serialize( "far", m_Far );
+        ts.serialize( "width", m_Width );
+        ts.serialize( "height", m_Height );
+        ts.serialize( "isPerspective", m_IsPerspective );
+        ts.serialize( "isStereo", m_IsStereo );
+        ts.serialize( "ipd", m_Ipd );
+        if ( !ts.isWriting() ) 
+        {
+            m_IsDirty = true;
+        }
     }
 
 }
