@@ -43,7 +43,6 @@ namespace fv
         FV_MO FV_DLL void serialize(TextSerializer& ts);
 
     private:
-        u32 m_Id = -1;
         u32 m_PrototypeId = -1;
         String m_Name;
         Map<u32, GameComponent*> m_Components;
@@ -78,7 +77,7 @@ namespace fv
     FV_DLL SparseArray<GameObject>* gameObjectManager();
     FV_DLL void deleteGameObjectManager();
 
-    FV_DLL GameObject* NewGameObject(bool addSceneComponent=true);
+    FV_DLL GameObject* NewGameObject(u64 sceneMask);
 
     // Ensure that every ptr to game object is nulled or keep a Ref<GameObject> handle.
     FV_DLL void DestroyGameObject( GameObject* go );

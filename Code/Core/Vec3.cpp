@@ -37,7 +37,9 @@ namespace fv
 
     Vec3& Vec3::normalize()
     {
-        float l=1.f/length();
+        float l=length();
+        if (l>=0.00001f)
+            l=1.f/l;
         *this *= l;
         assert( checkVector(*this) );
         return *this;

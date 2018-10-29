@@ -13,7 +13,7 @@ namespace fv
     {
         u32 type() const { return m_Type; }
 
-    private:
+    protected:
         u32 m_Type = -1;
 
         friend class TypeManager;

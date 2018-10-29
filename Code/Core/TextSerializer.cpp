@@ -8,10 +8,8 @@ namespace fv
     TextSerializer::TextSerializer():
         m_IsWriting(true)
     {
-    #if FV_NLOHMANJSON
-        m_Document.push(json());
-    #else
-    #endif
+        m_Stack.push(&m_Document);
+        m_Active = m_Stack.top();
     }
 
     TextSerializer::TextSerializer(const char* inputFilePath):
@@ -23,13 +21,13 @@ namespace fv
             try
             {
             #if FV_NLOHMANJSON
-                m_Document.push(json());
-                file >> m_Document.top();
+                file >> m_Document;
             #else
                 #error no implementation
             #endif
-
                 file.close();
+                m_Stack.push(&m_Document);
+                m_Active = m_Stack.top();
             }
             catch (...)
             {
@@ -58,7 +56,7 @@ namespace fv
             try
             {
             #if FV_NLOHMANJSON
-                file << setw(4) << m_Document.top() << endl;
+                file << setw(4) << m_Document << endl;
             #else
                 #error no implementation
             #endif
@@ -74,44 +72,91 @@ namespace fv
         else m_HasSerializeErrors = true;
     }
 
-    void TextSerializer::pushArray()
+    bool TextSerializer::beginArrayElement()
     {
-        #if FV_NLOHMANJSON
-        json jarray = json::array();
-        m_Document.push( jarray );
-        #endif
-        
-    }
-
-    void TextSerializer::beginArrayElement()
-    {
-        pushObject();
+        if ( m_IsWriting )
+        {
+            m_Active->push_back( json::object() );
+            m_Stack.push( &m_Active->back() );
+            m_Active = m_Stack.top();
+            return true;
+        }
+        else
+        {
+            if ( m_ArrayIt.top() != m_Active->end() )
+            {
+                m_Stack.push( &(*m_ArrayIt.top()) );
+                m_Active = m_Stack.top();
+                return true;
+            }
+        }
+        return false;
     }
 
     void TextSerializer::endArrayElement()
     {
-        json jobject = m_Document.top();
-        m_Document.pop();
-        m_Document.top().push_back( jobject );
+        if ( m_IsWriting )
+        {
+            m_Stack.pop();
+            m_Active = m_Stack.top();
+        }
+        else
+        {
+            m_ArrayIt.top()++;
+            m_Stack.pop();
+            m_Active = m_Stack.top();
+        }
     }
 
-    void TextSerializer::popArray(const String& name)
+    void TextSerializer::pushArray(const String& name)
     {
-        json jarray = m_Document.top();
-        m_Document.pop();
-        m_Document.top()[name] = jarray;
+    #if FV_NLOHMANJSON
+        if ( m_IsWriting )
+        {
+            (*m_Active)[name] = json::array();
+            m_Stack.push( &(*m_Active)[name] );
+            m_Active = m_Stack.top();
+        }
+        else
+        {
+            m_Stack.push( &(*m_Active)[name] );
+            m_Active = m_Stack.top();
+            m_ArrayIt.push( m_Active->begin() );
+        }
+    #endif
     }
 
-    void TextSerializer::pushObject()
+    void TextSerializer::popArray()
     {
-        json jobject = json::object();
-        m_Document.push( jobject );
+    #if FV_NLOHMANJSON
+        if ( m_IsWriting )
+        {
+            m_Stack.pop();
+            m_Active = m_Stack.top();
+        }
+        else
+        {
+            m_Stack.pop();
+            m_Active = m_Stack.top();
+            m_ArrayIt.pop();
+        }
+    #endif
     }
 
-    void TextSerializer::popObject(const String& name)
+    void TextSerializer::pushObject(const String& name)
     {
-        json jobject = m_Document.top();
-        m_Document.pop();
-        m_Document.top()[name] = jobject;
+    #if FV_NLOHMANJSON
+        (*m_Active)[name] = json::object();
+        m_Stack.push( &(*m_Active)[name] );
+        m_Active = m_Stack.top();
+    #endif
+    }
+
+    void TextSerializer::popObject()
+    {
+    #if FV_NLOHMANJSON
+        m_Stack.pop();
+        m_Active = m_Stack.top();
+    #endif
     }
 }

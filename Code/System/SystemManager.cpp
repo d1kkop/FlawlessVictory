@@ -46,9 +46,9 @@ namespace fv
         if ( h.function )
         {
             // Execute optional entry point of loaded module.
-            using entryFunc = void (*)();
+            using entryFunc = void (*)(i32, char**);
             entryFunc entry = (entryFunc)h.function;
-            entry();
+            entry( params.argc, params.argv );
         }
         else
         {

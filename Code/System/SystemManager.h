@@ -7,6 +7,8 @@ namespace fv
 {
     struct SystemParams
     {
+        i32 argc;
+        char** argv;
         String moduleName;
     };
 

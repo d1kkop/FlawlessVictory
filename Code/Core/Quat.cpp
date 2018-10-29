@@ -30,6 +30,8 @@ namespace fv
 
     Quat Quat::rotate(const Vec3& axis, float ang)
     {
+        if (!axis.isNormalized())
+            return identity();
         Quat q;
         q.setRotate(axis, ang);
         return q;
@@ -118,7 +120,10 @@ namespace fv
 
     Vec3 Quat::axis() const
     {
-        float s = 1.f/(1.f-w*w);
+        float d = (1.f-w*w);
+        float s = d;
+        if ( d>=0.00001f )
+            s=1.f/d;
         return { x*s, y*s, z*s };
     }
 

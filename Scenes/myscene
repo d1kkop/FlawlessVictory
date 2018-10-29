@@ -1,81 +1,158 @@
 {
-    "bit": 1,
     "gameObjects": [
         {
-            "AIComponent": {},
-            "PlayerComponent": {},
-            "SceneComponent": {
-                "parent": 4294967295,
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "quat": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "sceneBits": 1
-            },
-            "id": 4294967295
+            "components": [
+                {
+                    "name": "PlayerComponent",
+                    "type": 219967790
+                },
+                {
+                    "name": "AIComponent",
+                    "type": 1917920598
+                },
+                {
+                    "name": "SceneComponent",
+                    "parent": 4294967295,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "quat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self": 0,
+                    "type": 3178808041
+                }
+            ]
         },
         {
-            "AIComponent": {},
-            "PlayerComponent": {},
-            "SceneComponent": {
-                "parent": 4294967295,
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "quat": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "sceneBits": 1
-            },
-            "id": 4294967295
+            "components": [
+                {
+                    "name": "PlayerComponent",
+                    "type": 219967790
+                },
+                {
+                    "name": "AIComponent",
+                    "type": 1917920598
+                },
+                {
+                    "name": "SceneComponent",
+                    "parent": 4294967295,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "quat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self": 1,
+                    "type": 3178808041
+                }
+            ]
         },
         {
-            "AIComponent": {},
-            "PlayerComponent": {},
-            "SceneComponent": {
-                "parent": 4294967295,
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "quat": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "sceneBits": 1
-            },
-            "id": 4294967295
+            "components": [
+                {
+                    "name": "PlayerComponent",
+                    "type": 219967790
+                },
+                {
+                    "name": "AIComponent",
+                    "type": 1917920598
+                },
+                {
+                    "name": "SceneComponent",
+                    "parent": 4294967295,
+                    "position": [
+                        2.0,
+                        0.0,
+                        0.0
+                    ],
+                    "quat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self": 2,
+                    "type": 3178808041
+                }
+            ]
+        },
+        {
+            "components": [
+                {
+                    "name": "SceneComponent",
+                    "parent": 2,
+                    "position": [
+                        5.0,
+                        0.0,
+                        0.0
+                    ],
+                    "quat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        0.5,
+                        1.0
+                    ],
+                    "self": 3,
+                    "type": 3178808041
+                }
+            ]
+        },
+        {
+            "components": [
+                {
+                    "name": "SceneComponent",
+                    "parent": 3,
+                    "position": [
+                        5.0,
+                        -10.0,
+                        0.0
+                    ],
+                    "quat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        0.5,
+                        1.0
+                    ],
+                    "self": 4,
+                    "type": 3178808041
+                }
+            ]
         }
-    ],
-    "name": "FirstScene"
+    ]
 }

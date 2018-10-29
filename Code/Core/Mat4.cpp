@@ -253,6 +253,8 @@ namespace fv
 
     Mat4 Mat4::rotate(const Vec3& axis, float ang)
     {
+        if ( !axis.isNormalized() )
+            return identity();
         Mat4 m;
         m.setRotate(axis, ang);
         return m;

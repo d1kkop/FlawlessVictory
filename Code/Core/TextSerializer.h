@@ -17,12 +17,12 @@ namespace fv
         FV_DLL ~TextSerializer();
         FV_DLL void writeToFile( const char* outputFilePath );
 
-        FV_DLL void pushArray();
-        FV_DLL void beginArrayElement();
+        FV_DLL void pushArray(const String& name);
+        FV_DLL bool beginArrayElement();
         FV_DLL void endArrayElement();
-        FV_DLL void popArray(const String& name);
-        FV_DLL void pushObject();
-        FV_DLL void popObject(const String& name);
+        FV_DLL void popArray();
+        FV_DLL void pushObject(const String& name);
+        FV_DLL void popObject();
 
         template <class T>
         void serialize(const String& key, T& value);
@@ -39,9 +39,10 @@ namespace fv
         bool m_HasSerializeErrors = false;
 
     #if FV_NLOHMANJSON
-        Stack<json> m_Document;
-        json m_ArrayElement{};
-        bool m_IsArray = false;
+        json m_Document;
+        Stack<json*> m_Stack;
+        json* m_Active;
+        Stack<json::iterator> m_ArrayIt;
     #endif
     };
 
@@ -49,41 +50,32 @@ namespace fv
     template <class T>
     void TextSerializer::serialize(const String& key, T& value)
     {
-    #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
-            m_Document.top()[ key ] = value;
+            (*m_Active)[key] = value;
         }
         else 
         {
-            value = m_Document.top()[ key ];
+            value = (*m_Active)[key];
         }
-    #else
-        #error no implementation
-    #endif
     }
 
     template <>
     inline void TextSerializer::serialize(const String& key, Vec3& v)
     {
-    #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
-            m_Document.top()[key] = { v.x, v.y, v.z };
+            (*m_Active)[key] = { v.x, v.y, v.z };
         }
         else
         {
-            auto& val = m_Document.top()[key];
-            if ( val.is_array() && val.size()==3 )
-            {
-                v.x = val[0];
-                v.y = val[1];
-                v.z = val[2];
-            }
+            auto& val = (*m_Active)[key];
+            if ( !(val.is_array() && val.size()==3) )
+                throw;
+            v.x = val[0];
+            v.y = val[1];
+            v.z = val[2];
         }
-    #else
-        #error no implementation
-    #endif
     }
 
     template <>
@@ -92,18 +84,17 @@ namespace fv
     #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
-            m_Document.top()[key] = { v.x, v.y, v.z, v.w };
+            (*m_Active)[key] = { v.x, v.y, v.z, v.w };
         }
         else
         {
-            auto& val = m_Document.top()[key];
-            if ( val.is_array() && val.size()==4 )
-            {
-                v.x = val[0];
-                v.y = val[1];
-                v.z = val[2];
-                v.w = val[3];
-            }
+            auto& val = (*m_Active)[key];
+            if ( !(val.is_array() && val.size()==4) )
+                throw;
+            v.x = val[0];
+            v.y = val[1];
+            v.z = val[2];
+            v.w = val[3];
         }
     #else
         #error no implementation
@@ -111,7 +102,7 @@ namespace fv
     }
 
     template <>
-    inline void TextSerializer::serialize(const String& key, Vec4& v) { serialize(key, (Quat&)v); }
+    inline void TextSerializer::serialize(const String& key, Vec4& v) { serialize(key, (Vec4&)v); }
 
     template <class T>
     void TextSerializer::serializeVector(const String& key, Vector<T>& value)
@@ -122,11 +113,11 @@ namespace fv
             json j;
             for ( auto& v : value )
                 j.emplace_back( v );
-            m_Document.top()[key] = j;
+            (*m_Active)[key] = j;
         }
         else
         {
-            json& j = m_Document.top()[key];
+            json& j = (*m_Active)[key];
             for ( auto& v : j )
             {
                 value.emplace_back( v );
@@ -146,11 +137,11 @@ namespace fv
             json j;
             for ( auto& kvp : value )
                 j[kvp.first] = kvp.second;
-            m_Document.top()[key] = j;
+            (*m_Active)[key] = j;
         }
         else
         {
-            json& j = m_Document.top()[key];
+            json& j = (*m_Active)[key];
             for (auto& kvp : j.items())
             {
                 value[ kvp.key() ] = kvp.value();

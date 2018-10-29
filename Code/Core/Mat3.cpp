@@ -42,6 +42,8 @@ namespace fv
 
     Mat3 Mat3::rotate(const Vec3& axis, float ang)
     {
+        if (!axis.isNormalized()) 
+            return identity();
         Mat3 m; 
         m.setRotate(axis, ang); 
         return m;

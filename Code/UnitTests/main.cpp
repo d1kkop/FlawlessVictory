@@ -13,7 +13,7 @@ using namespace fv;
 
 extern "C"
 {
-    FV_DLL void entry()
+    FV_DLL void entry(i32 argc, char** arv)
     {
         for ( auto* ut : g_UnitTests )
         {

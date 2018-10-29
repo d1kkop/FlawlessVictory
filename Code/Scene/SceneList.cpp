@@ -19,9 +19,7 @@ namespace fv
         if ( save )
         {
             TextSerializer ts {};
-            ts.serialize( "bit", m_Bit );
-            ts.serialize( "name", m_Name );
-            ts.pushArray();
+            ts.pushArray("gameObjects");
             for ( SceneComponent& sc : Itr<SceneComponent>() )
             {
                 ts.beginArrayElement();
@@ -39,12 +37,28 @@ namespace fv
                 }
                 ts.endArrayElement();
             }
-            ts.popArray("gameObjects");
+            ts.popArray();
             ts.writeToFile( (Directories::scenes() / filename).string().c_str() );
         }
         else
         {
             TextSerializer ts( (Directories::scenes() / filename).string().c_str() );
+            if (ts.hasSerializeErrors()) return;
+            try
+            {
+                ts.pushArray("gameObjects");
+                while ( ts.beginArrayElement() )
+                {
+                    GameObject* go = NewGameObject( false );
+                    go->serialize( ts );
+                    ts.endArrayElement();
+                }
+                ts.popArray();
+            }
+            catch (...)
+            {
+                LOGC("Failed to serialize %s.", filename.string().c_str());
+            }
         }
     }
 }

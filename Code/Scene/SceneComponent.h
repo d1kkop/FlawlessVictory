@@ -30,16 +30,23 @@ namespace fv
         FV_DLL void setScale(const Vec3& scale);
         FV_DLL const Vec3& scale() const;
 
+        /*  Detaches from parent and attaches to new component if any. 
+            World position/rotation/scale is not affeected. */
         FV_MO FV_DLL void attach(SceneComponent* other);
-        FV_MO FV_DLL void detachSelf();
-        FV_MO FV_DLL void detachParent();
+        FV_MO FV_DLL void detachFromParent();
         FV_MO FV_DLL void detachChildren();
 
-        FV_DLL void serialize(TextSerializer& ts) override;
-        FV_MO u64 sceneBits() const;
+        /*  Returns true of 'other' is in hierarchy of calling component.
+            This can be either upwards (parent/ancestor) or downwards (child or grandchild). */
+        FV_DLL bool inHierarchy(const SceneComponent* other) const;
+
+        FV_DLL bool isChildOrGrandChild(const SceneComponent* other) const;
+
+        FV_MO FV_DLL void serialize(TextSerializer& ts) override;
+        FV_MO FV_DLL u64& sceneBits() { return m_SceneBits; }
 
     private:
-        FV_MO bool computeLocalToWorld();
+        FV_MO void computeLocalToWorld();
         FV_MO void computeWorldToLocal();
         FV_MO void computeTRSWorldToLocal();
 
@@ -50,9 +57,9 @@ namespace fv
         Vector<SceneComponent*> m_Children;
         Mat4 m_LocalToWorld = Mat4::identity();
         Mat4 m_WorldToLocal = Mat4::identity();
-        bool m_MatrixDirty{};
-        bool m_WorldToLocalDirty{};
-        u64 m_SceneBits = 1;
+        bool m_LocalToWorldDirty = true;
+        bool m_WorldToLocalDirty = true;
+        u64 m_SceneBits = 0;
 
         friend class SceneManager;
     };

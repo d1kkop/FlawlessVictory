@@ -63,6 +63,8 @@ int main(int argc, char** argv)
     
     SystemParams sysParams{};
     sysParams.moduleName   = dllPath.string();
+    sysParams.argc = argc;
+    sysParams.argv = argv;
 
     if ( systemManager()->initialize( sysParams ) )
     {

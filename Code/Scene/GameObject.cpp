@@ -90,23 +90,45 @@ namespace fv
         return m_Name;
     }
 
-    u32 GameObject::id() const
-    {
-        FV_CHECK_MO();
-        return m_Id;
-    }
-
     void GameObject::serialize(TextSerializer& ts)
     {
         FV_CHECK_MO();
-        ts.serialize( "id", m_Id );
-        for ( auto& kvp : m_Components )
+        if ( ts.isWriting() )
         {
-            const TypeInfo* ti = typeManager()->typeInfo( kvp.second->type() );
-            if ( !ti ) continue;
-            ts.pushObject();
-                kvp.second->serialize( ts );
-            ts.popObject( *ti->name );
+            ts.pushArray("components");
+            for ( auto& kvp : m_Components )
+            {
+                ts.beginArrayElement();
+                u32 type = kvp.second->type();
+                auto ti  = typeManager()->typeInfo(type);
+                if (ti)
+                {
+                    String name = *ti->name;
+                    ts.serialize( "type", type );
+                    ts.serialize( "name", name );
+                    kvp.second->serialize( ts );
+                }
+                ts.endArrayElement();
+            }
+            ts.popArray();
+        }
+        else
+        {
+            ts.pushArray("components");
+            while ( ts.beginArrayElement() )
+            {
+                u32 compType;
+                String name;
+                ts.serialize("type", compType);
+                const TypeInfo* ti = typeManager()->typeInfo( compType );
+                if (ti)
+                {
+                    auto* c = addComponent(compType);
+                    if (c) c->serialize( ts );
+                }
+                ts.endArrayElement();
+            }
+            ts.popArray();
         }
     }
 
@@ -114,11 +136,16 @@ namespace fv
     SparseArray<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
     void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
 
-    GameObject* NewGameObject(bool addSceneComponent)
+    GameObject* NewGameObject(u64 sceneMask)
     {
         FV_CHECK_MO();
         auto* go = gameObjectManager()->newObject();
-        if ( addSceneComponent ) go->addComponent<SceneComponent>();
+        if (!go) return nullptr;
+        if ( sceneMask!=0 ) 
+        {
+            SceneComponent* sc = go->addComponent<SceneComponent>();
+            sc->sceneBits() |= sceneMask;
+        }
         return go;
     }
 
