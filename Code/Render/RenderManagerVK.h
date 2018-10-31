@@ -13,7 +13,8 @@ namespace fv
         ~RenderManagerVK() override;
         bool initGraphics() override;
         void closeGraphics() override;
-        void drawFrame() override;
+        void concludeFrame() override;
+        void submitFrame() override;
         void waitOnDeviceIdle() override;
 
         FV_TS bool getOrCreatePipeline(u32 deviceIdx, const SubmeshInput& sinput, const MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipeline);
@@ -29,15 +30,20 @@ namespace fv
         bool createDevices(VkSurfaceKHR mainSurface, u32 numGraphicsQueues);
         u32 numDevices() const override { return (u32) m_Devices.size(); }
         u32 autoDeviceIdx() override;
-        void drawWorld();
 
+        // Create
         FV_TS RTexture2D createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
                                          u32 mipLevels, u32 layers, u32 samples, ImageFormat format) override;
         FV_TS RShader createShader(u32 deviceIdx, const char* data, u32 size) override;
         FV_TS RSubmesh createSubmesh(u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si) override;
+
+        // Delete
         FV_TS void deleteTexture2D(RTexture2D tex2d) override;
         FV_TS void deleteShader(RShader shader) override;
         FV_TS void deleteSubmesh(RSubmesh submesh) override;
+
+        // Render
+        void renderSubmesh(RSubmesh submesh) override;
 
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};

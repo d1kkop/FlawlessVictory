@@ -279,9 +279,7 @@ namespace fv
 
     void DeviceVK::createDrawObject(Vector<VkCommandBuffer>& cmdsOut, const Function<void (VkCommandBuffer)>& recordCb)
     {
-        FV_CHECK_MO();
-        assert( logical );
-
+        assert( logical && frameObjects.size() && graphicsQueues.size() );
         for ( u32 i=0; i<(u32)frameObjects.size(); ++i )
         {
             for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
@@ -295,6 +293,19 @@ namespace fv
                 cmdsOut.emplace_back( cb ); 
             }
         }
+    }
+
+    void DeviceVK::deleteDrawObject(Vector<VkCommandBuffer>& buffers)
+    {
+        assert( logical && frameObjects.size() && graphicsQueues.size() && buffers.size()==frameObjects.size()*graphicsQueues.size() );
+        for ( u32 i=0; i<(u32)frameObjects.size(); ++i )
+        {
+            for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
+            {
+                HelperVK::freeCommandBuffers(logical, graphicsPools[j], &buffers[i*graphicsQueues.size()+j], 1);
+            }
+        }
+        buffers.clear();
     }
 
     void DeviceVK::submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback)

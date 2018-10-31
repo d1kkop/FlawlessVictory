@@ -18,5 +18,6 @@ namespace fv
     private:
         BufferVK m_VertexBuffer;
         BufferVK m_IndexBuffer;
+        Vector<VkCommandBuffer> m_DrawBuffers;
     };
 }

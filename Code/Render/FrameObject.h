@@ -15,8 +15,10 @@ namespace fv
         // In this order. Wait, reset, submit, obtain finished semaphores.
         void waitForFences();
         void resetFences();
+        void addCmdBufferToQueue( VkCommandBuffer cb, u32 queueIdx ); // Each thread should have its unique idx ranging form [ 0 to numThreads-1 ]
         void submitCommandBuffers(VkSemaphore waitSemaphore, const Vector<VkQueue>& graphicsQueues);
         const VkSemaphore* finishedSemaphores() const { return m_FinishedSemaphores.data(); }
+        u32 numSemaphores() const { return (u32)m_FinishedSemaphores.size(); }
 
     private:
         struct DeviceVK* m_Device;

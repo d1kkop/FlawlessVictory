@@ -117,16 +117,23 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
 
+        // Creation
         FV_TS virtual RTexture2D createTexture2D( u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
                                                   u32 mipLevels, u32 layers, u32 samples, ImageFormat format ) = 0;
         FV_TS virtual RShader createShader( u32 deviceIdx, const char* data, u32 size ) = 0;
         FV_TS virtual RSubmesh createSubmesh( u32 deviceIdx, const Submesh& submesh, const SubmeshInput& si ) = 0;
+
+        // Deletion
         FV_TS virtual void deleteTexture2D( RTexture2D tex2d ) = 0;
         FV_TS virtual void deleteShader( RShader shader ) = 0;
         FV_TS virtual void deleteSubmesh( RSubmesh submesh ) = 0;
+        
+        // Rendering
+        virtual void renderSubmesh( RSubmesh submesh) = 0;
 
         void readRenderConfig();
-        virtual void drawFrame() = 0;
+        virtual void concludeFrame() = 0;
+        virtual void submitFrame() = 0;
         virtual void waitOnDeviceIdle() = 0;
         virtual u32 numDevices() const = 0;
         virtual u32 autoDeviceIdx() = 0;

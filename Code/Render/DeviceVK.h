@@ -34,8 +34,9 @@ namespace fv
         bool createRenderImages(const struct RenderConfig& rc);
         bool createFrameObjects(const struct RenderConfig& rc);
 
-        // Cmd's
-        FV_MO void createDrawObject(Vector<VkCommandBuffer>& buffersOut, const Function<void (VkCommandBuffer)>& recordCb);
+        // Cmd's // Thread-safe in a sense that it does not affect the DeviceVK object.
+        FV_TS void createDrawObject(Vector<VkCommandBuffer>& buffersOut, const Function<void (VkCommandBuffer)>& recordCb);
+        FV_TS void deleteDrawObject(Vector<VkCommandBuffer>& buffers);
 
         // Resource creation/deletion
         void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);

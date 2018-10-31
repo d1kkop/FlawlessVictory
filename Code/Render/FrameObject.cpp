@@ -45,6 +45,7 @@ namespace fv
             m_FinishedSemaphores.emplace_back( imageFinished );
             m_FrameFences.emplace_back( frameFence );
         }
+        m_QueueMutexs.resize( numObjects );
         
         return true;
     }

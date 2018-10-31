@@ -27,8 +27,6 @@ namespace fv
     {
         if ( m_Culled ) return;
         if ( !m_Mesh ) return;
-        
-        // Update materials.. ?
     }
 
     void MeshRenderer::serialize(TextSerializer& ts)

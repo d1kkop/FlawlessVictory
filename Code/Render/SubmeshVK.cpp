@@ -5,6 +5,8 @@ namespace fv
 {
     SubmeshVK::~SubmeshVK()
     {
+        // Device on BufferVK is always valid even if buffer was not valid.
+        device()->deleteDrawObject( m_DrawBuffers );
         m_VertexBuffer.release();
         m_IndexBuffer.release();
     }
@@ -30,6 +32,11 @@ namespace fv
         auto s = new SubmeshVK{};
         s->m_VertexBuffer = vertexBuffer;
         s->m_IndexBuffer = indexBuffer;
+
+        device.createDrawObject( s->m_DrawBuffers, [s](VkCommandBuffer cb)
+        {
+            s->recordDraw( cb );
+        });
         return s;
     }
 

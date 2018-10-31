@@ -76,4 +76,10 @@ namespace fv
 
     FV_DLL ResourceManager* resourceManager();
     FV_DLL void deleteResourceManager();
+
+    template <class T>
+    M<T> Load(const String& filename)
+    {
+        return resourceManager()->load<T>(filename);
+    }
 }

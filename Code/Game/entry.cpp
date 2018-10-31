@@ -1,4 +1,5 @@
 #include "../Core.h"
+#include "../Resources.h"
 #include "../Scene.h"
 #include "PlayerComponent.h"
 #include "AIComponent.h"
@@ -15,13 +16,12 @@ extern "C"
         {
             if ( strcmp(argv[2],"save")==0)
             {
-                u64 sceneMask = sceneManager()->addScene( "MainScene" );
-                for ( u32 i =0; i <3; i ++)
-                {
-                    g = NewGameObject( sceneMask );
-                    g->addComponent<PlayerComponent>()->addComponent<AIComponent>();
-            
-                }
+                u64 scene = sceneManager()->addScene( "MainScene" );
+                auto g = NewGameObject(scene);
+                g->addComponent<MeshRenderer>()->setMesh(Load<Mesh>("tyra.obj"));
+                auto c = NewGameObject(scene);
+                c->addComponent<Camera>();
+                c->addComponent<PlayerComponent>();
                 sceneManager()->serialize( "MainScene", "myscene", true );
             }
         }

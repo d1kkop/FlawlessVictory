@@ -11,13 +11,13 @@ namespace fv
         FV_TYPE_FLAGS(MeshRenderer, FV_DRAW)
 
     public:
-        FV_MO void setMesh(const M<Mesh> mesh);
-        FV_MO M<Mesh>& mesh();
+        FV_MO FV_DLL void setMesh(const M<Mesh> mesh);
+        FV_MO FV_DLL M<Mesh>& mesh();
 
     protected:
-        void cullMT() override;
-        void drawMT() override;
-        FV_MO void serialize( TextSerializer& ts ) override;
+        FV_DLL void cullMT() override;
+        FV_DLL void drawMT() override;
+        FV_MO FV_DLL void serialize( TextSerializer& ts ) override;
 
     private:
         M<Mesh> m_Mesh;

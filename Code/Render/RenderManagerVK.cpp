@@ -142,14 +142,20 @@ namespace fv
         }
     }
 
-    void RenderManagerVK::drawFrame()
+    void RenderManagerVK::concludeFrame()
     {
         for ( auto& dv : m_Devices )
         {
             auto& frameObject = dv->frameObjects[m_FrameImageIdx];
             frameObject.waitForFences();
             frameObject.resetFences();
+        }
+    }
 
+    void RenderManagerVK::submitFrame()
+    {
+        for ( auto& dv : m_Devices )
+        {
             u32 imageIndex; // Iterates from 0 to numImages-1 in swap chain.
             VkSemaphore imageAvailable = {};
             if ( dv->swapChain() )
@@ -167,7 +173,7 @@ namespace fv
             {
                 VkPresentInfoKHR presentInfo = {};
                 presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-                presentInfo.waitSemaphoreCount = jobManager()->numThreads();
+                presentInfo.waitSemaphoreCount = frameObject.numSemaphores();
                 presentInfo.pWaitSemaphores = frameObject.finishedSemaphores();
                 presentInfo.swapchainCount  = 1;
                 VkSwapchainKHR swapChains [] = { dv->swapChain()->swapChain() };
@@ -284,11 +290,6 @@ namespace fv
         return retVal % numDevices();
     }
 
-    void RenderManagerVK::drawWorld()
-    {
-        //componentManager()->componentsOfType
-    }
-
     RTexture2D RenderManagerVK::createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
                                                 u32 mipLevels, u32 layers, u32 samples, ImageFormat format)
     {
@@ -320,8 +321,16 @@ namespace fv
 
     void RenderManagerVK::deleteSubmesh(RSubmesh submesh)
     {
+        if (!submesh) return;
         SubmeshVK* s = (SubmeshVK*)submesh;
         s->device()->deleteSubmesh( submesh, true );
+    }
+
+    void RenderManagerVK::renderSubmesh(RSubmesh submesh)
+    {
+        assert(submesh);
+        SubmeshVK* s = (SubmeshVK*)submesh;
+        s->device()->frameObjects[m_FrameImageIdx].m_CommandBuffers
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

@@ -9,6 +9,7 @@ namespace fv
                               bool shareInQueue, const u32* queueIndices, u32 numQueueIndices, void** pMapped)
     {
         BufferVK bf = {};
+        bf.m_Device = &device;
 
         assert(queueIndices && numQueueIndices >= 1 && size != 0);
         VkBufferCreateInfo bufferInfo {};
@@ -46,7 +47,6 @@ namespace fv
         bf.m_Allocator = device.allocator;
         bf.m_Size = size;
         bf.m_Usage = memUsage;
-        bf.m_Device = &device;
         if ( pMapped ) 
         {
             assert( allocatedInfo.pMappedData );

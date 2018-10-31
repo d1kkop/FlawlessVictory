@@ -102,7 +102,7 @@ namespace fv
         ts.serialize( "isPerspective", m_IsPerspective );
         ts.serialize( "isStereo", m_IsStereo );
         ts.serialize( "ipd", m_Ipd );
-        if ( !ts.isWriting() ) 
+        if ( !ts.isWriting() )
         {
             m_IsDirty = true;
         }
