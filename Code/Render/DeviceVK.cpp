@@ -27,7 +27,7 @@ namespace fv
         for ( auto& kvp : pipelines ) kvp.second.release();
         // clearPipeline.release(); // No need, is in map of pipelines 
         m_StagingBuffer.release();
-        vkDestroyRenderPass( logical, clearPass, nullptr );
+        clearColorDepthPass.release();
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
         vkDestroyCommandPool( logical, transferPool, nullptr );
@@ -134,9 +134,38 @@ namespace fv
         return m_SwapChain != nullptr;
     }
 
-    bool DeviceVK::createStandard( const RenderConfig& rc )
+    bool DeviceVK::createRenderImages(const struct RenderConfig& rc)
     {
-        if ( !HelperVK::createRenderPass(logical, format, rc.numSamples, clearPass) )
+        assert(renderImages.size()==0 && rc.numImages > 0 && rc.numSamples >= 1);
+        renderImages.resize(rc.numImages);
+        u32 i=0;
+        for ( auto& ri : renderImages )
+        {
+            VkImage swapChainImg = swapChain() ? swapChain()->images()[i++] : nullptr;
+            if ( !ri.initialize( *this, rc, swapChainImg, clearColorDepthPass.renderPass() ) )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool DeviceVK::createFrameObjects(const struct RenderConfig& rc)
+    {
+        assert(frameObjects.size() == 0 && rc.numFramesBehind >= 1 );
+        frameObjects.resize( rc.numFramesBehind );
+        u32 i=0;
+        for ( auto& fo : frameObjects )
+        {
+            if ( !fo.initialize(*this, i++, jobManager()->numThreads() ) ) return false;
+        }
+        return true;
+    }
+
+    bool DeviceVK::createStandard(const RenderConfig& rc)
+    {
+        clearColorDepthPass = RenderPassVK::create(*this, format, rc.numSamples, false);
+        if ( !clearColorDepthPass.valid() )
         {
             LOGC("Cannot create main render pass. Render setup failed.");
             return false;
@@ -151,41 +180,14 @@ namespace fv
             LOGC("VK Cannot create standard vert shader. Render setup failed.");
             return false;
         }
-        SubmeshInput sinput{};
-        MaterialData mdata{};
+        SubmeshInput sinput {};
+        MaterialData mdata {};
         mdata.fragShader = { idx, standardFrag };
         mdata.vertShader = { idx, standardVert };
-        if ( !getOrCreatePipeline( sinput, mdata, clearPass, clearPipeline ) )
+        if ( !getOrCreatePipeline(sinput, mdata, clearColorDepthPass.renderPass(), clearPipeline) )
         {
             LOGC("VK Cannot create standard pipeline.");
             return false;
-        }
-        return true;
-    }
-
-    bool DeviceVK::createRenderImages(const struct RenderConfig& rc)
-    {
-        assert(renderImages.size()==0 && rc.numImages > 0 && rc.numSamples >= 1);
-        renderImages.resize(rc.numImages);
-        u32 i=0;
-        for ( auto& ri : renderImages )
-        {
-            VkImage swapChainImg = swapChain() ? swapChain()->images()[i++] : nullptr;
-            if ( !ri.initialize( *this, rc, swapChainImg, clearPass ) )
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool DeviceVK::createFrameObjects(const struct RenderConfig& rc)
-    {
-        assert(frameObjects.size() == 0 && rc.numFramesBehind >= 1 );
-        frameObjects.resize( rc.numFramesBehind );
-        for ( auto& fo : frameObjects )
-        {
-            if ( !fo.initialize(*this, jobManager()->numThreads()) ) return false;
         }
         return true;
     }
@@ -231,23 +233,18 @@ namespace fv
             vp.maxDepth = 1.f;
 
             // Create pipeline
-            VkPipeline pipeline;
-            VkPipelineLayout layout;
-            if ( !HelperVK::createPipeline(logical, 
-                                           (VkShaderModule) matData.vertShader.resources[0],
-                                           (VkShaderModule) matData.fragShader.resources[0],
-                                           (VkShaderModule) matData.geomShader.resources[0],
-                                           renderPass, vp, vertexBindings, vertexAttribs, vertexSize, pipeline, layout) )
+            PipelineVK pipeline = PipelineVK::create(*this, 
+                                                     (VkShaderModule)matData.vertShader.resources[0],
+                                                     (VkShaderModule)matData.fragShader.resources[0],
+                                                     (VkShaderModule)matData.geomShader.resources[0],
+                                                     clearColorDepthPass.renderPass(), vp, vertexSize, vertexBindings, vertexAttribs);
+            if ( !pipeline.valid() )
             {
                 // pipelineMutex is already unlocked
                 return false;
             }
 
-            pipelineOut.m_Device = this;
-            pipelineOut.m_Pipeline = pipeline;
-            pipelineOut.m_Layout = layout;
-
-            pipelines[pipelineHash] = pipelineOut;
+            pipelines[pipelineHash] = std::move( pipeline );
         }
         else
         {
@@ -277,9 +274,9 @@ namespace fv
         m_StagingBufferMutex.unlock();
     }
 
-    void DeviceVK::createDrawObject(Vector<VkCommandBuffer>& cmdsOut, const Function<void (VkCommandBuffer)>& recordCb)
+    void DeviceVK::recordCommandBuffers(Vector<VkCommandBuffer>& cmdsOut, const Function<void (VkCommandBuffer, VkFramebuffer)>& recordCb)
     {
-        assert( logical && frameObjects.size() && graphicsQueues.size() );
+        assert( logical && frameObjects.size() && graphicsQueues.size() && frameObjects.size() == renderImages.size() );
         for ( u32 i=0; i<(u32)frameObjects.size(); ++i )
         {
             for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
@@ -288,14 +285,14 @@ namespace fv
                 HelperVK::allocCommandBuffer(logical, graphicsPools[j], cb);
                 // TODO should be one time submit command buffer
                 HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
-                recordCb(cb);
+                recordCb(cb, renderImages[i].frameBuffer());
                 HelperVK::stopRecordCommandBuffer(cb);
                 cmdsOut.emplace_back( cb ); 
             }
         }
     }
 
-    void DeviceVK::deleteDrawObject(Vector<VkCommandBuffer>& buffers)
+    void DeviceVK::deleteCommandBuffers(Vector<VkCommandBuffer>& buffers)
     {
         assert( logical && frameObjects.size() && graphicsQueues.size() && buffers.size()==frameObjects.size()*graphicsQueues.size() );
         for ( u32 i=0; i<(u32)frameObjects.size(); ++i )

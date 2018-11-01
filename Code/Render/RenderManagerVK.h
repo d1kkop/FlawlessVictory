@@ -17,8 +17,6 @@ namespace fv
         void submitFrame() override;
         void waitOnDeviceIdle() override;
 
-        FV_TS bool getOrCreatePipeline(u32 deviceIdx, const SubmeshInput& sinput, const MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipeline);
-
         // Debug callback
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
             VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

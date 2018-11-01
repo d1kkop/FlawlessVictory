@@ -27,6 +27,7 @@ namespace fv
     {
         if ( m_Culled ) return;
         if ( !m_Mesh ) return;
+        m_Mesh->drawMT();
     }
 
     void MeshRenderer::serialize(TextSerializer& ts)

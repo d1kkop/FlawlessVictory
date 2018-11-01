@@ -81,13 +81,13 @@
     <ClCompile Include="SubmeshVK.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
-    <ClCompile Include="RenderPassVK.h">
+    <ClCompile Include="FrameObject.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
     <ClCompile Include="RenderPassVK.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
-    <ClCompile Include="FrameObject.cpp">
+    <ClCompile Include="RenderPassVK.h">
       <Filter>DeviceParts</Filter>
     </ClCompile>
   </ItemGroup>

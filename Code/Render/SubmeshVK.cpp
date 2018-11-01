@@ -1,12 +1,14 @@
 #include "SubmeshVK.h"
+#if FV_VULKAN
 #include "DeviceVK.h"
+#include "../Core/JobManager.h"
 
 namespace fv
 {
     SubmeshVK::~SubmeshVK()
     {
         // Device on BufferVK is always valid even if buffer was not valid.
-        device()->deleteDrawObject( m_DrawBuffers );
+        device()->deleteCommandBuffers( m_DrawBuffers );
         m_VertexBuffer.release();
         m_IndexBuffer.release();
     }
@@ -33,7 +35,7 @@ namespace fv
         s->m_VertexBuffer = vertexBuffer;
         s->m_IndexBuffer = indexBuffer;
 
-        device.createDrawObject( s->m_DrawBuffers, [s](VkCommandBuffer cb)
+        device.recordCommandBuffers( s->m_DrawBuffers, [s](VkCommandBuffer cb, VkFramebuffer fb)
         {
             s->recordDraw( cb );
         });
@@ -50,4 +52,11 @@ namespace fv
         vkCmdDrawIndexed( cb, m_IndexBuffer.size()>>2, 1, 0, 0, 0 );
     }
 
+    void SubmeshVK::addDrawBufferToQueue(FrameObject& fo, u32 queueIdx)
+    {
+        u32 numThreads = jobManager()->numThreads();
+        fo.addCmdBufferToQueue( m_DrawBuffers[fo.idx()*numThreads + queueIdx], queueIdx );
+    }
+
 }
+#endif

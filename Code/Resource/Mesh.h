@@ -16,10 +16,13 @@ namespace fv
     private:
         // From different thread
         FV_DLL void load(const ResourceToLoad& rtl) override;
+        FV_DLL void drawMT();
 
     private:
         Vector<RSubmesh> m_SubMeshes;
         Vector<M<Material>> m_Materials;
         Vector<Submesh> m_HostMeshes{}; // Usually empty
+
+        friend class MeshRenderer;
     };
 }

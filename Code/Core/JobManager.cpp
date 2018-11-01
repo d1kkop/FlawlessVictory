@@ -122,6 +122,17 @@ namespace fv
         return (u32)m_Threads.size();
     }
 
+    u32 JobManager::threadIdToIdx() const
+    {
+        u32 i=0;
+        for ( auto& t : m_Threads )
+            if ( t.get_id() == this_thread::get_id() )
+                return i;
+            else i++;
+        assert(false);
+        return -1;
+    }
+
     bool JobManager::cancelJob(Job* job)
     {
         assert(job);

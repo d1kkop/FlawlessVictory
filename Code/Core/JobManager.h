@@ -50,6 +50,7 @@ namespace fv
 
         FV_TS FV_DLL M<Job> addJob( const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
         FV_TS FV_DLL u32 numThreads() const;
+        FV_TS FV_DLL u32 threadIdToIdx() const;
 
     private:
         FV_TS bool cancelJob(Job* job);

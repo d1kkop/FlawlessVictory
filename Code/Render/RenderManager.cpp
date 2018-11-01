@@ -51,7 +51,7 @@ namespace fv
         rs.numImages = 3;
         rs.numSamples = 1; // For msaa 2, 4 etc
         rs.numLayers = 1; // for stereo 2
-        rs.numFramesBehind = 2;
+        rs.numFramesBehind = 3;
         rs.createWindow = true; // TODO without swap chain, the draw frame hangs on wait for Fence
         rs.windowWidth = rs.resX;
         rs.windowHeight = rs.resY;

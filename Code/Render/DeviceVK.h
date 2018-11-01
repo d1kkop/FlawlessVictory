@@ -5,6 +5,7 @@
 #include "FrameObject.h"
 #include "PipelineVK.h"
 #include "BufferVK.h"
+#include "RenderPassVK.h"
 #include "RenderManager.h"
 
 namespace fv
@@ -30,13 +31,13 @@ namespace fv
         bool createCommandPools();
         bool createStagingBuffers();
         bool createSwapChain(const struct RenderConfig& rc, VkSurfaceKHR surface);
-        bool createStandard(const struct RenderConfig& rc);
         bool createRenderImages(const struct RenderConfig& rc);
         bool createFrameObjects(const struct RenderConfig& rc);
+        bool createStandard(const struct RenderConfig& rc);
 
-        // Cmd's // Thread-safe in a sense that it does not affect the DeviceVK object.
-        FV_TS void createDrawObject(Vector<VkCommandBuffer>& buffersOut, const Function<void (VkCommandBuffer)>& recordCb);
-        FV_TS void deleteDrawObject(Vector<VkCommandBuffer>& buffers);
+        // CommandBuffer is created for per frame per queue. Eg. 2 frames and 4 queues is 8 command buffers.
+        FV_TS void recordCommandBuffers(Vector<VkCommandBuffer>& buffersOut, const Function<void (VkCommandBuffer, VkFramebuffer)>& recordCb);
+        FV_TS void deleteCommandBuffers(Vector<VkCommandBuffer>& buffers);
 
         // Resource creation/deletion
         void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
@@ -70,7 +71,7 @@ namespace fv
         VkFormat format;
         VkShaderModule standardFrag;
         VkShaderModule standardVert;
-        VkRenderPass clearPass;
+        RenderPassVK clearColorDepthPass;
         PipelineVK clearPipeline;
         Vector<VkCommandPool> graphicsPools;
         Vector<VkQueue> graphicsQueues;

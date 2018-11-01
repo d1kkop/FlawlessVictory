@@ -85,7 +85,7 @@ namespace fv
         }
 
         // Note, surface can be null in case there is no mainWindow.
-        if ( !createDevices(surface, jobManager()->numThreads()) )
+        if ( !createDevices(surface, 1 /* jobManager()->numThreads() */ ) )
             return false;
 
         // See if want swap chain
@@ -113,10 +113,16 @@ namespace fv
             dv->setFormatAndExtent( rc );
             if (!dv->createAllocators() ) return false;
             if (!dv->createStagingBuffers() ) return false;
-            if (!dv->createStandard( rc )) return false;
             if (!dv->createCommandPools()) return false;
+            if (!dv->createStandard( rc )) return false;
             if (!dv->createRenderImages( rc )) return false;
             if (!dv->createFrameObjects( rc )) return false;
+
+            VkClearValue cv = { 1, 0, 0, 0 };
+            Vector<VkClearValue> cvs = { cv };
+            dv->clearColorDepthPass.recordCommandBuffers( { 0, 0}, { rc.resX, rc.resY }, cvs );
+
+            dv->clearPipeline.recordCommandBuffers();
         }
 
         LOG("VK Initialized succesful.");
@@ -149,7 +155,10 @@ namespace fv
             auto& frameObject = dv->frameObjects[m_FrameImageIdx];
             frameObject.waitForFences();
             frameObject.resetFences();
+
         }
+
+
     }
 
     void RenderManagerVK::submitFrame()
@@ -167,6 +176,7 @@ namespace fv
                 imageIndex = m_CurrentDrawImage;
             }
 
+            auto& frameObject = dv->frameObjects[m_FrameImageIdx];
             frameObject.submitCommandBuffers( imageAvailable, dv->graphicsQueues );
 
             if ( dv->swapChain() )
@@ -232,7 +242,9 @@ namespace fv
                 continue; // Not suitable
             }
 
-            float priorities = 1.f;
+            // 128 must cover number of queues
+            assert( numGraphicsQueues <= 128 );
+            float priorities [128] = { 1.f };
             Set<u32> uniqueQueueIndices = { *dv.queueIndices.graphics, *dv.queueIndices.compute, *dv.queueIndices.transfer, *dv.queueIndices.sparse };
             Vector<VkDeviceQueueCreateInfo> queueCreateInfos;
             for ( auto& uIdx : uniqueQueueIndices )
@@ -241,7 +253,7 @@ namespace fv
                 dqci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
                 dqci.queueCount = (uIdx == dv.queueIndices.graphics.value()) ? numGraphicsQueues : 1;
                 dqci.queueFamilyIndex = uIdx;
-                dqci.pQueuePriorities = &priorities;
+                dqci.pQueuePriorities = priorities;
                 queueCreateInfos.emplace_back( dqci );
             }
 
@@ -330,7 +342,7 @@ namespace fv
     {
         assert(submesh);
         SubmeshVK* s = (SubmeshVK*)submesh;
-        s->device()->frameObjects[m_FrameImageIdx].m_CommandBuffers
+        s->addDrawBufferToQueue( s->device()->frameObjects[m_FrameImageIdx], 0  /* TODO different queues */ );
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

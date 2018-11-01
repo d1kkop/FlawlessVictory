@@ -108,4 +108,12 @@ namespace fv
         patch->submit();
     }
 
+    void Mesh::drawMT()
+    {
+        for ( auto& s : m_SubMeshes )
+        {
+            renderManager()->renderSubmesh( s );
+        }
+    }
+
 }

@@ -11,6 +11,7 @@ namespace fv
         RenderImageVK() = default;
         bool initialize(struct DeviceVK& device, const struct RenderConfig& rc, VkImage swapChainImage, VkRenderPass renderPass);
         void release(); // Do not put in destructor.
+        VkFramebuffer frameBuffer() { return m_FrameBuffer; }
 
     private:
         bool createImage(const struct RenderConfig& rc);

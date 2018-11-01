@@ -17,11 +17,12 @@ namespace fv
         }
     }
 
-    bool FrameObject::initialize(DeviceVK& device, u32 numQueues)
+    bool FrameObject::initialize(DeviceVK& device, u32 frameIdx, u32 numQueues)
     {
         assert(device.logical && m_FrameFences.empty() && m_FinishedSemaphores.empty() && numQueues>0);
 
         m_Device = &device;
+        m_Idx = frameIdx;
 
         VkSemaphoreCreateInfo semaphoreInfo = {};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -45,7 +46,7 @@ namespace fv
             m_FinishedSemaphores.emplace_back( imageFinished );
             m_FrameFences.emplace_back( frameFence );
         }
-        m_QueueMutexs.resize( numObjects );
+        m_CommandBuffers.resize( numQueues );
         
         return true;
     }
@@ -82,6 +83,7 @@ namespace fv
         assert( m_Device && m_Device->logical );
         u32 numObjects = (u32)m_FrameFences.size();
         while ( vkWaitForFences(m_Device->logical, numObjects, m_FrameFences.data(), VK_TRUE, (u64)-1) == VK_TIMEOUT );
+        for ( auto& cmdb : m_CommandBuffers ) cmdb.clear();
     }
 
     void FrameObject::resetFences()
@@ -89,6 +91,11 @@ namespace fv
         assert( m_Device && m_Device->logical );
         u32 numObjects = (u32)m_FrameFences.size();
         FV_VKCALL( vkResetFences(m_Device->logical, numObjects, m_FrameFences.data()) );
+    }
+
+    void FrameObject::addCmdBufferToQueue(VkCommandBuffer cb, u32 queueIdx)
+    {
+        m_CommandBuffers[ queueIdx ].emplace_back( cb );
     }
 
 }

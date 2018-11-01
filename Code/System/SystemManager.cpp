@@ -129,11 +129,15 @@ namespace fv
                 gc.cullMT();
             });
 
+            renderManager()->concludeFrame();
+
             // Draw
             ParallelComponentFor<GameComponent>(m_SortedOthers, [](GameComponent& gc)
             {
                 gc.drawMT();
             });
+
+            renderManager()->submitFrame();
 
             // Update timings
             TimeUpdate();
