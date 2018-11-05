@@ -3,7 +3,7 @@
         {
             "components": [
                 {
-                    "filename": "sponza.obj",
+                    "filename": "cow.obj",
                     "name": "MeshRenderer",
                     "type": 3025127384
                 },
