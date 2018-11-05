@@ -11,10 +11,9 @@ namespace fv
     public:
         RenderManagerVK();
         ~RenderManagerVK() override;
-        bool initGraphics() override;
+        FV_BG bool initGraphics() override;
         void closeGraphics() override;
-        void concludeFrame() override;
-        void submitFrame() override;
+        void drawFrame() override;
         void waitOnDeviceIdle() override;
 
         // Debug callback
@@ -40,14 +39,11 @@ namespace fv
         FV_TS void deleteShader(RShader shader) override;
         FV_TS void deleteSubmesh(RSubmesh submesh) override;
 
-        // Render
-        void renderSubmesh(RSubmesh submesh) override;
-
         VkInstance m_Instance{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
         Vector<DeviceVK*> m_Devices; // Must use ptr as has mutexes for which default operators are deleted.
         void* m_Window {};
-        u32 m_FrameImageIdx = 0;    // Iterates from 0 to RenderConfig.numFramesBehind-1
+        u32 m_FrameIndex = 0;    // Iterates from 0 to RenderConfig.numFramesBehind-1
         u32 m_CurrentDrawImage = 0; // In case of no swap chain.
         Atomic<u32> m_AutoDeviceIdx;
 

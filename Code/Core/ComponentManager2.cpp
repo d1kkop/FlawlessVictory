@@ -10,15 +10,15 @@ namespace fv
 {
     ComponentManager2::~ComponentManager2()
     {
-           for ( auto& kvp : m_Components )
-            {
-                Vector<ComponentArray2>& objs = kvp.second;
-                for ( auto& ar : objs )
-                    if ( ComponentBufferSize != 1 )
-                        delete [] ar.elements;
-                    else
-                        delete ar.elements;
-            }
+        for ( auto& kvp : m_Components )
+        {
+            Vector<ComponentArray2>& objs = kvp.second;
+            for ( auto& ar : objs )
+                if ( ComponentBufferSize != 1 )
+                    delete[] ar.elements;
+                else
+                    delete ar.elements;
+        }
     }
 
     M<Component> ComponentManager2::newComponent(u32 type)

@@ -2,7 +2,6 @@
 #include "../Core/Common.h"
 #if FV_VULKAN
 #include "RenderImageVK.h"
-#include "FrameObject.h"
 #include "PipelineVK.h"
 #include "BufferVK.h"
 #include "RenderPassVK.h"
@@ -35,24 +34,27 @@ namespace fv
         bool createFrameObjects(const struct RenderConfig& rc);
         bool createStandard(const struct RenderConfig& rc);
 
-        // CommandBuffer is created for per frame per queue. Eg. 2 frames and 4 queues is 8 command buffers.
-        FV_TS void recordCommandBuffers(Vector<VkCommandBuffer>& buffersOut, const Function<void (VkCommandBuffer, VkFramebuffer)>& recordCb);
-        FV_TS void deleteCommandBuffers(Vector<VkCommandBuffer>& buffers);
+        void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback);
+        void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
 
         // Resource creation/deletion
-        void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
         FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, u32 mipLevels, u32 layers, u32 samples, ImageFormat format, VkImageUsageFlagBits imageUsageBits, VmaMemoryUsage memoryUsage);
         FV_TS RShader createShader(const char* data, u32 size);
         FV_TS RSubmesh createSubmesh(const Submesh& submesh, const SubmeshInput& si);
         FV_TS void deleteTexture2D(RTexture2D tex2d, bool removeFromList);
         FV_TS void deleteShader(RShader shader, bool removeFromList);
         FV_TS void deleteSubmesh(RSubmesh submesh, bool removeFromList);
-        FV_TS bool getOrCreatePipeline(const struct SubmeshInput& sinput, const struct MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut);
+        FV_TS bool getOrCreatePipeline(u32 pipelineHash, const struct PipelineFormatVK& format, struct PipelineVK& pipelineOut);
+        FV_TS bool getOrCreatePipeline(const struct PipelineFormatVK& format, PipelineVK& pipelineOut);
 
         // Buffers
         FV_TS bool mapStagingBuffer(BufferVK& staging, void** pMapped);
         FV_TS void unmapStagingBuffer();
         struct SwapChainVK* swapChain() const { return m_SwapChain; }
+
+        // Frame syncronization and submission
+        void waitForFences(u32 frameIndex);
+        void resetFences(u32 frameIndex);
 
         u32 idx;
         VkInstance instance;
@@ -72,17 +74,18 @@ namespace fv
         VkShaderModule standardFrag;
         VkShaderModule standardVert;
         RenderPassVK clearColorDepthPass;
-        PipelineVK clearPipeline;
         Vector<VkCommandPool> graphicsPools;
         Vector<VkQueue> graphicsQueues;
         Map<u32, PipelineVK> pipelines;
         Vector<RenderImageVK> renderImages;
-        Vector<FrameObject> frameObjects;
         Vector<DeviceResource> textures2d;
         Vector<DeviceResource> shaders;
         Vector<RSubmesh> submeshes;
         Vector<VkCommandBuffer> singleTimeCmds;
         VmaAllocator allocator;
+        Vector<VkSemaphore> frameFinishSemaphores;
+        Vector<VkFence> frameFinishFences;
+        Vector<Vector<VkCommandBuffer>> frameGraphicsCmds;
 
 
     private:
@@ -93,6 +96,8 @@ namespace fv
         Mutex tex2dMutex;
         Mutex shaderMutex;
         Mutex submeshMutex;
+
+        friend class RenderManagerVK;
     };
 }
 #endif

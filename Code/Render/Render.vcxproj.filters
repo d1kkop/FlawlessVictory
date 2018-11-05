@@ -46,9 +46,6 @@
     <ClInclude Include="SubmeshVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
-    <ClInclude Include="FrameObject.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">
@@ -79,9 +76,6 @@
       <Filter>DeviceParts</Filter>
     </ClCompile>
     <ClCompile Include="SubmeshVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameObject.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
     <ClCompile Include="RenderPassVK.cpp">

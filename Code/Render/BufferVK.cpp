@@ -6,7 +6,7 @@
 namespace fv
 {
     BufferVK BufferVK::create(DeviceVK& device, u32 size, VkBufferUsageFlagBits usage, VmaMemoryUsage memUsage, 
-                              bool shareInQueue, const u32* queueIndices, u32 numQueueIndices, void** pMapped)
+                              const u32* queueIndices, u32 numQueueIndices, void** pMapped)
     {
         BufferVK bf = {};
         bf.m_Device = &device;
@@ -18,7 +18,7 @@ namespace fv
         bufferInfo.usage = usage;
         bufferInfo.pQueueFamilyIndices = (const uint32_t*)queueIndices;
         bufferInfo.queueFamilyIndexCount = numQueueIndices;
-        bufferInfo.sharingMode = shareInQueue ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+        bufferInfo.sharingMode = numQueueIndices > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = memUsage;

@@ -1,6 +1,7 @@
 #include "HelperVK.h"
 #if FV_VULKAN
 #include "RenderManager.h" // For RenderConfig
+#include "PipelineVK.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
@@ -275,44 +276,40 @@ namespace fv
     }
 
     bool HelperVK::createPipeline(VkDevice device,
-                                  VkShaderModule vertShader,
-                                  VkShaderModule fragShader,
-                                  VkShaderModule geomShader,
-                                  VkRenderPass renderPass,
+                                  const PipelineFormatVK& format,
                                   const VkViewport& vp,
                                   const Vector<VkVertexInputBindingDescription>& vertexBindings,
                                   const Vector<VkVertexInputAttributeDescription>& vertexAttribs,
-                                  u32 totalVertexSize,
                                   VkPipeline& pipeline,
                                   VkPipelineLayout& pipelineLayout)
     {
-        assert(device && vertShader && fragShader && renderPass);
+        assert(device && format.mdata.vertShader.resources[0] && format.mdata.fragShader.resources[0] && format.renderPass);
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = vertShader;
+        vertShaderStageInfo.module = (VkShaderModule) format.mdata.vertShader.resources[0];
         vertShaderStageInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShader;
+        fragShaderStageInfo.module = (VkShaderModule) format.mdata.fragShader.resources[0];
         fragShaderStageInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo geomShaderStageInfo = {};
         geomShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         geomShaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-        geomShaderStageInfo.module = geomShader;
+        geomShaderStageInfo.module = (VkShaderModule) format.mdata.geomShader.resources[0];
         geomShaderStageInfo.pName = "main";
 
         u32 numShaderStages = 2;
         VkPipelineShaderStageCreateInfo shaderStages[8] = { vertShaderStageInfo, fragShaderStageInfo };
-        if ( geomShader ) shaderStages[numShaderStages++] = geomShaderStageInfo;
+        if ( format.mdata.geomShader.resources[0] ) shaderStages[numShaderStages++] = geomShaderStageInfo;
 
         VkVertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = 0;
-        bindingDescription.stride = totalVertexSize;
+        bindingDescription.stride = format.vertexSize;
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
@@ -342,16 +339,16 @@ namespace fv
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.polygonMode = format.polyMode;
+        rasterizer.lineWidth = format.lineWidth;
+        rasterizer.cullMode  = format.cullmode;
+        rasterizer.frontFace = format.frontFace;
         rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisampling = {};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        multisampling.rasterizationSamples = (VkSampleCountFlagBits)format.numSamples;
 
         VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -390,7 +387,7 @@ namespace fv
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.renderPass = format.renderPass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
@@ -621,7 +618,7 @@ namespace fv
         FV_VKCALL( vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data() + oldSize) );
     }
 
-    void HelperVK::startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer)
+    void HelperVK::beginCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer)
     {
         assert( device && commandBuffer );
         VkCommandBufferBeginInfo beginInfo = {};
@@ -650,7 +647,7 @@ namespace fv
         vkCmdEndRenderPass( commandBuffer );
     }
 
-    void HelperVK::stopRecordCommandBuffer(VkCommandBuffer commandBuffer)
+    void HelperVK::endCommandBuffer(VkCommandBuffer commandBuffer)
     {
         assert( commandBuffer );
         FV_VKCALL( vkEndCommandBuffer(commandBuffer) );
@@ -658,7 +655,8 @@ namespace fv
 
     void HelperVK::freeCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer* buffers, u32 numBuffers)
     {
-        assert( device && commandPool && buffers && numBuffers > 0 );
+        assert( device && commandPool );
+        if (!buffers ||numBuffers==0) return;
         vkFreeCommandBuffers( device, commandPool, numBuffers, buffers );
     }
 

@@ -1,7 +1,6 @@
 #include "RenderManagerVK.h"
 #if FV_VULKAN
 #include "HelperVK.h"
-#include "FrameObject.h"
 #include "PipelineVK.h"
 #include "RenderImageVK.h"
 #include "SubmeshVK.h"
@@ -24,6 +23,8 @@ namespace fv
 
     bool RenderManagerVK::initGraphics()
     {
+        FV_CHECK_BG();
+
         // Setup layers and extensions for instance and devices
     #if FV_DEBUG
         m_RequiredInstanceExtensions = { "VK_EXT_debug_report", "VK_EXT_debug_utils" };
@@ -117,12 +118,6 @@ namespace fv
             if (!dv->createStandard( rc )) return false;
             if (!dv->createRenderImages( rc )) return false;
             if (!dv->createFrameObjects( rc )) return false;
-
-            VkClearValue cv = { 1, 0, 0, 0 };
-            Vector<VkClearValue> cvs = { cv };
-            dv->clearColorDepthPass.recordCommandBuffers( { 0, 0}, { rc.resX, rc.resY }, cvs );
-
-            dv->clearPipeline.recordCommandBuffers();
         }
 
         LOG("VK Initialized succesful.");
@@ -148,53 +143,98 @@ namespace fv
         }
     }
 
-    void RenderManagerVK::concludeFrame()
+    void RenderManagerVK::drawFrame()
     {
         for ( auto& dv : m_Devices )
         {
-            auto& frameObject = dv->frameObjects[m_FrameImageIdx];
-            frameObject.waitForFences();
-            frameObject.resetFences();
+            // End previous
+            dv->waitForFences( m_FrameIndex );
+            dv->resetFences( m_FrameIndex );
+            for ( u32 i=0; i<(u32)dv->graphicsQueues.size(); ++i )
+            {
+                u32 offs = m_FrameIndex*(u32)dv->graphicsQueues.size();
+                HelperVK::freeCommandBuffers( dv->logical, dv->graphicsPools[i], dv->frameGraphicsCmds[offs + i].data(), (u32)dv->frameGraphicsCmds[offs +i].size() );
+                dv->frameGraphicsCmds[offs +i].clear();
+            }
 
-        }
-
-
-    }
-
-    void RenderManagerVK::submitFrame()
-    {
-        for ( auto& dv : m_Devices )
-        {
-            u32 imageIndex; // Iterates from 0 to numImages-1 in swap chain.
-            VkSemaphore imageAvailable = {};
+            VkSemaphore waitSemaphore = {};
+            u32 renderImageIndex = m_CurrentDrawImage;
             if ( dv->swapChain() )
             {
-                 imageAvailable = dv->swapChain()->acquireNextImage(imageIndex, nullptr);
-            }
-            else
-            {
-                imageIndex = m_CurrentDrawImage;
+                waitSemaphore = dv->swapChain()->acquireNextImage( m_FrameIndex, renderImageIndex );
             }
 
-            auto& frameObject = dv->frameObjects[m_FrameImageIdx];
-            frameObject.submitCommandBuffers( imageAvailable, dv->graphicsQueues );
+            // Clear values
+            VkClearValue cv = { 0, 0, 0, 1 };
+            Vector<VkClearValue> cvs = { cv };
+
+            for ( u32 i=0; i<(u32)dv->graphicsQueues.size(); ++i )
+            {
+                dv->submitGraphicsCommands( m_FrameIndex, i, waitSemaphore, [&](VkCommandBuffer cb)
+                {
+                    auto& ri = dv->renderImages[renderImageIndex];
+                    dv->clearColorDepthPass.begin( cb, ri.frameBuffer(), { 0, 0 }, dv->extent, cvs );
+
+                    MaterialData md = {};
+                    md.fragShader = { dv->idx, dv->standardFrag };
+                    md.vertShader = { dv->idx, dv->standardVert };
+
+                    PipelineFormatVK pipelineFormat = {};
+                    pipelineFormat.mdata = md;
+                    pipelineFormat.cullmode = VK_CULL_MODE_NONE;
+                    pipelineFormat.frontFace = VK_FRONT_FACE_CLOCKWISE;
+                    pipelineFormat.polyMode = VK_POLYGON_MODE_FILL;
+                    pipelineFormat.lineWidth = 1.0f;
+                    pipelineFormat.numSamples = 1;
+                    pipelineFormat.renderPass = dv->clearColorDepthPass.renderPass();
+
+                    PipelineVK prevPipeline;
+
+                    {
+                        scoped_lock lk(dv->submeshMutex);
+
+                        for ( auto& rs : dv->submeshes )
+                        {
+                            SubmeshVK* s = (SubmeshVK*)rs;
+
+                            pipelineFormat.sinput = s->submeshInput();
+                            pipelineFormat.vertexSize = s->vertexSize();
+
+                            PipelineVK pipeline;
+                            dv->getOrCreatePipeline( pipelineFormat, pipeline );
+                            if ( !prevPipeline.valid() || pipeline.hash() != prevPipeline.hash() )
+                            {
+                                pipeline.bind( cb );
+                                prevPipeline = pipeline;
+                            }
+                            s->render(cb);
+                        }
+                    }
+
+                    dv->clearColorDepthPass.end( cb );
+
+                    // do not continue
+                    return false;
+                });
+            }
 
             if ( dv->swapChain() )
             {
                 VkPresentInfoKHR presentInfo = {};
                 presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-                presentInfo.waitSemaphoreCount = frameObject.numSemaphores();
-                presentInfo.pWaitSemaphores = frameObject.finishedSemaphores();
+                presentInfo.waitSemaphoreCount = (u32)dv->graphicsQueues.size();
+                presentInfo.pWaitSemaphores = &dv->frameFinishSemaphores[m_FrameIndex*dv->graphicsQueues.size()];
                 presentInfo.swapchainCount  = 1;
-                VkSwapchainKHR swapChains [] = { dv->swapChain()->swapChain() };
+                VkSwapchainKHR swapChains[] = { dv->swapChain()->swapChain() };
                 presentInfo.pSwapchains = swapChains;
-                presentInfo.pImageIndices = (uint32_t*)&imageIndex;
+                uint32_t imageIndices [] = { renderImageIndex };
+                presentInfo.pImageIndices = imageIndices;
                 vkQueuePresentKHR(dv->presentQueue, &presentInfo);
             }
         }
 
         // Device indepentent variables
-        m_FrameImageIdx = (m_FrameImageIdx + 1) % m_RenderConfig.numFramesBehind;
+        m_FrameIndex = (m_FrameIndex + 1) % m_RenderConfig.numFramesBehind;
         m_CurrentDrawImage = (m_CurrentDrawImage + 1) % m_RenderConfig.numImages;
     }
 
@@ -212,9 +252,9 @@ namespace fv
 
         uint32_t deviceCount = 0;
         Vector<VkPhysicalDevice> physicalDevices;
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+        FV_VKCALL( vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr) );
         physicalDevices.resize( deviceCount );
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, physicalDevices.data());
+        FV_VKCALL( vkEnumeratePhysicalDevices(m_Instance, &deviceCount, physicalDevices.data()) );
 
         DeviceVK* device = new DeviceVK();
         u32 numCreatedDevices = 0;
@@ -336,13 +376,6 @@ namespace fv
         if (!submesh) return;
         SubmeshVK* s = (SubmeshVK*)submesh;
         s->device()->deleteSubmesh( submesh, true );
-    }
-
-    void RenderManagerVK::renderSubmesh(RSubmesh submesh)
-    {
-        assert(submesh);
-        SubmeshVK* s = (SubmeshVK*)submesh;
-        s->addDrawBufferToQueue( s->device()->frameObjects[m_FrameImageIdx], 0  /* TODO different queues */ );
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

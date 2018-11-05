@@ -1,5 +1,6 @@
 #pragma once
 #include "../Scene.h"
+#include "../Resources.h"
 using namespace fv;
 
 namespace game
@@ -15,5 +16,8 @@ namespace game
     public:
         void updateMT(float t) override;
         void update(float t) override;
+
+        M<Shader> m_FragShader;
+        M<Shader> m_VertShader;
     };
 }

@@ -18,7 +18,7 @@ namespace fv
         }
 
         Path output = Directories::intermediateShaders() / path.filename();
-        output.replace_extension(Assets::shaderBinExtension());
+        output.replace_extension( ext + Assets::shaderBinExtension().string() );
 
         // https://vulkan.lunarg.com/doc/view/1.0.8.0/windows/spirv_toolchain.html
         String args;

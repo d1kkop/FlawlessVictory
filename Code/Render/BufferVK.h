@@ -7,7 +7,7 @@ namespace fv
     {
         BufferVK() = default;
         static BufferVK create(struct DeviceVK& device, u32 size, VkBufferUsageFlagBits usage, VmaMemoryUsage memUsage,
-                               bool shareInQueue, const u32* queueIndices, u32 numQueueIndices, void** pMapped);
+                               const u32* queueIndices, u32 numQueueIndices, void** pMapped);
         void release();
         bool map(void** pData);
         void unmap();

@@ -7,18 +7,23 @@
 
 namespace fv
 {
-    SwapChainVK* SwapChainVK::create(struct DeviceVK& device, VkSurfaceKHR surface,
+    SwapChainVK* SwapChainVK::create(struct DeviceVK& device, VkSurfaceKHR surface, u32 numFramesBehind,
                                      u32 width, u32 height, u32 numImages, u32 numLayers,
                                      const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx)
     {
-        assert( width > 0 && height > 0 && numImages > 0 && numLayers > 0 );
+        assert( width > 0 && height > 0 && numImages > 0 && numLayers > 0 && numFramesBehind > 0 );
         VkSemaphoreCreateInfo semaphoreInfo = {};
-        VkSemaphore imageAvailableSemaphore;
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        if ( vkCreateSemaphore(device.logical, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS )
+        Vector<VkSemaphore> imageAvailableSemaphores;
+        for ( u32 i=0; i<numFramesBehind; ++i )
         {
-            LOGC("VK Cannot create swap chain image available semaphore.");
-            return nullptr;
+            VkSemaphore imageAvailableSemaphore;
+            if ( vkCreateSemaphore(device.logical, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS )
+            {
+                LOGC("VK Cannot create swap chain image available semaphore.");
+                return nullptr;
+            }
+            imageAvailableSemaphores.emplace_back( imageAvailableSemaphore );
         }
         VkSurfaceFormatKHR chosenFormat;
         VkPresentModeKHR chosenPresentMode;
@@ -29,6 +34,7 @@ namespace fv
                                         graphicsQueueIdx, presentQueueIdx,
                                         chosenFormat, chosenPresentMode, surfaceExtend, swapChain ))
         {
+            for ( auto s : imageAvailableSemaphores ) vkDestroySemaphore( device.logical, s, nullptr );
             return nullptr;
         }
         SwapChainVK* sc = new SwapChainVK{};
@@ -38,7 +44,7 @@ namespace fv
         sc->m_PresentMode = chosenPresentMode;
         sc->m_SurfaceFormat = chosenFormat;
         sc->m_SwapChain = swapChain;
-        sc->m_ImageAvailableSemaphore = imageAvailableSemaphore;
+        sc->m_ImageAvailableSemaphores = std::move(imageAvailableSemaphores);
         if ( !sc->getImages() )
         {
             vkDestroySwapchainKHR(device.logical, swapChain, nullptr);
@@ -52,9 +58,9 @@ namespace fv
     {
         assert( m_Device && m_Device->logical );
         // No need to delete images
+        for (auto& s : m_ImageAvailableSemaphores) vkDestroySemaphore( m_Device->logical, s, nullptr );
         vkDestroySwapchainKHR(m_Device->logical, m_SwapChain, nullptr);
         vkDestroySwapchainKHR(m_Device->logical, m_OldSwapChain, nullptr);
-        vkDestroySemaphore(m_Device->logical, m_ImageAvailableSemaphore, nullptr);
         vkDestroySurfaceKHR(m_Device->instance, m_Surface, nullptr);
     }
 
@@ -76,12 +82,12 @@ namespace fv
         return true;
     }
 
-    VkSemaphore SwapChainVK::acquireNextImage(u32& imageIndex, VkFence fence)
+    VkSemaphore SwapChainVK::acquireNextImage(u32 frameIndex, u32& renderImageIndex)
     {
         FV_CHECK_MO();
         assert( m_Device && m_Device->logical && m_SwapChain );
-        FV_VKCALL( vkAcquireNextImageKHR(m_Device->logical, m_SwapChain, (u64)-1, m_ImageAvailableSemaphore, fence, (uint32_t*)&imageIndex) );
-        return m_ImageAvailableSemaphore;
+        FV_VKCALL( vkAcquireNextImageKHR(m_Device->logical, m_SwapChain, (u64)-1, m_ImageAvailableSemaphores[frameIndex], nullptr, (uint32_t*)&renderImageIndex) );
+        return m_ImageAvailableSemaphores[frameIndex];
     }
 
 }

@@ -26,14 +26,13 @@ namespace fv
         // Call these before any threads are started.
         resourceManager()->initialize();
 
-        StopBeginFase();
-
-
         // Initialize graphics.
         if ( !renderManager()->initGraphics() )
         {
             return false;
         }
+
+        StopBeginFase();
 
         // Load user provided module.
         OSHandle h = OSLoadLibrary(params.moduleName.c_str());
@@ -129,15 +128,7 @@ namespace fv
                 gc.cullMT();
             });
 
-            renderManager()->concludeFrame();
-
-            // Draw
-            ParallelComponentFor<GameComponent>(m_SortedOthers, [](GameComponent& gc)
-            {
-                gc.drawMT();
-            });
-
-            renderManager()->submitFrame();
+            renderManager()->drawFrame();
 
             // Update timings
             TimeUpdate();

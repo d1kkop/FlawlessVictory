@@ -34,11 +34,13 @@ namespace fv
         static bool createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
         static bool createRenderPass(VkDevice device, VkFormat format, u32 samples, VkRenderPass& renderPass);
-        static bool createPipeline(VkDevice device, VkShaderModule vertShader, VkShaderModule fragShader, VkShaderModule geomShader, VkRenderPass renderPass, const VkViewport& vp,
+        static bool createPipeline(VkDevice device,
+                                   const struct PipelineFormatVK& format,
+                                   const VkViewport& vp,
                                    const Vector<VkVertexInputBindingDescription>& vertexBindings,
-                                   const Vector<VkVertexInputAttributeDescription>& vertexAttribs, 
-                                   u32 totalVertexSize,
-                                   VkPipeline& pipeline, VkPipelineLayout& pipelineLayout);
+                                   const Vector<VkVertexInputAttributeDescription>& vertexAttribs,
+                                   VkPipeline& pipeline,
+                                   VkPipelineLayout& pipelineLayout);
         static bool createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer);
         static bool createCommandPool(VkDevice device, u32 familyQueueIndex, VkCommandPool& pool);
         static bool createVertexBuffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties, const void* data, u32 bufferSize, bool shareInQueues, bool coherentMemory, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -47,10 +49,10 @@ namespace fv
         // Command buffers
         static void allocCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBuffer& commandBuffer);
         static void allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
-        static void startRecordCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer);
+        static void beginCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer);
         static void startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal);
         static void stopRenderPass(VkCommandBuffer commandBuffer);
-        static void stopRecordCommandBuffer(VkCommandBuffer commandBuffer);
+        static void endCommandBuffer(VkCommandBuffer commandBuffer);
         static void freeCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer* buffers, u32 numBuffers);
        
         // Checks and validation.

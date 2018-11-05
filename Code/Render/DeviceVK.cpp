@@ -20,7 +20,6 @@ namespace fv
     {
         delete m_SwapChain; m_SwapChain = nullptr;
         for ( auto& ri : renderImages ) ri.release();
-        for ( auto& fo : frameObjects) fo.release();
         for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d, false );
         for ( auto& shad: shaders) deleteShader( shad, false );
         for ( auto& subm : submeshes) deleteSubmesh( subm, false );
@@ -31,6 +30,8 @@ namespace fv
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
         vkDestroyCommandPool( logical, transferPool, nullptr );
+        for ( auto& s : frameFinishSemaphores) vkDestroySemaphore( logical, s, nullptr );
+        for ( auto& f : frameFinishFences ) vkDestroyFence( logical, f, nullptr );
         for ( auto& gp : graphicsPools ) vkDestroyCommandPool( logical, gp, nullptr );
         vmaDestroyAllocator( allocator );
         vkDestroyDevice( logical, nullptr );
@@ -116,8 +117,8 @@ namespace fv
         VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits) ( VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | 
                                                                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
                                                                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT );
-        u32 queueIdxs [] = { queueIndices.transfer.value() };
-        m_StagingBuffer = BufferVK::create( *this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, false, queueIdxs, 1, nullptr );
+        u32 queueIdxs [] = { queueIndices.graphics.value(), queueIndices.transfer.value() };
+        m_StagingBuffer = BufferVK::create( *this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, queueIdxs, 2, nullptr );
         if ( !m_StagingBuffer.valid() )
         {
             LOGC("VK Failed to create staging buffer(s).");
@@ -129,7 +130,7 @@ namespace fv
     bool DeviceVK::createSwapChain(const RenderConfig& rc, VkSurfaceKHR surface)
     {
         assert(logical && physical && surface && !m_SwapChain);
-        m_SwapChain = SwapChainVK::create(*this, surface, rc.windowWidth, rc.windowHeight, rc.numImages, rc.numLayers, 
+        m_SwapChain = SwapChainVK::create(*this, surface, rc.numFramesBehind, rc.windowWidth, rc.windowHeight, rc.numImages, rc.numLayers, 
                                           queueIndices.graphics, queueIndices.present);
         return m_SwapChain != nullptr;
     }
@@ -137,7 +138,7 @@ namespace fv
     bool DeviceVK::createRenderImages(const struct RenderConfig& rc)
     {
         assert(renderImages.size()==0 && rc.numImages > 0 && rc.numSamples >= 1);
-        renderImages.resize(rc.numImages);
+        renderImages.resize(swapChain() ? swapChain()->images().size() : rc.numImages);
         u32 i=0;
         for ( auto& ri : renderImages )
         {
@@ -152,13 +153,35 @@ namespace fv
 
     bool DeviceVK::createFrameObjects(const struct RenderConfig& rc)
     {
-        assert(frameObjects.size() == 0 && rc.numFramesBehind >= 1 );
-        frameObjects.resize( rc.numFramesBehind );
-        u32 i=0;
-        for ( auto& fo : frameObjects )
+        assert( rc.numFramesBehind >= 1 );
+
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        for ( u32 i=0; i<rc.numFramesBehind; ++i )
         {
-            if ( !fo.initialize(*this, i++, jobManager()->numThreads() ) ) return false;
+            for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
+            {
+                VkSemaphore imageFinished;
+                VkFence frameFence;
+
+                if ( vkCreateSemaphore(logical, &semaphoreInfo, nullptr, &imageFinished) != VK_SUCCESS ||
+                     vkCreateFence(logical, &fenceInfo, nullptr, &frameFence) != VK_SUCCESS )
+                {
+                    LOGC("VK Cannot create frame sync objects.");
+                    return false;
+                }
+
+                frameFinishSemaphores.emplace_back(imageFinished);
+                frameFinishFences.emplace_back(frameFence);
+            }
         }
+
+        frameGraphicsCmds.resize( rc.numFramesBehind * graphicsQueues.size() );
         return true;
     }
 
@@ -180,32 +203,11 @@ namespace fv
             LOGC("VK Cannot create standard vert shader. Render setup failed.");
             return false;
         }
-        SubmeshInput sinput {};
-        MaterialData mdata {};
-        mdata.fragShader = { idx, standardFrag };
-        mdata.vertShader = { idx, standardVert };
-        if ( !getOrCreatePipeline(sinput, mdata, clearColorDepthPass.renderPass(), clearPipeline) )
-        {
-            LOGC("VK Cannot create standard pipeline.");
-            return false;
-        }
         return true;
     }
 
-    bool DeviceVK::getOrCreatePipeline(const SubmeshInput& sinput, const MaterialData& matData, VkRenderPass renderPass, PipelineVK& pipelineOut)
+    bool DeviceVK::getOrCreatePipeline(u32 pipelineHash, const PipelineFormatVK& format, PipelineVK& pipelineOut)
     {
-        struct tempStruct
-        {
-            SubmeshInput sinput;
-            MaterialData matData;
-            VkRenderPass renderPass;
-        };
-        tempStruct ts;
-        ts.sinput = sinput;
-        ts.matData = matData;
-        ts.renderPass = renderPass;
-        u32 pipelineHash = Hash32((const char*)&ts, sizeof(ts));
-
         scoped_lock lk(pipelineMutex);
         auto pIt = pipelines.find(pipelineHash);
         if ( pIt == pipelines.end() )
@@ -213,7 +215,7 @@ namespace fv
             // Get input attribs
             u32 vertexSize;
             Vector<VkVertexInputAttributeDescription> vertexAttribs;
-            HelperVK::createVertexAttribs(sinput, vertexAttribs, vertexSize);
+            HelperVK::createVertexAttribs(format.sinput, vertexAttribs, vertexSize);
 
             VkVertexInputBindingDescription vertexBinding {};
             vertexBinding.binding = 0;
@@ -221,9 +223,9 @@ namespace fv
             vertexBinding.stride = vertexSize;
             Vector<VkVertexInputBindingDescription> vertexBindings;
             if ( vertexAttribs.size() )
-                vertexBindings.emplace_back( vertexBinding );
+                vertexBindings.emplace_back(vertexBinding);
 
-            // Conduct default viewport
+            // Conduct default viewport (Scissor is deduced from this, it can be changed at anytime).
             VkViewport vp;
             vp.x = 0;
             vp.y = 0;
@@ -233,24 +235,26 @@ namespace fv
             vp.maxDepth = 1.f;
 
             // Create pipeline
-            PipelineVK pipeline = PipelineVK::create(*this, 
-                                                     (VkShaderModule)matData.vertShader.resources[0],
-                                                     (VkShaderModule)matData.fragShader.resources[0],
-                                                     (VkShaderModule)matData.geomShader.resources[0],
-                                                     clearColorDepthPass.renderPass(), vp, vertexSize, vertexBindings, vertexAttribs);
-            if ( !pipeline.valid() )
+            pipelineOut = PipelineVK::create(*this, pipelineHash, format, vp, vertexBindings, vertexAttribs);
+            if ( !pipelineOut.valid() )
             {
-                // pipelineMutex is already unlocked
                 return false;
             }
 
-            pipelines[pipelineHash] = std::move( pipeline );
+            pipelines[pipelineHash] = std::move(pipelineOut);
         }
         else
         {
             pipelineOut = pIt->second;
         }
+
         return true;
+    }
+
+    bool DeviceVK::getOrCreatePipeline(const PipelineFormatVK& format, PipelineVK& pipelineOut)
+    {
+        u32 pipelineHash = Hash32((const char*)&format, sizeof(format));
+        return getOrCreatePipeline( pipelineHash, format, pipelineOut );
     }
 
     bool DeviceVK::mapStagingBuffer(BufferVK& staging, void** pMapped)
@@ -274,35 +278,70 @@ namespace fv
         m_StagingBufferMutex.unlock();
     }
 
-    void DeviceVK::recordCommandBuffers(Vector<VkCommandBuffer>& cmdsOut, const Function<void (VkCommandBuffer, VkFramebuffer)>& recordCb)
+    void DeviceVK::waitForFences(u32 frameIndex)
     {
-        assert( logical && frameObjects.size() && graphicsQueues.size() && frameObjects.size() == renderImages.size() );
-        for ( u32 i=0; i<(u32)frameObjects.size(); ++i )
-        {
-            for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
-            {
-                VkCommandBuffer cb;
-                HelperVK::allocCommandBuffer(logical, graphicsPools[j], cb);
-                // TODO should be one time submit command buffer
-                HelperVK::startRecordCommandBuffer(logical, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, cb);
-                recordCb(cb, renderImages[i].frameBuffer());
-                HelperVK::stopRecordCommandBuffer(cb);
-                cmdsOut.emplace_back( cb ); 
-            }
-        }
+        while ( vkWaitForFences(logical, (u32)graphicsQueues.size(), 
+                                frameFinishFences.data()+frameIndex*graphicsQueues.size(),
+                                VK_TRUE, -1) == VK_TIMEOUT );
     }
 
-    void DeviceVK::deleteCommandBuffers(Vector<VkCommandBuffer>& buffers)
+    void DeviceVK::resetFences(u32 frameIdex)
     {
-        assert( logical && frameObjects.size() && graphicsQueues.size() && buffers.size()==frameObjects.size()*graphicsQueues.size() );
-        for ( u32 i=0; i<(u32)frameObjects.size(); ++i )
+        FV_VKCALL(vkResetFences(logical, (u32)graphicsQueues.size(),
+                                frameFinishFences.data()+frameIdex*graphicsQueues.size()));
+    }
+
+    void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback)
+    {
+        bool bContinue = false;
+        bool isFirstSubmit = true;
+        auto gq = graphicsQueues[queueIdx];
+        auto gp = graphicsPools[queueIdx];
+        u32 arrIdx = frameIndex*(u32)graphicsQueues.size()+queueIdx;
+        VkSemaphore doneSemaphore = frameFinishSemaphores[arrIdx];
+        VkFence doneFence = frameFinishFences[arrIdx];
+        Vector<VkCommandBuffer>& frameCmds = frameGraphicsCmds[arrIdx];
+        assert( frameCmds.empty() );
+
+        do
         {
-            for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
+            VkCommandBuffer cb;
+            HelperVK::allocCommandBuffer(logical, gp, cb);
+            HelperVK::beginCommandBuffer( logical, (VkCommandBufferUsageFlags) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb );
+            bContinue = callback( cb );
+            HelperVK::endCommandBuffer(cb);
+
+            VkSubmitInfo submitInfo = {};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+            if ( waitSemaphore && isFirstSubmit )
             {
-                HelperVK::freeCommandBuffers(logical, graphicsPools[j], &buffers[i*graphicsQueues.size()+j], 1);
+                VkSemaphore waitSemaphores[] = { waitSemaphore };
+                submitInfo.waitSemaphoreCount = 1;
+                submitInfo.pWaitSemaphores = waitSemaphores;
+                VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
+                submitInfo.pWaitDstStageMask = waitStages;
             }
-        }
-        buffers.clear();
+
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &cb;
+
+            if ( bContinue )
+            {
+                FV_VKCALL( vkQueueSubmit(gq, 1, &submitInfo, VK_NULL_HANDLE) );
+            }
+            else
+            {
+                VkSemaphore signalSemaphores[]  = { doneSemaphore };
+                submitInfo.signalSemaphoreCount = 1;
+                submitInfo.pSignalSemaphores = signalSemaphores;
+                FV_VKCALL( vkQueueSubmit(gq, 1, &submitInfo, doneFence) );
+                FV_VKCALL( vkQueueWaitIdle( gq ) );
+            }
+
+            frameCmds.emplace_back( cb );
+
+        } while ( bContinue );
     }
 
     void DeviceVK::submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback)
@@ -311,26 +350,21 @@ namespace fv
 
         VkCommandBuffer cb;
         HelperVK::allocCommandBuffer( logical, transferPool, cb );
-        HelperVK::startRecordCommandBuffer( logical, (VkCommandBufferUsageFlags) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb );
+        HelperVK::beginCommandBuffer( logical, (VkCommandBufferUsageFlags) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb );
 
         callback( cb );
 
-        HelperVK::stopRecordCommandBuffer( cb );
+        HelperVK::endCommandBuffer( cb );
   
-        VkFence fence;
-        VkFenceCreateInfo fenceInfo = {};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        FV_VKCALL( vkCreateFence(logical, &fenceInfo, nullptr, &fence) );
-
         VkSubmitInfo submit = {};
         submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit.pCommandBuffers = &cb;
         submit.commandBufferCount = 1;
-        VkResult res = vkQueueSubmit(transferQueue, 1, &submit, fence);
-        assert( res == VK_SUCCESS );
+      //  VkPipelineStageFlags stageFlags [] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
+      //  submit.pWaitDstStageMask = stageFlags; // TODO is this necessary ?
+        FV_VKCALL( vkQueueSubmit(transferQueue, 1, &submit, VK_NULL_HANDLE) );
+        FV_VKCALL( vkQueueWaitIdle( transferQueue ) );
 
-        while ( vkWaitForFences(logical, 1, &fence, VK_TRUE, -1) == VK_TIMEOUT );
-        vkDestroyFence(logical, fence, nullptr);
         HelperVK::freeCommandBuffers( logical, transferPool, &cb, 1 );
     }
 
@@ -429,7 +463,7 @@ namespace fv
             }
         }
 
-        SubmeshVK* submeshVK = SubmeshVK::create( *this, vertexBuffer, bufferSize, submesh.indices.data(), (u32) submesh.indices.size()*sizeof(u32) );
+        SubmeshVK* submeshVK = SubmeshVK::create( *this, vertexBuffer, bufferSize, submesh.indices.data(), (u32) submesh.indices.size()*sizeof(u32), si, numComponents*4 );
         delete [] vertexBuffer;
         if ( !submeshVK )
         {

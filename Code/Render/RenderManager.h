@@ -128,12 +128,8 @@ namespace fv
         FV_TS virtual void deleteShader( RShader shader ) = 0;
         FV_TS virtual void deleteSubmesh( RSubmesh submesh ) = 0;
         
-        // Rendering
-        virtual void renderSubmesh( RSubmesh submesh) = 0;
-
         void readRenderConfig();
-        virtual void concludeFrame() = 0;
-        virtual void submitFrame() = 0;
+        virtual void drawFrame() = 0;
         virtual void waitOnDeviceIdle() = 0;
         virtual u32 numDevices() const = 0;
         virtual u32 autoDeviceIdx() = 0;

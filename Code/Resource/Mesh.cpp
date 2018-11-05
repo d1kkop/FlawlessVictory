@@ -110,10 +110,6 @@ namespace fv
 
     void Mesh::drawMT()
     {
-        for ( auto& s : m_SubMeshes )
-        {
-            renderManager()->renderSubmesh( s );
-        }
     }
 
 }

@@ -24,8 +24,6 @@ namespace game
         void serialize( class fv::TextSerializer& ts ) override;
 
     private:
-        M<Shader> m_FragShader;
-        M<Shader> m_VertShader;
         M<Mesh>   m_Sponza;
         M<Mesh>   m_Tyra;
         Ref<class PlayerComponent> m_TargetPlayer;

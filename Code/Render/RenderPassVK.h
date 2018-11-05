@@ -19,21 +19,17 @@ namespace fv
         VkFormat format() const { return m_Format; }
         u32 samples() const { return m_Samples; }
 
-        void recordCommandBuffers( const VkOffset2D& offset, const VkExtent2D& extend, const Vector<VkClearValue>& clearValues );
-        void addBeginPassToQueue( struct FrameObject& fo, u32 queueIdx );
-        void addEndPassToQueue( struct FrameObject& fo, u32 queueIdx );
+        void begin(VkCommandBuffer cb, VkFramebuffer fb,
+                   const VkOffset2D& offset, const VkExtent2D& extent,
+                   const Vector<VkClearValue>& clearValues);
+        void end(VkCommandBuffer cb);
 
     private:
-        void recordBeginRenderPass(VkCommandBuffer cb, VkFramebuffer frameBuffer, const VkOffset2D& offset, const VkExtent2D& extent, const Vector<VkClearValue>& clearValues);
-        void recordEndRenderPass(VkCommandBuffer cb);
-
         bool m_Valid = false;
         DeviceVK* m_Device;
         VkRenderPass m_RenderPass;
         VkFormat m_Format;
         u32 m_Samples;
-        Vector<VkCommandBuffer> m_BeginRenderPassBuffers;
-        Vector<VkCommandBuffer> m_EndRenderPassBuffers;
     };
 }
 #endif

@@ -10,11 +10,10 @@ namespace fv
     public:
         SwapChainVK() = default;
         ~SwapChainVK();
-        static SwapChainVK* create(struct DeviceVK& device, VkSurfaceKHR surface,
+        static SwapChainVK* create(struct DeviceVK& device, VkSurfaceKHR surface, u32 numFramesBehind,
                                    u32 width, u32 height, u32 numImages, u32 numLayers,
                                    const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx);
-        FV_MO VkSemaphore acquireNextImage(u32& imageIndex, VkFence fence);
-
+        FV_MO VkSemaphore acquireNextImage(u32 frameIndex, u32& renderImageIndex);
 
         struct DeviceVK& device() { return *m_Device; }
         VkSurfaceKHR surface() const { return m_Surface; }
@@ -36,7 +35,7 @@ namespace fv
         VkSwapchainKHR m_SwapChain;
         VkSwapchainKHR m_OldSwapChain;
         Vector<VkImage> m_Images;
-        VkSemaphore m_ImageAvailableSemaphore;
+        Vector<VkSemaphore> m_ImageAvailableSemaphores;
     };
 }
 #endif
