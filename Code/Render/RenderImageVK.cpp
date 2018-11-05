@@ -1,6 +1,6 @@
-#include "RenderManager.h" // For config
-#if FV_VULKAN
 #include "RenderImageVK.h"
+#if FV_VULKAN
+#include "RenderManager.h" // For config
 #include "DeviceVK.h"
 #include "HelperVK.h"
 #include "MemoryHelperVK.h"

@@ -28,7 +28,7 @@ namespace fv
                                     u32 width, u32 height, u32 numImages, u32 numLayers,
                                     const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
                                     VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
-                                    VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain);
+                                    VkExtent2D& surfaceExtend, VkSwapchainKHR oldSwapChain, VkSwapchainKHR& swapChain);
         static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule);
@@ -68,7 +68,7 @@ namespace fv
                                        VkSurfaceCapabilitiesKHR& capabilities, Vector<VkPresentModeKHR>& presentModes);
         static bool chooseSwapChain(u32 width, u32 height,
                                     const Vector<VkSurfaceFormatKHR>& formats, const VkSurfaceCapabilitiesKHR& capabilities, const Vector<VkPresentModeKHR>& presentModes,
-                                    VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend);
+                                    VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extent);
 
         // Misc
         static u32  findMemoryType(u32 typeFilter, const VkPhysicalDeviceMemoryProperties& memProperties, VkMemoryPropertyFlags propertyFlags);

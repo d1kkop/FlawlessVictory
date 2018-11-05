@@ -24,15 +24,18 @@ namespace fv
     public:
         DeviceVK() = default;
         void release(); // Do not put in destructor.
+        void releaseSwapchain();
         void storeDeviceQueueFamilies(VkSurfaceKHR surface);
-        void setFormatAndExtent(const struct RenderConfig& rc);
+        void setFormatAndExtent(const RenderConfig& rc);
         bool createAllocators();
         bool createCommandPools();
         bool createStagingBuffers();
-        bool createSwapChain(const struct RenderConfig& rc, VkSurfaceKHR surface);
-        bool createRenderImages(const struct RenderConfig& rc);
-        bool createFrameObjects(const struct RenderConfig& rc);
-        bool createStandard(const struct RenderConfig& rc);
+        bool createSwapChain(const RenderConfig& rc, VkSurfaceKHR surface);
+        bool createRenderPasses(const RenderConfig& rc);
+        bool createRenderImages(const RenderConfig& rc);
+        bool createFrameObjects(const RenderConfig& rc);
+        bool createStandard(const RenderConfig& rc);
+        bool reCreateSwapChain(const RenderConfig& rc, VkSurfaceKHR surface);
 
         void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback);
         void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
@@ -87,6 +90,7 @@ namespace fv
         Vector<VkFence> frameFinishFences;
         Vector<Vector<VkCommandBuffer>> frameGraphicsCmds;
 
+        bool recreateSwapChain;
 
     private:
         struct SwapChainVK* m_SwapChain;

@@ -15,16 +15,16 @@ namespace fv
     {
         VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         VmaMemoryUsage vmaUsage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
-        u32 queueIdxs[] = { device.queueIndices.graphics.value(), device.queueIndices.transfer.value() };
+        u32 queueIdxs[] = { device.queueIndices.transfer.value() };
 
-        BufferVK vertexBuffer = BufferVK::create(device, vertexBufferSize, vkUsage, vmaUsage, queueIdxs, 2, nullptr);
+        BufferVK vertexBuffer = BufferVK::create(device, vertexBufferSize, vkUsage, vmaUsage, queueIdxs, 1, nullptr);
         if ( !vertexBuffer.valid() || !vertexBuffer.copyFrom(vertices, vertexBufferSize) )
         {
             return {};
         }
 
         VkBufferUsageFlagBits vkUsageIndex = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-        BufferVK indexBuffer = BufferVK::create(device, indexBufferSize, vkUsageIndex, vmaUsage, queueIdxs, 2, nullptr); 
+        BufferVK indexBuffer = BufferVK::create(device, indexBufferSize, vkUsageIndex, vmaUsage, queueIdxs, 1, nullptr); 
         if ( !indexBuffer.valid() || !indexBuffer.copyFrom((void*)indices, indexBufferSize) )
         {
             return {};

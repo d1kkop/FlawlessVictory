@@ -18,23 +18,33 @@ namespace fv
 
     void DeviceVK::release()
     {
-        delete m_SwapChain; m_SwapChain = nullptr;
-        for ( auto& ri : renderImages ) ri.release();
         for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d, false );
         for ( auto& shad: shaders) deleteShader( shad, false );
         for ( auto& subm : submeshes) deleteSubmesh( subm, false );
-        for ( auto& kvp : pipelines ) kvp.second.release();
-        // clearPipeline.release(); // No need, is in map of pipelines 
+        for ( auto& s : frameFinishSemaphores ) vkDestroySemaphore(logical, s, nullptr);
+        for ( auto& f : frameFinishFences ) vkDestroyFence(logical, f, nullptr);
+        for ( auto& gp : graphicsPools ) vkDestroyCommandPool(logical, gp, nullptr);
         m_StagingBuffer.release();
-        clearColorDepthPass.release();
+        releaseSwapchain();
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
         vkDestroyCommandPool( logical, transferPool, nullptr );
-        for ( auto& s : frameFinishSemaphores) vkDestroySemaphore( logical, s, nullptr );
-        for ( auto& f : frameFinishFences ) vkDestroyFence( logical, f, nullptr );
-        for ( auto& gp : graphicsPools ) vkDestroyCommandPool( logical, gp, nullptr );
         vmaDestroyAllocator( allocator );
         vkDestroyDevice( logical, nullptr );
+    }
+
+    void DeviceVK::releaseSwapchain()
+    {
+        delete m_SwapChain; m_SwapChain = nullptr;
+        for ( auto& ri : renderImages ) ri.release();
+        renderImages.clear();
+        clearColorDepthPass.release();
+        // Resource thread may try to add new pipeline while recreating swap chain. Do lock.
+        {
+            scoped_lock lk(pipelineMutex);
+            for ( auto& kvp : pipelines ) kvp.second.release();
+            pipelines.clear();
+        }
     }
 
     void DeviceVK::storeDeviceQueueFamilies(VkSurfaceKHR surface)
@@ -131,7 +141,31 @@ namespace fv
     {
         assert(logical && physical && surface && !m_SwapChain);
         m_SwapChain = SwapChainVK::create(*this, surface, rc.numFramesBehind, rc.windowWidth, rc.windowHeight, rc.numImages, rc.numLayers, 
-                                          queueIndices.graphics, queueIndices.present);
+                                          queueIndices.graphics, queueIndices.present, nullptr);
+        return m_SwapChain != nullptr;
+    }
+
+    bool DeviceVK::createRenderPasses(const RenderConfig& rc)
+    {
+        clearColorDepthPass = RenderPassVK::create(*this, format, rc.numSamples, false);
+        if ( !clearColorDepthPass.valid() )
+        {
+            LOGC("Cannot create main render pass. Render setup failed.");
+            return false;
+        }
+        return true;
+    }
+
+    bool DeviceVK::reCreateSwapChain(const struct RenderConfig& rc, VkSurfaceKHR surface)
+    {
+        assert( logical && surface );
+        vkDeviceWaitIdle( logical );
+        releaseSwapchain();
+        if ( createSwapChain( rc, surface ) )
+        {
+            createRenderPasses( rc );
+            createRenderImages( rc );
+        }
         return m_SwapChain != nullptr;
     }
 
@@ -187,12 +221,6 @@ namespace fv
 
     bool DeviceVK::createStandard(const RenderConfig& rc)
     {
-        clearColorDepthPass = RenderPassVK::create(*this, format, rc.numSamples, false);
-        if ( !clearColorDepthPass.valid() )
-        {
-            LOGC("Cannot create main render pass. Render setup failed.");
-            return false;
-        }
         if ( !HelperVK::createShaderFromBinary(logical, Directories::standard() / "standard.frag.spv", standardFrag) )
         {
             LOGC("VK Cannot create standard frag shader. Render setup failed.");
@@ -335,8 +363,8 @@ namespace fv
                 VkSemaphore signalSemaphores[]  = { doneSemaphore };
                 submitInfo.signalSemaphoreCount = 1;
                 submitInfo.pSignalSemaphores = signalSemaphores;
-                FV_VKCALL( vkQueueSubmit(gq, 1, &submitInfo, doneFence) );
-                FV_VKCALL( vkQueueWaitIdle( gq ) );
+                auto res = vkQueueSubmit(gq, 1, &submitInfo, doneFence);
+                assert( res == VK_SUCCESS ); 
             }
 
             frameCmds.emplace_back( cb );

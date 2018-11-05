@@ -40,6 +40,7 @@ namespace fv
         FV_TS void deleteSubmesh(RSubmesh submesh) override;
 
         VkInstance m_Instance{};
+        VkSurfaceKHR m_Surface{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
         Vector<DeviceVK*> m_Devices; // Must use ptr as has mutexes for which default operators are deleted.
         void* m_Window {};

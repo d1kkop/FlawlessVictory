@@ -10,6 +10,7 @@ namespace fv
     {
         if (!m_Device || !m_Device->logical) return;
         vkDestroyRenderPass( device().logical, m_RenderPass, nullptr );
+        m_RenderPass = nullptr;
     }
 
     RenderPassVK RenderPassVK::create(DeviceVK& device, VkFormat format, u32 numSamples, bool depth)

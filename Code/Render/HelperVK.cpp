@@ -110,7 +110,7 @@ namespace fv
                                    u32 width, u32 height, u32 numImages, u32 numLayers,
                                    const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
                                    VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
-                                   VkExtent2D& surfaceExtend, VkSwapchainKHR& swapChain)
+                                   VkExtent2D& surfaceExtend, VkSwapchainKHR oldSwapChain, VkSwapchainKHR& swapChain)
     {
         assert(device && physicalDevice && surface && width > 0 && height > 0 && numImages > 0 && numLayers > 0 );
 
@@ -164,7 +164,7 @@ namespace fv
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;  // If want to blend with other windows in system
         createInfo.presentMode = chosenPresentMode;
         createInfo.clipped = VK_TRUE; // Whether hidden pixels by other windows are obscured
-        createInfo.oldSwapchain = VK_NULL_HANDLE; // TODO fix later
+        createInfo.oldSwapchain = oldSwapChain;
 
         if ( vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS )
         {
@@ -729,7 +729,7 @@ namespace fv
                                    const Vector<VkSurfaceFormatKHR>& formats, 
                                    const VkSurfaceCapabilitiesKHR& capabilities, 
                                    const Vector<VkPresentModeKHR>& presentModes,
-                                   VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extend)
+                                   VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extent)
     {
         bool found = false;
         if ( formats.size() > 0 )
@@ -754,10 +754,9 @@ namespace fv
         }
         if ( !found )
         {
-            LOGW("VK Could not find suitable surface format for swap chain.");
             return false;
         }
-        mode  = VK_PRESENT_MODE_FIFO_KHR;
+        mode = VK_PRESENT_MODE_FIFO_KHR;
         for ( const auto& presentMode : presentModes )
         {
             if ( presentMode == VK_PRESENT_MODE_MAILBOX_KHR )
@@ -772,13 +771,17 @@ namespace fv
         }
         if ( capabilities.currentExtent.width != UINT_MAX )
         {
-            extend = capabilities.currentExtent;
+            extent = capabilities.currentExtent;
         }
         else
         {
-            extend = { width, height };
-            extend.width  = Clamp(extend.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-            extend.height = Clamp(extend.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+            extent = { width, height };
+            extent.width  = Clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            extent.height = Clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+        }
+        if ( extent.width < 1 || extent.height < 1 )
+        {
+            return false;
         }
         return true;
     }

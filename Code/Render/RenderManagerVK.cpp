@@ -75,10 +75,9 @@ namespace fv
     #endif
 
         // In case of main swap chain
-        VkSurfaceKHR surface = nullptr;
         if ( m_Window )
         {
-            if ( !HelperVK::createSurface(m_Instance, m_Window, surface) )
+            if ( !HelperVK::createSurface(m_Instance, m_Window, m_Surface) )
             {
                 LOGC("VK Failed to create main window surface.");
                 return false;
@@ -86,7 +85,7 @@ namespace fv
         }
 
         // Note, surface can be null in case there is no mainWindow.
-        if ( !createDevices(surface, 1 /* jobManager()->numThreads() */ ) )
+        if ( !createDevices(m_Surface, 1 /* jobManager()->numThreads() */ ) )
             return false;
 
         // See if want swap chain
@@ -96,7 +95,7 @@ namespace fv
             bool bCreatedSwapChain = false;
             for ( auto& dv : m_Devices )
             {
-                if ( dv->createSwapChain( rc, surface ) )
+                if ( dv->createSwapChain( rc, m_Surface ) )
                 {
                     bCreatedSwapChain = true;
                     break;
@@ -115,9 +114,10 @@ namespace fv
             if (!dv->createAllocators() ) return false;
             if (!dv->createStagingBuffers() ) return false;
             if (!dv->createCommandPools()) return false;
-            if (!dv->createStandard( rc )) return false;
+            if (!dv->createRenderPasses( rc )) return false;
             if (!dv->createRenderImages( rc )) return false;
             if (!dv->createFrameObjects( rc )) return false;
+            if (!dv->createStandard( rc )) return false;
         }
 
         LOG("VK Initialized succesful.");
@@ -137,19 +137,24 @@ namespace fv
             dv->release();
             delete dv;
         }
-        if ( m_Instance )
-        {
-            vkDestroyInstance(m_Instance, nullptr);
-        }
+        if ( m_Surface ) vkDestroySurfaceKHR( m_Instance, m_Surface, nullptr );
+        if ( m_Instance ) vkDestroyInstance(m_Instance, nullptr);
     }
 
     void RenderManagerVK::drawFrame()
     {
         for ( auto& dv : m_Devices )
         {
-            // End previous
+            if ( dv->recreateSwapChain )
+            {
+                if ( !dv->reCreateSwapChain( m_RenderConfig, m_Surface ) )
+                    continue;
+                dv->recreateSwapChain = false;
+            }
+
             dv->waitForFences( m_FrameIndex );
             dv->resetFences( m_FrameIndex );
+
             for ( u32 i=0; i<(u32)dv->graphicsQueues.size(); ++i )
             {
                 u32 offs = m_FrameIndex*(u32)dv->graphicsQueues.size();
@@ -161,7 +166,11 @@ namespace fv
             u32 renderImageIndex = m_CurrentDrawImage;
             if ( dv->swapChain() )
             {
-                waitSemaphore = dv->swapChain()->acquireNextImage( m_FrameIndex, renderImageIndex );
+                if ( !dv->swapChain()->acquireNextImage( m_FrameIndex, renderImageIndex, waitSemaphore ) )
+                {
+                    dv->recreateSwapChain = true;
+                    continue;
+                }
             }
 
             // Clear values
@@ -220,16 +229,13 @@ namespace fv
 
             if ( dv->swapChain() )
             {
-                VkPresentInfoKHR presentInfo = {};
-                presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-                presentInfo.waitSemaphoreCount = (u32)dv->graphicsQueues.size();
-                presentInfo.pWaitSemaphores = &dv->frameFinishSemaphores[m_FrameIndex*dv->graphicsQueues.size()];
-                presentInfo.swapchainCount  = 1;
-                VkSwapchainKHR swapChains[] = { dv->swapChain()->swapChain() };
-                presentInfo.pSwapchains = swapChains;
-                uint32_t imageIndices [] = { renderImageIndex };
-                presentInfo.pImageIndices = imageIndices;
-                vkQueuePresentKHR(dv->presentQueue, &presentInfo);
+                const VkSemaphore* finishSemaphores = &dv->frameFinishSemaphores[m_FrameIndex*dv->graphicsQueues.size()];
+                u32 numSemaphores = (u32)dv->graphicsQueues.size();
+                if ( !dv->swapChain()->present(finishSemaphores, numSemaphores) )
+                {
+                    dv->recreateSwapChain = true;
+                    continue;
+                }
             }
         }
 
