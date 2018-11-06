@@ -17,15 +17,12 @@ namespace fv
     public:
         FV_DLL bool initialize( const SystemParams& params );
         FV_DLL void mainloop();
-        const SystemParams& startParams() const { return m_Params; }
-
-    private:
-        void prepareSortListFor( Map<u32, Vector<ComponentArray>>& components, Vector<ComponentArray>& sortedList );
+        const SystemParams& startParams() const { return m_Params; }  
 
         bool m_Done = false;
         SystemParams m_Params {};
-        Vector<ComponentArray> m_SortedUpdatables;
-        Vector<ComponentArray> m_SortedOthers;
+        Vector<ComponentArray> m_ListUpdatables;
+        Vector<ComponentArray> m_ListOthers;
     };
 
     FV_DLL class SystemManager* systemManager();

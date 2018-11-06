@@ -29,7 +29,8 @@ namespace fv
     {
         if ( !MemoryHelperVK::createImage(*m_Device, m_Device->extent.width, m_Device->extent.height, m_Device->format, 1,
                                           rc.numLayers, rc.numSamples, false, m_Device->queueIndices.graphics.value(),
-                                          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, m_Image) )
+                                          (VkImageUsageFlagBits) (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT), VMA_MEMORY_USAGE_GPU_ONLY,
+                                          m_Image) )
         {
             return false;
         }

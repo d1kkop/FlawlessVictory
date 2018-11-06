@@ -15,9 +15,9 @@ namespace fv
         if ( uvs )        vertexComponentCount += 2;
         if ( lightUvs )   vertexComponentCount += 2;
         if ( bones )      vertexComponentCount += 5; // weights and boneIndices
-        for ( u32 i=0; i<4; ++i )
+        for (bool extra : extras)
         {
-            if ( extras[i] ) vertexComponentCount += 4;
+            if ( extra ) vertexComponentCount += 4;
         }
         return vertexComponentCount;
     }
@@ -48,10 +48,10 @@ namespace fv
         rs.maxDevices = 1; // TODO should work with more and with a single swap chain
         rs.resX = 1200;
         rs.resY = 1000;
-        rs.numImages = 2;
+        rs.numImages = 3;
         rs.numSamples = 1; // For msaa 2, 4 etc
         rs.numLayers = 1; // for stereo 2
-        rs.numFramesBehind = 1;
+        rs.numFramesBehind = 2;
         rs.createWindow = true; // TODO without swap chain, the draw frame hangs on wait for Fence
         rs.windowWidth = rs.resX;
         rs.windowHeight = rs.resY;

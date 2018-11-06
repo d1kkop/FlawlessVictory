@@ -46,6 +46,9 @@
     <ClInclude Include="SubmeshVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
+    <ClInclude Include="RenderComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">

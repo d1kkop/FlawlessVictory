@@ -53,6 +53,8 @@ namespace fv
         Vector<const char*> m_RequiredInstanceLayers;
         Vector<const char*> m_RequiredPhysicalExtensions;
         Vector<const char*> m_RequiredPhysicalLayers;
+
+        Vector<class Component*> m_ListDrawables;
     };
 }
 #endif

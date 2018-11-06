@@ -57,6 +57,48 @@ namespace fv
         return bf;
     }
 
+    BufferVK BufferVK::createVertexBuffer(DeviceVK& device, const void* vertices, u32 numVertices, u32 vertexSize)
+    {
+        assert( vertices && numVertices >= 1 );
+        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+        VmaMemoryUsage vmaUsage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
+        u32 queueIdxs[] = { device.queueIndices.transfer.value() };
+        BufferVK vertexBuffer = BufferVK::create(device, numVertices*vertexSize, vkUsage, vmaUsage, queueIdxs, 1, nullptr);
+        if ( !vertexBuffer.valid() || !vertexBuffer.copyFrom(vertices, numVertices*vertexSize) )
+        {
+            return {};
+        }
+        return std::move(vertexBuffer);
+    }
+
+    BufferVK BufferVK::createIndexBuffer(DeviceVK& device, const u32* indices, u32 numIndices)
+    {
+        assert( indices && numIndices > 0 );
+        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+        VmaMemoryUsage vmaUsage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
+        u32 queueIdxs[] = { device.queueIndices.transfer.value() };
+        BufferVK indexBuffer = BufferVK::create(device, numIndices*4, vkUsage, vmaUsage, queueIdxs, 1, nullptr);
+        if ( !indexBuffer.valid() || !indexBuffer.copyFrom(indices, numIndices*4) )
+        {
+            return {};
+        }
+        return std::move(indexBuffer);
+    }
+
+    BufferVK BufferVK::createUniformBuffer(DeviceVK& device, const void* data, u32 size)
+    {
+        assert( data && size > 0 );
+        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+        VmaMemoryUsage vmaUsage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
+        u32 queueIdxs[] = { device.queueIndices.transfer.value() };
+        BufferVK uniformBuffer = BufferVK::create(device, size, vkUsage, vmaUsage, queueIdxs, 1, nullptr);
+        if ( !uniformBuffer.valid() || !uniformBuffer.copyFrom(data, size) )
+        {
+            return {};
+        }
+        return std::move(uniformBuffer);
+    }
+
     bool BufferVK::map(void** pData)
     {
         assert( pData );

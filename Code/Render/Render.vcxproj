@@ -82,6 +82,7 @@
     <ClInclude Include="IncVulkan.h" />
     <ClInclude Include="MemoryHelperVK.h" />
     <ClInclude Include="PipelineVK.h" />
+    <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="RenderImageVK.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="RenderManagerVK.h" />

@@ -72,10 +72,14 @@ namespace fv
             if (!inputManager()->update())
                 break;
 
-            prepareSortListFor( componentManager()->updateComponents(), m_SortedUpdatables );
+           PrepareList(componentManager()->updateComponents(), m_ListUpdatables, [](const ComponentArray& a, const ComponentArray& b)
+           {
+                assert(a.size && b.size);
+                return ((GameComponent&)a.elements[0]).m_UpdatePriority < ((GameComponent&)b.elements[0]).m_UpdatePriority;
+           });
 
             // Call begin (Single threaded).
-            ComponentFor<GameComponent>( m_SortedUpdatables, [](GameComponent& gc)
+            ComponentFor<GameComponent>( m_ListUpdatables, [](GameComponent& gc)
             {
                 if ( !gc.m_HasBegun )
                 {
@@ -88,8 +92,8 @@ namespace fv
             if ( Time::elapsed() - lastNetworkUpdate )
             {
                 lastNetworkUpdate = Time::elapsed();
-                prepareSortListFor( componentManager()->networkComponents(), m_SortedOthers );
-                ParallelComponentFor<GameComponent>( m_SortedOthers, []( GameComponent& gc)
+                PrepareList( componentManager()->networkComponents(), m_ListOthers );
+                ParallelComponentFor<GameComponent>( m_ListOthers, []( GameComponent& gc)
                 {
                     gc.networkUpdateMT( Time::networkDt() );
                 });
@@ -99,35 +103,36 @@ namespace fv
             if ( Time::elapsed() - lastPhysicsUpdate )
             {
                 lastPhysicsUpdate = Time::elapsed();
-                prepareSortListFor( componentManager()->physicsComponents(), m_SortedOthers );
-                ParallelComponentFor<GameComponent>( m_SortedOthers, [](GameComponent& gc)
+                PrepareList( componentManager()->physicsComponents(), m_ListOthers );
+                ParallelComponentFor<GameComponent>( m_ListOthers, [](GameComponent& gc)
                 {
                     gc.physicsUpdateMT(Time::physicsDt());
                 });
             }
 
             // Call MT update on components
-            ParallelComponentFor<GameComponent>( m_SortedUpdatables, [](GameComponent& gc)
+            ParallelComponentFor<GameComponent>( m_ListUpdatables, [](GameComponent& gc)
             {
                 gc.updateMT( Time::networkDt() );
             });
 
             // Call ST update on components
-            ComponentFor<GameComponent>( m_SortedUpdatables, [](GameComponent& gc)
+            ComponentFor<GameComponent>( m_ListUpdatables, [](GameComponent& gc)
             {
                 gc.update( Time::dt() );
             });
 
 
             // -- Rendering --
-            prepareSortListFor( componentManager()->drawComponents(), m_SortedOthers );
+            PrepareList( componentManager()->drawComponents(), m_ListOthers );
 
             // Cull
-            ParallelComponentFor<GameComponent>(m_SortedOthers, [](GameComponent& gc)
+            ParallelComponentFor<GameComponent>(m_ListOthers, [](GameComponent& gc)
             {
                 gc.cullMT();
             });
 
+            // drawMT is called from renderManager
             renderManager()->drawFrame();
 
             // Update timings
@@ -135,28 +140,6 @@ namespace fv
         }
 
         renderManager()->waitOnDeviceIdle();
-    }
-
-
-    void SystemManager::prepareSortListFor(Map<u32, Vector<ComponentArray>>& components, Vector<ComponentArray>& sortedList)
-    {
-        sortedList.clear();
-        for ( auto& kvp : components )
-        {
-            Vector<ComponentArray>& compArrayList = kvp.second;
-            for ( auto& compArray : compArrayList )
-            {
-                if ( compArray.size > 0 )
-                {
-                    sortedList.emplace_back(compArray);
-                }
-            }
-        }
-        Sort(sortedList, [](const ComponentArray& a, const ComponentArray& b)
-        {
-            assert(a.size && b.size);
-            return ((GameComponent&)a.elements[0]).m_UpdatePriority < ((GameComponent&)b.elements[0]).m_UpdatePriority;
-        });
     }
 
     SystemManager* g_SystemManager {};

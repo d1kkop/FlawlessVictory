@@ -11,8 +11,10 @@ namespace fv
         SubmeshVK() = default;
         ~SubmeshVK();
 
-        static SubmeshVK* create( struct DeviceVK& device, const void* vertices, u32 vertexBufferSize, const u32* indices, u32 indexBufferSize,
-                                 const SubmeshInput& si, u32 vertexSize );
+        static SubmeshVK* create( struct DeviceVK& device,
+                                 const void* vertices, u32 numVertices, u32 vertexSize,
+                                 const u32* indices, u32 numIndices,
+                                 const SubmeshInput& si );
 
         struct DeviceVK* device() const { return m_VertexBuffer.device(); }
         const BufferVK& vertexBuffer() const { return m_VertexBuffer; }

@@ -442,8 +442,8 @@ namespace fv
         }
 
         // Make interleaved vertex buffer.
-        char* vertexBuffer = new char[bufferSize];
-        char* ptr = vertexBuffer;
+        char* vertices = new char[bufferSize];
+        char* ptr = vertices;
         for ( u32 i=0; i<vCount; ++i )
         {
             if ( si.positions )
@@ -491,8 +491,11 @@ namespace fv
             }
         }
 
-        SubmeshVK* submeshVK = SubmeshVK::create( *this, vertexBuffer, bufferSize, submesh.indices.data(), (u32) submesh.indices.size()*sizeof(u32), si, numComponents*4 );
-        delete [] vertexBuffer;
+        SubmeshVK* submeshVK = SubmeshVK::create(*this, 
+                                                 vertices, vCount, numComponents*4,
+                                                 submesh.indices.data(), (u32) submesh.indices.size(),
+                                                 si);
+        delete [] vertices;
         if ( !submeshVK )
         {
             return {};

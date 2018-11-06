@@ -4,6 +4,7 @@
 #include "PipelineVK.h"
 #include "RenderImageVK.h"
 #include "SubmeshVK.h"
+#include "../Core/ComponentManager.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
 #include "../Core/Directories.h"
@@ -200,6 +201,17 @@ namespace fv
                     PipelineVK prevPipeline;
 
                     {
+                        Flatten(componentManager()->drawComponents(), m_ListDrawables, 
+                                [](const Component* a, const Component* b)
+                        {
+                            return false;
+                        });
+
+                        for ( auto* c : m_ListDrawables )
+                        {
+                            // c->drawMT();
+                        }
+
                         scoped_lock lk(dv->submeshMutex);
 
                         for ( auto& rs : dv->submeshes )

@@ -2,13 +2,14 @@
 #include "PCH.h"
 #include "Common.h"
 #include "Component.h"
+#include "Algorithm.h"
 
 namespace fv
 {
     class ComponentManager
     {
     public:
-        FV_DLL ComponentManager(u32 componentBufferSize=128);
+        FV_DLL ComponentManager(u32 componentBufferSize=64);
         FV_DLL ~ComponentManager();
 
         FV_MO FV_DLL Component* newComponent(u32 type);
@@ -88,4 +89,53 @@ namespace fv
             }
         }
     }
+
+    inline void PrepareList(Map<u32, Vector<ComponentArray>>& components, Vector<ComponentArray>& listOut)
+    {
+        listOut.clear();
+        for ( auto& kvp : components )
+        {
+            Vector<ComponentArray>& compArrayList = kvp.second;
+            for ( auto& compArray : compArrayList )
+            {
+                if ( compArray.size > 0 )
+                {
+                    listOut.emplace_back(compArray);
+                }
+            }
+        }
+    }
+
+    template <class CmpFunc>
+    inline void PrepareList(Map<u32, Vector<ComponentArray>>& components, Vector<ComponentArray>& listOut, const CmpFunc& cmpFunc)
+    {
+        PrepareList( components, listOut );
+        Sort( listOut, cmpFunc );
+    }
+
+    inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>& listOut)
+    {
+        listOut.clear();
+        for ( auto& kvp : components )
+        {
+            Vector<ComponentArray>& compArrayList = kvp.second;
+            for ( auto& compArray : compArrayList )
+            {
+                for ( u32 i=0; i<compArray.size; ++i )
+                {
+                    Component* c = (Component*) ((char*)compArray.elements + i*compArray.compSize);
+                    if ( c->inUse() )listOut.emplace_back( c );
+                }
+            }
+        }
+    }
+
+    template <class CmpFunc>
+    inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>& listOut, const CmpFunc& cmpFunc)
+    {
+        Flatten(components, listOut);
+        Sort(listOut, cmpFunc);
+    }
+
+
 }

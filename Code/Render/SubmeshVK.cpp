@@ -11,30 +11,24 @@ namespace fv
         m_IndexBuffer.release();
     }
 
-    SubmeshVK* SubmeshVK::create(DeviceVK& device, const void* vertices, u32 vertexBufferSize, const u32* indices, u32 indexBufferSize, const SubmeshInput& si, u32 vertexSize)
+    SubmeshVK* SubmeshVK::create(DeviceVK& device,
+                                 const void* vertices, u32 numVertices, u32 vertexSize,
+                                 const u32* indices, u32 numIndices,
+                                 const SubmeshInput& si)
     {
-        VkBufferUsageFlagBits vkUsage = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-        VmaMemoryUsage vmaUsage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
-        u32 queueIdxs[] = { device.queueIndices.transfer.value() };
+        assert( vertices && numVertices && indices && numIndices ); // VertexSize can be 0.
 
-        BufferVK vertexBuffer = BufferVK::create(device, vertexBufferSize, vkUsage, vmaUsage, queueIdxs, 1, nullptr);
-        if ( !vertexBuffer.valid() || !vertexBuffer.copyFrom(vertices, vertexBufferSize) )
-        {
-            return {};
-        }
+        BufferVK vertexBuffer = BufferVK::createVertexBuffer( device, vertices, numVertices, vertexSize );
+        if (!vertexBuffer.valid()) return nullptr;
 
-        VkBufferUsageFlagBits vkUsageIndex = (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-        BufferVK indexBuffer = BufferVK::create(device, indexBufferSize, vkUsageIndex, vmaUsage, queueIdxs, 1, nullptr); 
-        if ( !indexBuffer.valid() || !indexBuffer.copyFrom((void*)indices, indexBufferSize) )
-        {
-            return {};
-        }
+        BufferVK indexBuffer = BufferVK::createIndexBuffer( device, indices, numIndices );
+        if (!indexBuffer.valid()) return nullptr;
 
         auto s = new SubmeshVK{};
         s->m_VertexBuffer = vertexBuffer;
-        s->m_IndexBuffer = indexBuffer;
+        s->m_IndexBuffer  = indexBuffer;
         s->m_SubmeshInput = si;
-        s->m_VertexSize = vertexSize;
+        s->m_VertexSize   = vertexSize;
         return s;
     }
 
