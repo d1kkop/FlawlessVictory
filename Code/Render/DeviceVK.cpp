@@ -219,6 +219,59 @@ namespace fv
         return true;
     }
 
+    bool DeviceVK::createPipelines(const RenderConfig& rc)
+    {
+        assert( standardFrag && standardVert );
+
+        MaterialData md = {};
+        md.fragShader = { idx, standardFrag };
+        md.vertShader = { idx, standardVert };
+
+        SubmeshInput si = {};
+        si.positions = true;
+        si.normals = true;
+        si.uvs = true;
+
+        PipelineFormatVK pipelineFormat = {};
+        pipelineFormat.mdata  = md;
+        pipelineFormat.sinput = si;
+        pipelineFormat.cullmode   = VK_CULL_MODE_NONE;
+        pipelineFormat.frontFace  = VK_FRONT_FACE_CLOCKWISE;
+        pipelineFormat.polyMode   = VK_POLYGON_MODE_FILL;
+        pipelineFormat.lineWidth  = 1.0f;
+        pipelineFormat.numSamples = rc.numSamples;
+        pipelineFormat.renderPass = clearColorDepthPass.renderPass();
+
+        //if ( !getOrCreatePipeline( pipelineFormat, pipelineOpaqueStandard ))
+        //{
+        //    LOGC("VK Cannot create opaque standard pipeline.");
+        //    return false;
+        //}
+
+        //pipelineFormat.sinput.tanBins = true;
+        //if ( !getOrCreatePipeline( pipelineFormat, pipelineOpaqueStandardTB ))
+        //{
+        //    LOGC("VK Cannot create opaque standard tanbin pipeline.");
+        //    return false;
+        //}
+
+        //pipelineFormat.sinput.bones = true;
+        //if ( !getOrCreatePipeline(pipelineFormat, pipelineOpaqueStandardTBBones) )
+        //{
+        //    LOGC("VK Cannot create opaque standard tanbin with bones pipeline.");
+        //    return false;
+        //}
+
+        //pipelineFormat.sinput.tanBins = false;
+        //if ( !getOrCreatePipeline(pipelineFormat, pipelineOpaqueStandardBones) )
+        //{
+        //    LOGC("VK Cannot create opaque standard with bones pipeline.");
+        //    return false;
+        //}
+
+        return true;
+    }
+
     bool DeviceVK::createStandard(const RenderConfig& rc)
     {
         if ( !HelperVK::createShaderFromBinary(logical, Directories::standard() / "standard.frag.spv", standardFrag) )
@@ -319,10 +372,9 @@ namespace fv
                                 frameFinishFences.data()+frameIdex*graphicsQueues.size()));
     }
 
-    void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback)
+    void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, bool firstSubmit,
+                                          const Function<bool (VkCommandBuffer cb)>& callback)
     {
-        bool bContinue = false;
-        bool isFirstSubmit = true;
         auto gq = graphicsQueues[queueIdx];
         auto gp = graphicsPools[queueIdx];
         u32 arrIdx = frameIndex*(u32)graphicsQueues.size()+queueIdx;
@@ -331,45 +383,42 @@ namespace fv
         Vector<VkCommandBuffer>& frameCmds = frameGraphicsCmds[arrIdx];
         assert( frameCmds.empty() );
 
-        do
+        VkCommandBuffer cb;
+        HelperVK::allocCommandBuffer(logical, gp, cb);
+        HelperVK::beginCommandBuffer(logical, (VkCommandBufferUsageFlags)VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
+        activeGraphicsCmdBuffer[ queueIdx ] = cb;
+        bool lastSubmit = callback(cb);
+        HelperVK::endCommandBuffer(cb);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        if ( waitSemaphore && firstSubmit )
         {
-            VkCommandBuffer cb;
-            HelperVK::allocCommandBuffer(logical, gp, cb);
-            HelperVK::beginCommandBuffer( logical, (VkCommandBufferUsageFlags) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb );
-            bContinue = callback( cb );
-            HelperVK::endCommandBuffer(cb);
+            VkSemaphore waitSemaphores[] = { waitSemaphore };
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = waitSemaphores;
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
+            submitInfo.pWaitDstStageMask = waitStages;
+        }
 
-            VkSubmitInfo submitInfo = {};
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &cb;
 
-            if ( waitSemaphore && isFirstSubmit )
-            {
-                VkSemaphore waitSemaphores[] = { waitSemaphore };
-                submitInfo.waitSemaphoreCount = 1;
-                submitInfo.pWaitSemaphores = waitSemaphores;
-                VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
-                submitInfo.pWaitDstStageMask = waitStages;
-            }
+        if ( !lastSubmit )
+        {
+            FV_VKCALL(vkQueueSubmit(gq, 1, &submitInfo, VK_NULL_HANDLE));
+        }
+        else
+        {
+            VkSemaphore signalSemaphores[]  = { doneSemaphore };
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = signalSemaphores;
+            auto res = vkQueueSubmit(gq, 1, &submitInfo, doneFence);
+            assert(res == VK_SUCCESS);
+        }
 
-            submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &cb;
-
-            if ( bContinue )
-            {
-                FV_VKCALL( vkQueueSubmit(gq, 1, &submitInfo, VK_NULL_HANDLE) );
-            }
-            else
-            {
-                VkSemaphore signalSemaphores[]  = { doneSemaphore };
-                submitInfo.signalSemaphoreCount = 1;
-                submitInfo.pSignalSemaphores = signalSemaphores;
-                auto res = vkQueueSubmit(gq, 1, &submitInfo, doneFence);
-                assert( res == VK_SUCCESS ); 
-            }
-
-            frameCmds.emplace_back( cb );
-
-        } while ( bContinue );
+        frameCmds.emplace_back(cb);
     }
 
     void DeviceVK::submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback)

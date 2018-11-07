@@ -37,6 +37,7 @@ namespace fv
         Mutex m_StateMutex;
         CondVar m_StateSignal;
         u32 m_NumWaiters = 0;
+        u32 m_ExecOn = -1;
 
         friend class JobManager;
         friend class SparseArray<Job>;
@@ -49,6 +50,7 @@ namespace fv
         FV_DLL ~JobManager();
 
         FV_TS FV_DLL M<Job> addJob( const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
+        FV_TS FV_DLL M<Job> addJobOn( u32 tIdx, const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled = Function<void (Job*)>() );
         FV_TS FV_DLL u32 numThreads() const;
         FV_TS FV_DLL u32 threadIdToIdx() const;
 
@@ -117,7 +119,7 @@ namespace fv
     {
         i32 kRemaining, kThreads, kPerThread, ofs;
         ParallelForPrepare((i32)collection.size(), kRemaining, kThreads, kPerThread, ofs);
-        Job* jobs[64];
+        M<Job> jobs[64];
         assert(kThreads<=64);
         i32 i;
         for ( i=0; i<kThreads && kRemaining>0; ++i )
@@ -127,12 +129,12 @@ namespace fv
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
                 {
-                    cb( collection[j] );
+                    cb( collection[j], i );
                 }
             });
             kRemaining -= kPerThread;
             ofs += kPerThread;
         }
-        for ( i32 a=0; a<i; ++a ) jobs[a]->waitAndFree();
+        for ( i32 a=0; a<i; ++a ) jobs[a]->wait();
     }
 }

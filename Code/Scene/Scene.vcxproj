@@ -78,7 +78,6 @@
     <ClInclude Include="..\Scene.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameComponent.h" />
-    <ClInclude Include="GameObject.h" />
     <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="SceneComponent.h" />
     <ClInclude Include="SceneList.h" />
@@ -87,7 +86,6 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GameComponent.cpp" />
-    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="SceneList.cpp" />
@@ -96,6 +94,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{324374c0-4e44-49d9-91c7-8803b8c111c0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Render\Render.vcxproj">
+      <Project>{f230bdbe-21b1-43a1-bf32-02951677935a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Resource\Resource.vcxproj">
       <Project>{0c7a13f5-2945-4956-8277-21a950b7c8fc}</Project>

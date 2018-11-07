@@ -38,6 +38,7 @@ namespace fv
         Vector<Submesh> subMeshes;
         Vector<M<Material>> materials;
         u32 devIdx = renderManager()->autoDeviceIdx();
+        m_DeviceIdx = devIdx;
 
         // Try get import settings from file
         MeshImportSettings settings {};
@@ -108,8 +109,12 @@ namespace fv
         patch->submit();
     }
 
-    void Mesh::drawMT()
+    void Mesh::drawMT(u32 tIdx)
     {
+        for ( auto& rs : m_SubMeshes )
+        {
+            renderManager()->renderSubmesh( tIdx, rs );
+        }
     }
 
 }

@@ -83,7 +83,10 @@ namespace fv
         {
             m_ObjectsMutex.unlock();
         }
+        u32 oldVersion = o->m_Version;
+        new (o)T; // Resets object (placement new)
         o->m_Freed = false;
+        o->m_Version = oldVersion;
         return o;
     }
 
@@ -92,9 +95,9 @@ namespace fv
     {
         if ( !o->m_Freed )
         {
-            u32 oldVersion = o->m_Version;
-            new (o)T; // Resets object (placement new)
-            o->m_Version = oldVersion+1;  // Increment version immediately so tat refs to this component will return null ptr from now on.
+            o->~T(); // Call destructor
+            o->m_Version++; // Refs will return nullptr from now on
+            o->m_Freed = true;
             if ( m_ThreadSafe )
             {
                 m_ObjectsMutex.lock();

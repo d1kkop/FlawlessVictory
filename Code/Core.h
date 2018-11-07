@@ -7,3 +7,5 @@
 #include "Core/Time.h"
 #include "Core/Math.h"
 #include "Core/Input.h"
+#include "Core/Component.h"
+#include "Core/GameObject.h"

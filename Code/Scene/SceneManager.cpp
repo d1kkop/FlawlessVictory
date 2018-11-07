@@ -4,6 +4,7 @@
 #include "../Core/Thread.h"
 #include "../Core/LogManager.h"
 #include "../Core/Functions.h"
+#include "../Core/GameObject.h"
 
 namespace fv
 {
@@ -124,4 +125,18 @@ namespace fv
     SceneManager* g_SceneManager {};
     SceneManager* sceneManager() { return CreateOnce(g_SceneManager); }
     void deleteSceneManager() { delete g_SceneManager; g_SceneManager=nullptr; }
+
+
+    GameObject* NewGameObject(u64 sceneMask)
+    {
+        FV_CHECK_MO();
+        auto* go = gameObjectManager()->newObject();
+        if ( !go ) return nullptr;
+        if ( sceneMask!=0 )
+        {
+            SceneComponent* sc = go->addComponent<SceneComponent>();
+            sc->sceneBits() |= sceneMask;
+        }
+        return go;
+    }
 }

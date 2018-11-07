@@ -93,10 +93,10 @@ namespace fv
             {
                 lastNetworkUpdate = Time::elapsed();
                 PrepareList( componentManager()->networkComponents(), m_ListOthers );
-                ParallelComponentFor<GameComponent>( m_ListOthers, []( GameComponent& gc)
-                {
-                    gc.networkUpdateMT( Time::networkDt() );
-                });
+                /*  ParallelComponentFor<GameComponent>( m_ListOthers, []( GameComponent& gc)
+                  {
+                      gc.networkUpdateMT( Time::networkDt() );
+                  });*/
             }
 
             // Check to see if can update physics
@@ -104,10 +104,10 @@ namespace fv
             {
                 lastPhysicsUpdate = Time::elapsed();
                 PrepareList( componentManager()->physicsComponents(), m_ListOthers );
-                ParallelComponentFor<GameComponent>( m_ListOthers, [](GameComponent& gc)
+  /*              ParallelComponentFor<GameComponent>( m_ListOthers, [](GameComponent& gc)
                 {
                     gc.physicsUpdateMT(Time::physicsDt());
-                });
+                });*/
             }
 
             // Call MT update on components
@@ -123,17 +123,8 @@ namespace fv
             });
 
 
-            // -- Rendering --
-            PrepareList( componentManager()->drawComponents(), m_ListOthers );
-
-            // Cull
-            ParallelComponentFor<GameComponent>(m_ListOthers, [](GameComponent& gc)
-            {
-                gc.cullMT();
-            });
-
-            // drawMT is called from renderManager
-            renderManager()->drawFrame();
+            Mat4 view = Mat4::identity();
+            renderManager()->drawFrame( view );
 
             // Update timings
             TimeUpdate();

@@ -1,53 +1,30 @@
 #pragma once
-//#include "../Core/Component.h"
-//
-//namespace fv
-//{
-//    class GameObject;
-//    class TextSerializer;
-//
-//    class RenderComponent: public GameComponent
-//    {
-//    public:
-//        FV_MO FV_DLL GameComponent* addComponent(u32 type);
-//        FV_MO FV_DLL GameComponent* getComponent(u32 type);
-//        FV_MO FV_DLL bool hasComponent(u32 type);
-//        FV_MO FV_DLL bool removeComponent(u32 type);
-//        FV_MO FV_DLL GameObject* gameObject() const;
-//        template <class T> T* addComponent();
-//        template <class T> T* getComponent();
-//        template <class T> bool hasComponent();
-//        template <class T> bool removeComponent();
-//
-//        virtual void serialize(TextSerializer& ts) = 0;
-//
-//    private:
-//        virtual void begin() { }
-//        virtual void update(float dt) { }
-//        virtual void updateMT(float dt) { }
-//        virtual void physicsUpdateMT(float dt) { }
-//        virtual void networkUpdateMT(float dt) { }
-//        virtual void cullMT() { }
-//        virtual void drawMT() { }
-//
-//    protected:
-//        bool m_HasBegun = false;
-//        i32  m_UpdatePriority = 0;
-//
-//    private:
-//        class GameObject* m_GameObject {};
-//
-//        friend class GameObject;
-//        friend class SystemManager;
-//    };
-//
-//
-//    template <class T>
-//    T* GameComponent::addComponent() { return sc<T*>(addComponent(T::type())); }
-//    template <class T>
-//    T* GameComponent::getComponent() { return sc<T*>(getComponent(T::type())); }
-//    template <class T>
-//    bool GameComponent::hasComponent() { return hasComponent(T::type); }
-//    template <class T>
-//    bool GameComponent::removeComponent() { return removeComponent(T::type()); }
-//}
+#include "../Core/Component.h"
+
+namespace fv
+{
+    class RenderComponent: public Component
+    {
+    public:
+        FV_MO FV_DLL RenderComponent();
+        FV_MO FV_DLL ~RenderComponent() override;
+
+        virtual void cullMT(u32 tIdx) { }
+        virtual void drawMT(u32 tIdx) { }
+
+        FV_DLL void castShadows( bool cast ) { m_CastShadows = cast; }
+        FV_DLL void receiveShadows( bool receive ) { m_ReceiveShadows = receive; }
+        
+        FV_DLL u32 deviceIdx() const { return m_DeviceIdx; }
+        FV_DLL bool culled() const { return m_Culled; }
+        FV_DLL bool castShadows() const { return m_CastShadows; }
+        FV_DLL bool receiveShadows() const { return m_ReceiveShadows; }
+
+    protected:
+        u32 m_DeviceIdx;
+        bool m_Culled = false;
+        bool m_CastShadows = true;
+        bool m_ReceiveShadows = true;
+    };
+
+}

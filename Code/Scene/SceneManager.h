@@ -4,6 +4,7 @@
 
 namespace fv
 {
+    class GameObject;
     class SceneComponent;
 
     class SceneManager
@@ -28,4 +29,6 @@ namespace fv
 
     FV_DLL class SceneManager* sceneManager();
     FV_DLL void deleteSceneManager();
+
+    FV_DLL GameObject* NewGameObject(u64 sceneMask);
 }

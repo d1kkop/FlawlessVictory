@@ -11,6 +11,7 @@ namespace fv
     void MeshRenderer::setMesh(const M<Mesh> mesh)
     {
         m_Mesh = mesh;
+        m_DeviceIdx = m_Mesh->deviceIdx();
     }
 
     M<Mesh>& MeshRenderer::mesh()
@@ -18,16 +19,16 @@ namespace fv
         return m_Mesh;
     }
 
-    void MeshRenderer::cullMT()
+    void MeshRenderer::cullMT(u32 tIdx)
     {
         m_Culled = false; // TODO impl cull method
     }
 
-    void MeshRenderer::drawMT()
+    void MeshRenderer::drawMT(u32 tIdx)
     {
         if ( m_Culled ) return;
         if ( !m_Mesh ) return;
-        m_Mesh->drawMT();
+        m_Mesh->drawMT(tIdx);
     }
 
     void MeshRenderer::serialize(TextSerializer& ts)

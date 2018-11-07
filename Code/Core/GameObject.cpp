@@ -1,29 +1,39 @@
+#include "PCH.h"
 #include "GameObject.h"
-#include "SceneComponent.h"
-#include "../Core/TextSerializer.h"
-#include "../Core/Functions.h"
-#include "../Core/Reflection.h"
-#include "../Core/SparseArray.h"
+#include "TextSerializer.h"
+#include "Functions.h"
+#include "Reflection.h"
+#include "SparseArray.h"
+#include "TransformManager.h"
 
 namespace fv
 {
-    GameObject::GameObject()
+    GameObject::GameObject():
+        m_LocalToWorld( transformManager()->newLocalToWorldMatrix() ),
+        m_WorldToLocal( transformManager()->newWorldToLocalMatrix() )
     {
-        // Placement new invokes this each time a game object is recycled.
+        FV_CHECK_MO();
+    }
+
+    GameObject::~GameObject()
+    {
+        FV_CHECK_MO();
+        transformManager()->freeLocalToWorldMatrix( m_LocalToWorld );
+        transformManager()->freeWorldToLocalMatrix( m_WorldToLocal );
         m_Components.clear();
     }
 
-    GameComponent* GameObject::addComponent(u32 type)
+    Component* GameObject::addComponent(u32 type)
     {
         FV_CHECK_MO();
-        GameComponent* c = getComponent(type);
+        Component* c = getComponent(type);
         if ( c ) 
         {
             auto* ti = typeManager()->typeInfo(type);
             LOGW("Component of type %s already added.", ti?ti->name->c_str():"unknown" );
             return c;
         }
-        c = sc<GameComponent*>(componentManager()->newComponent( type ));
+        c = sc<Component*>(componentManager()->newComponent( type ));
         if ( c )
         { // Is null if type no longer exists
             m_Components[type] = c;
@@ -32,7 +42,7 @@ namespace fv
         return c;
     }
 
-    GameComponent* GameObject::getComponent(u32 type)
+    Component* GameObject::getComponent(u32 type)
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find( type );
@@ -135,19 +145,6 @@ namespace fv
     SparseArray<GameObject>* g_GameObjectManager {};
     SparseArray<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
     void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
-
-    GameObject* NewGameObject(u64 sceneMask)
-    {
-        FV_CHECK_MO();
-        auto* go = gameObjectManager()->newObject();
-        if (!go) return nullptr;
-        if ( sceneMask!=0 ) 
-        {
-            SceneComponent* sc = go->addComponent<SceneComponent>();
-            sc->sceneBits() |= sceneMask;
-        }
-        return go;
-    }
 
     void DestroyGameObject(GameObject* go)
     {

@@ -48,6 +48,9 @@ namespace fv
         }
         M<Component> c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
+        u32 oldVersion = c->m_Version;
+        ti->resetFunc( c.get() ); // Call constructor without allocating memory
+        c->m_Version = oldVersion; // Version was already incremented when freed.
         c->m_Freed = false;
         TypeManager::setType( type, *c );
         m_NumComponents++;
@@ -69,8 +72,9 @@ namespace fv
             auto& freeComps = m_FreeComponents[c->type()];
             assert(freeComps.count(c)==0);
             u32 oldVersion = c->m_Version;
-            ti->resetFunc(c.get()); // Resets object (placement new)
-            c->m_Version = oldVersion+1; // Increment version immediately so tat refs to this component will return null ptr from now on.
+            c->~Component(); // Call destructor without releasing memory
+            c->m_Version++; // Increment version immediately so tat refs to this component will return null ptr from now on.
+            c->m_Freed = true;
             freeComps.insert(c);
             m_NumComponents--;
         }

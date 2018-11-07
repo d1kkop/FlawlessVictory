@@ -14,6 +14,7 @@ namespace fv
         u32 numImages;      // Num imgages to render to, 3 for tripple buffering, 2 for double
         u32 numLayers;      // Num layers 1, or 2 for stereo 3d
         u32 numFramesBehind; // Max allowed frames in flight before sync on host
+        u32 numCommandsBeforeSubmit = 250;
         bool createWindow;
         u32 windowWidth, windowHeight;
         bool fullScreen;
@@ -127,9 +128,12 @@ namespace fv
         FV_TS virtual void deleteTexture2D( RTexture2D tex2d ) = 0;
         FV_TS virtual void deleteShader( RShader shader ) = 0;
         FV_TS virtual void deleteSubmesh( RSubmesh submesh ) = 0;
+
+        // Rendering
+        FV_TS virtual void renderSubmesh( u32 tIdx, RSubmesh submesh ) = 0;
         
         void readRenderConfig();
-        virtual void drawFrame() = 0;
+        virtual void drawFrame(const Mat4& view) = 0;
         virtual void waitOnDeviceIdle() = 0;
         virtual u32 numDevices() const = 0;
         virtual u32 autoDeviceIdx() = 0;

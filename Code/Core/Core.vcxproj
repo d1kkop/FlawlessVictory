@@ -81,10 +81,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentManager2.cpp" />
     <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="Directories.cpp" />
     <ClCompile Include="Functions.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="JobManager.cpp" />
@@ -96,6 +98,7 @@
     <ClCompile Include="TextSerializer.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="TransformManager.cpp" />
     <ClCompile Include="TypeManager.cpp" />
     <ClCompile Include="Vec2.cpp" />
     <ClCompile Include="Vec3.cpp" />
@@ -111,6 +114,7 @@
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="IncSDL.h" />
     <ClInclude Include="IncWindows.h" />
     <ClInclude Include="Input.h" />
@@ -127,9 +131,11 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Quat.h" />
     <ClInclude Include="Reflection.h" />
+    <ClInclude Include="SparseArray2.h" />
     <ClInclude Include="TextSerializer.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="TransformManager.h" />
     <ClInclude Include="TypeManager.h" />
     <ClInclude Include="Vec2.h" />
     <ClInclude Include="Vec3.h" />

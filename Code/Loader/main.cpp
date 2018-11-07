@@ -3,14 +3,15 @@
 #include "../Core/JobManager.h"
 #include "../Core/InputManager.h"
 #include "../Core/Functions.h"
+#include "../Core/GameObject.h"
 #include "../Core/ComponentManager2.h"
+#include "../Core/TransformManager.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/ResourceManager.h"
 #include "../Resource/ShaderCompiler.h"
 #include "../Resource/TextureImporter.h"
 #include "../Resource/ModelImporter.h"
 #include "../Resource/PatchManager.h"
-#include "../Scene/GameObject.h"
 #include "../System/SystemManager.h"
 using namespace fv;
 
@@ -32,10 +33,11 @@ void shutdown()
     deleteTextureImporter();
     deleteModelImporter();
     deleteRenderManager();
-    // Do jobManager after render manager as graphics may be async deleted.
+    // Do less tightly coupled manager
     deleteInputManager();
     deleteSystemManager();
     deleteTypeManager();
+    deleteTransformManager();
     // At last log manager when there is no logging required anymore.
     deleteLogManager();
 }

@@ -13,7 +13,9 @@ namespace fv
         ~RenderManagerVK() override;
         FV_BG bool initGraphics() override;
         void closeGraphics() override;
-        void drawFrame() override;
+        void drawFrame(const Mat4& view) override;
+
+
         void waitOnDeviceIdle() override;
 
         // Debug callback
@@ -39,6 +41,10 @@ namespace fv
         FV_TS void deleteShader(RShader shader) override;
         FV_TS void deleteSubmesh(RSubmesh submesh) override;
 
+        // Rendering
+        void renderSubmesh(u32 tIdx, RSubmesh submesh) override;
+        void renderOpaque(DeviceVK* dv, u32 graphicsQueueIdx, VkSemaphore waitSemaphore, u32 renderImageIndex);
+
         VkInstance m_Instance{};
         VkSurfaceKHR m_Surface{};
         VkDebugUtilsMessengerEXT m_DebugCallback{};
@@ -54,7 +60,11 @@ namespace fv
         Vector<const char*> m_RequiredPhysicalExtensions;
         Vector<const char*> m_RequiredPhysicalLayers;
 
-        Vector<class Component*> m_ListDrawables;
+        // Opaque drawables are drawn from multiple threads as there is no dependency in in drawing order.
+        Vector<Vector<class Component*>> m_ListDrawablesOpaque;
+
+        // Transparent drawables are sorted back to front and drawn single threaded as there is a drawing dependency.
+        Vector<class Component*> m_ListDrawablesTransparent;
     };
 }
 #endif

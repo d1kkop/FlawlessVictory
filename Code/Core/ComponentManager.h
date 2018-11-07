@@ -130,6 +130,28 @@ namespace fv
         }
     }
 
+    inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>* listOut, u32 numLists)
+    {
+        u32 k=0;
+        for ( u32 i=0; i<numLists; ++i) listOut[i].clear();
+        for ( auto& kvp : components )
+        {
+            Vector<ComponentArray>& compArrayList = kvp.second;
+            for ( auto& compArray : compArrayList )
+            {
+                for ( u32 i=0; i<compArray.size; ++i )
+                {
+                    Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
+                    if ( c->inUse() )
+                    {
+                        listOut[k++].emplace_back(c);
+                        if ( k == numLists ) k = 0;
+                    }
+                }
+            }
+        }
+    }
+
     template <class CmpFunc>
     inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>& listOut, const CmpFunc& cmpFunc)
     {

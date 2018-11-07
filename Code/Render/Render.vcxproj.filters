@@ -49,6 +49,9 @@
     <ClInclude Include="RenderComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="RenderPassVK.h">
+      <Filter>DeviceParts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderManager.cpp">
@@ -84,8 +87,8 @@
     <ClCompile Include="RenderPassVK.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
-    <ClCompile Include="RenderPassVK.h">
-      <Filter>DeviceParts</Filter>
+    <ClCompile Include="RenderComponent.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

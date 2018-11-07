@@ -1,16 +1,28 @@
 #include "SceneComponent.h"
-#include "GameObject.h"
 #include "SceneManager.h"
 #include "../Core/Algorithm.h"
 #include "../Core/Math.h"
 #include "../Core/Thread.h"
-#include "../Core/Reflection.h"
 #include "../Core/TextSerializer.h"
+#include "../Core/TransformManager.h"
 #include <cassert>
+
+#define FV_SCENECOMPONENT_PRIORITY (1000)
 
 namespace fv
 {
     FV_TYPE_IMPL(SceneComponent)
+
+    SceneComponent::SceneComponent()
+    {
+        FV_CHECK_MO();
+        m_UpdatePriority = FV_SCENECOMPONENT_PRIORITY;
+    }
+
+    SceneComponent::~SceneComponent()
+    {
+        FV_CHECK_MO();
+    }
 
     void SceneComponent::move(const Vec3& translate)
     {
@@ -58,27 +70,22 @@ namespace fv
         m_Scale = scale;
     }
 
-    const fv::Vec3& SceneComponent::scale() const
+    const Vec3& SceneComponent::scale() const
     {
         return m_Scale;
     }
 
-    void SceneComponent::attach(SceneComponent* other)
+    bool SceneComponent::attach(SceneComponent* other)
     {
         FV_CHECK_MO();
         detachFromParent();
-        if ( other )
+        if ( other && !inHierarchy(other) )
         {
-            if ( !inHierarchy(other) )
-            {
-                other->m_Children.push_back( this );
-                m_Parent = other;
-            }
-            else
-            {
-                LOGW("Cannot attach scene component to component that is already in the hierarchy. Attach failed.");
-            }
+            other->m_Children.push_back( this );
+            m_Parent = other;
+            return true;
         }
+        return false;
     }
 
     void SceneComponent::detachFromParent()
@@ -86,10 +93,10 @@ namespace fv
         FV_CHECK_MO();
         if ( m_Parent )
         {
+            computeLocalToWorld();
+            computeTRSFromWorldToLocal();
             Remove(m_Parent->m_Children, this);
             m_Parent = nullptr;
-            computeLocalToWorld();
-            computeTRSWorldToLocal();
         }
     }
 
@@ -99,7 +106,7 @@ namespace fv
         for ( auto* c : m_Children )
         {
             c->computeLocalToWorld();
-            c->computeTRSWorldToLocal();
+            c->computeTRSFromWorldToLocal();
             c->m_Parent = nullptr;
         }
         m_Children.clear();
@@ -158,11 +165,11 @@ namespace fv
             if ( m_Parent )
             {
                 m_Parent->computeLocalToWorld();
-                m_LocalToWorld = m_Parent->m_LocalToWorld * TRS;
+                localToWorld() = m_Parent->localToWorld() * TRS;
             }
             else
             {
-                m_LocalToWorld = TRS;
+                localToWorld() = TRS;
             }
             m_LocalToWorldDirty = false;
         }
@@ -172,18 +179,14 @@ namespace fv
     {
         FV_CHECK_MO();
         computeLocalToWorld();
-        if ( m_WorldToLocalDirty )
-        {
-            m_WorldToLocalDirty = false;
-            m_WorldToLocal = m_LocalToWorld.inverse();
-        }
+        worldToLocal() = localToWorld().inverse();
     }
 
-    void SceneComponent::computeTRSWorldToLocal()
+    void SceneComponent::computeTRSFromWorldToLocal()
     {
         FV_CHECK_MO();
         computeWorldToLocal();
-        m_WorldToLocal.decompose(m_Position, m_Rotation, m_Scale);
+        worldToLocal().decompose(m_Position, m_Rotation, m_Scale);
     }
 
 }

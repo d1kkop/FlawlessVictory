@@ -1,5 +1,6 @@
 #include "RenderManagerVK.h"
 #if FV_VULKAN
+#include "RenderComponent.h"
 #include "HelperVK.h"
 #include "PipelineVK.h"
 #include "RenderImageVK.h"
@@ -10,6 +11,7 @@
 #include "../Core/Directories.h"
 #include "../Core/OSLayer.h"
 #include "../Core/JobManager.h"
+#include "../Core/GameObject.h"
 
 namespace fv
 {
@@ -119,7 +121,10 @@ namespace fv
             if (!dv->createRenderImages( rc )) return false;
             if (!dv->createFrameObjects( rc )) return false;
             if (!dv->createStandard( rc )) return false;
+            if (!dv->createPipelines( rc )) return false;
         }
+
+        m_ListDrawablesOpaque.resize( jobManager()->numThreads() );
 
         LOG("VK Initialized succesful.");
         return true;
@@ -142,8 +147,35 @@ namespace fv
         if ( m_Instance ) vkDestroyInstance(m_Instance, nullptr);
     }
 
-    void RenderManagerVK::drawFrame()
+    void RenderManagerVK::drawFrame(const Mat4& view)
     {
+        Vector<M<Job>> renderJobs;
+        Flatten(componentManager()->drawComponents(), m_ListDrawablesOpaque.data(), (u32) m_ListDrawablesOpaque.size());
+
+        // Sort transparent drawables back to front (dependent on earlier drawn objects).
+        Vec3 eye  = (Vec3)view.translation();
+        Vec3 look = (Vec3)view.axisZ();
+        Flatten(componentManager()->drawComponents(), m_ListDrawablesTransparent, [&](Component* a, Component* b)
+        {
+            return  ((a->gameObject()->position() - eye) | look) >
+                    ((b->gameObject()->position() - eye) | look);
+        });
+
+        // Sort drawables front to back (for opaque) (should increase render performance TODO needs testing)
+        for (auto & drawables : m_ListDrawablesOpaque)
+        {
+            renderJobs.emplace_back( jobManager()->addJob([&]()
+            {
+                Sort(drawables, [&](Component* a, Component* b)
+                {
+                    return  ((a->gameObject()->position() - eye) | look) < 
+                            ((b->gameObject()->position() - eye) | look);
+                });
+            }));
+        }
+        for ( auto& j : renderJobs) j->wait();
+        renderJobs.clear();
+
         for ( auto& dv : m_Devices )
         {
             if ( dv->recreateSwapChain )
@@ -156,13 +188,6 @@ namespace fv
             dv->waitForFences( m_FrameIndex );
             dv->resetFences( m_FrameIndex );
 
-            for ( u32 i=0; i<(u32)dv->graphicsQueues.size(); ++i )
-            {
-                u32 offs = m_FrameIndex*(u32)dv->graphicsQueues.size();
-                HelperVK::freeCommandBuffers( dv->logical, dv->graphicsPools[i], dv->frameGraphicsCmds[offs + i].data(), (u32)dv->frameGraphicsCmds[offs +i].size() );
-                dv->frameGraphicsCmds[offs +i].clear();
-            }
-
             VkSemaphore waitSemaphore = {};
             u32 renderImageIndex = m_CurrentDrawImage;
             if ( dv->swapChain() )
@@ -174,71 +199,27 @@ namespace fv
                 }
             }
 
-            // Clear values
-            VkClearValue cv = { 0, 0, 0, 1 };
-            Vector<VkClearValue> cvs = { cv };
-
             for ( u32 i=0; i<(u32)dv->graphicsQueues.size(); ++i )
             {
-                dv->submitGraphicsCommands( m_FrameIndex, i, waitSemaphore, [&](VkCommandBuffer cb)
+                renderJobs.emplace_back( jobManager()->addJobOn( i, [&, i]()
                 {
-                    auto& ri = dv->renderImages[renderImageIndex];
-                    dv->clearColorDepthPass.begin( cb, ri.frameBuffer(), { 0, 0 }, dv->extent, cvs );
+                    // Clear previous command buffers for this frameIndex [ 0 to N ], where N is usually 1, 2 or 3.
+                    u32 offs = m_FrameIndex*(u32)dv->graphicsQueues.size();
+                    HelperVK::freeCommandBuffers(dv->logical, dv->graphicsPools[i], dv->frameGraphicsCmds[offs + i].data(), (u32)dv->frameGraphicsCmds[offs +i].size());
+                    dv->frameGraphicsCmds[offs +i].clear();
 
-                    MaterialData md = {};
-                    md.fragShader = { dv->idx, dv->standardFrag };
-                    md.vertShader = { dv->idx, dv->standardVert };
+                    renderOpaque( dv, i, waitSemaphore, renderImageIndex );
 
-                    PipelineFormatVK pipelineFormat = {};
-                    pipelineFormat.mdata = md;
-                    pipelineFormat.cullmode = VK_CULL_MODE_NONE;
-                    pipelineFormat.frontFace = VK_FRONT_FACE_CLOCKWISE;
-                    pipelineFormat.polyMode = VK_POLYGON_MODE_FILL;
-                    pipelineFormat.lineWidth = 1.0f;
-                    pipelineFormat.numSamples = 1;
-                    pipelineFormat.renderPass = dv->clearColorDepthPass.renderPass();
+                    // renderTransparent( dv, i, renderImageIndex );
 
-                    PipelineVK prevPipeline;
-
-                    {
-                        Flatten(componentManager()->drawComponents(), m_ListDrawables, 
-                                [](const Component* a, const Component* b)
-                        {
-                            return false;
-                        });
-
-                        for ( auto* c : m_ListDrawables )
-                        {
-                            // c->drawMT();
-                        }
-
-                        scoped_lock lk(dv->submeshMutex);
-
-                        for ( auto& rs : dv->submeshes )
-                        {
-                            SubmeshVK* s = (SubmeshVK*)rs;
-
-                            pipelineFormat.sinput = s->submeshInput();
-                            pipelineFormat.vertexSize = s->vertexSize();
-
-                            PipelineVK pipeline;
-                            dv->getOrCreatePipeline( pipelineFormat, pipeline );
-                            if ( !prevPipeline.valid() || pipeline.hash() != prevPipeline.hash() )
-                            {
-                                pipeline.bind( cb );
-                                prevPipeline = pipeline;
-                            }
-                            s->render(cb);
-                        }
-                    }
-
-                    dv->clearColorDepthPass.end( cb );
-
-                    // do not continue
-                    return false;
-                });
+                }));
             }
+        }
 
+        for ( auto& j : renderJobs ) j->wait();
+
+        for ( auto& dv : m_Devices )
+        {
             if ( dv->swapChain() )
             {
                 const VkSemaphore* finishSemaphores = &dv->frameFinishSemaphores[m_FrameIndex*dv->graphicsQueues.size()];
@@ -335,6 +316,7 @@ namespace fv
             if ( dv.queueIndices.present )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.present, 0, &dv.presentQueue);
 
             device->idx = numCreatedDevices;
+            device->activeGraphicsCmdBuffer.resize( numGraphicsQueues );
             m_Devices.emplace_back( device );
             device = new DeviceVK();
 
@@ -396,6 +378,14 @@ namespace fv
         s->device()->deleteSubmesh( submesh, true );
     }
 
+    void RenderManagerVK::renderSubmesh(u32 tIdx, RSubmesh submesh)
+    {
+        if (!submesh) return;
+
+        SubmeshVK* s = (SubmeshVK*)submesh;
+        s->render( s->device()->activeGraphicsCmdBuffer[tIdx] );
+    }
+
     VKAPI_ATTR VkBool32 VKAPI_CALL RenderManagerVK::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                                   VkDebugUtilsMessageTypeFlagsEXT messageType,
                                                                   const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
@@ -417,5 +407,66 @@ namespace fv
         return VK_FALSE;
     }
 
+    void RenderManagerVK::renderOpaque(DeviceVK* dv, u32 graphicsQueueIdx, VkSemaphore waitSemaphore, u32 renderImageIndex)
+    {
+        VkClearValue cv = { 0, 0, 0, 1 };
+        Vector<VkClearValue> cvs = { cv };
+
+        u32 drawIndex = 0;
+        u32 nextSubmit = m_RenderConfig.numCommandsBeforeSubmit;
+        u32 toalDraws = (u32)m_ListDrawablesOpaque[graphicsQueueIdx].size();
+        bool firstSubmit = true;
+
+        do
+        {
+            dv->submitGraphicsCommands(m_FrameIndex, graphicsQueueIdx, waitSemaphore, firstSubmit, [&](VkCommandBuffer cb)
+            {
+                firstSubmit = false;
+
+                auto& ri = dv->renderImages[renderImageIndex];
+                dv->clearColorDepthPass.begin(cb, ri.frameBuffer(), { 0, 0 }, dv->extent, cvs);
+
+                MaterialData md = {};
+                md.fragShader = { dv->idx, dv->standardFrag };
+                md.vertShader = { dv->idx, dv->standardVert };
+
+                PipelineFormatVK pipelineFormat = {};
+                pipelineFormat.mdata = md;
+                pipelineFormat.cullmode   = VK_CULL_MODE_NONE;
+                pipelineFormat.frontFace  = VK_FRONT_FACE_CLOCKWISE;
+                pipelineFormat.polyMode   = VK_POLYGON_MODE_FILL;
+                pipelineFormat.lineWidth  = 1.0f;
+                pipelineFormat.numSamples = 1;
+                pipelineFormat.renderPass = dv->clearColorDepthPass.renderPass();
+
+                PipelineVK prevPipeline;
+
+           //     dv->getOrCreatePipeline( 
+
+                // Flatten filters 'not in use' components, so no need to check that flag.
+                for ( ; drawIndex < toalDraws && drawIndex < nextSubmit; drawIndex++ )
+                {
+                    RenderComponent* rc = sc<RenderComponent*>( m_ListDrawablesOpaque[graphicsQueueIdx][drawIndex] );
+
+                    // Multiple devices loop over same list, however resource is drawn from only one.
+                    if ( rc->deviceIdx() != dv->idx ) continue;
+                
+                    rc->cullMT(graphicsQueueIdx);
+                    if ( !rc->culled() )
+                    {
+                        rc->drawMT(graphicsQueueIdx);
+                    }
+                }
+
+                dv->clearColorDepthPass.end(cb);
+
+                // Return if was last commit.
+                bool isLastSubmit = (drawIndex == toalDraws);
+                return isLastSubmit;
+            });
+
+            nextSubmit += m_RenderConfig.numCommandsBeforeSubmit;
+        } while ( drawIndex < toalDraws );
+    }
 }
 #endif

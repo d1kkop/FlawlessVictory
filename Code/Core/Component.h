@@ -6,11 +6,40 @@
 
 namespace fv
 {
+    class GameObject;
+    class TextSerializer;
+
     class Component: public Object, public Type
     {
     public:
         virtual ~Component() = default;
+
+        FV_MO FV_DLL Component* addComponent(u32 type);
+        FV_MO FV_DLL bool removeComponent(u32 type);
+        FV_DLL Component* getComponent(u32 type);
+        FV_DLL bool hasComponent(u32 type);
+        FV_DLL GameObject* gameObject() const;
+        FV_MO template <class T> T* addComponent();
+        FV_MO template <class T> bool removeComponent();
+        template <class T> T* getComponent();
+        template <class T> bool hasComponent();
+
+        FV_MO virtual void serialize(TextSerializer& ts) { }
+
+     protected:
+        class GameObject* m_GameObject {};
+
+        friend class GameObject;
     };
+
+    template <class T>
+    T* Component::addComponent() { return sc<T*>(addComponent(T::type())); }
+    template <class T>
+    T* Component::getComponent() { return sc<T*>(getComponent(T::type())); }
+    template <class T>
+    bool Component::hasComponent() { return hasComponent(T::type); }
+    template <class T>
+    bool Component::removeComponent() { return removeComponent(T::type()); }
 
     struct ComponentArray
     {

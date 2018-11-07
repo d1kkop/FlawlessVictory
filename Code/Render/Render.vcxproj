@@ -102,11 +102,12 @@
     <ClCompile Include="HelperVK.cpp" />
     <ClCompile Include="MemoryHelperVK.cpp" />
     <ClCompile Include="PipelineVK.cpp" />
+    <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RenderImageVK.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderManagerVK.cpp" />
     <ClCompile Include="RenderPassVK.cpp" />
-    <ClCompile Include="RenderPassVK.h" />
+    <ClInclude Include="RenderPassVK.h" />
     <ClCompile Include="SubmeshVK.cpp" />
     <ClCompile Include="SwapChainVK.cpp" />
   </ItemGroup>

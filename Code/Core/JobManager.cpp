@@ -86,28 +86,36 @@ namespace fv
             if ( t.joinable() ) t.join();
         }
         assert(m_NumThreadsSuspended == 0);
-        // If still had jobs in queue, process them ST
         processQueue();
     }
 
     M<Job> JobManager::addJob(const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled)
     {
-        assert( cb );
+        return addJobOn( -1, cb, onDoneOrCancelled );
+    }
+
+    M<Job> JobManager::addJobOn(u32 tIdx, const Function<void ()>& cb, const Function<void (Job*)>& onDoneOrCancelled)
+    {
+        assert(cb && (tIdx==-1 || tIdx < (u32)m_Threads.size()));
 
         // ObjectManager IS thread safe created
         M<Job> job =  M<Job>(newObject(), freeJob);
-        
+
+        job->m_ExecOn = tIdx;
         job->m_Cb = cb;
         job->m_OnDoneOrCancelled = onDoneOrCancelled;
-        assert( job->m_State == JobState::Scheduled );
-        assert( job->m_NumWaiters == 0 );
+        assert(job->m_State == JobState::Scheduled);
+        assert(job->m_NumWaiters == 0);
 
     #if FV_USEJOBSYSTEM
         scoped_lock lk(m_QueueMutex);
-        m_GlobalQueue.emplace_back( job );
+        m_GlobalQueue.emplace_back(job);
         if ( m_NumThreadsSuspended > 0 )
         {
-            m_ThreadSuspendSignal.notify_one();
+            if ( tIdx==-1 )
+                m_ThreadSuspendSignal.notify_one();
+            else
+                m_ThreadSuspendSignal.notify_all();
         }
     #else
         cb();
@@ -129,7 +137,6 @@ namespace fv
             if ( t.get_id() == this_thread::get_id() )
                 return i;
             else i++;
-        assert(false);
         return -1;
     }
 
@@ -191,13 +198,19 @@ namespace fv
 
     bool JobManager::extractJob(M<Job>& job)
     {
-        if ( m_GlobalQueue.size() )
+        u32 tIdx = threadIdToIdx();
+        u32 i=0;
+        for ( auto& j : m_GlobalQueue )
         {
-            job = m_GlobalQueue.front();
-            m_GlobalQueue.pop_front();
-            // Should not need state lock for this. Has global queue mutex, so state cannot changed to cancelled.
-            job->m_State = JobState::InProgress;
-            return true;
+            if ( j->m_ExecOn == -1 || j->m_ExecOn == tIdx || m_IsClosing ) // If is closing, do not obey rule to execute on specific worker thread all worker threads have closed then.
+            {
+                job = m_GlobalQueue[ i ];
+                m_GlobalQueue.erase( m_GlobalQueue.begin() + i );
+                // Should not need state lock for this. Has global queue mutex, so state cannot changed to cancelled.
+                job->m_State = JobState::InProgress;
+                return true;
+            }
+            ++i;
         }
         return false;
     }

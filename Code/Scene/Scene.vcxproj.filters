@@ -10,16 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Scene.h" />
-    <ClInclude Include="SceneComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="GameComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="MeshRenderer.h">
@@ -31,18 +22,15 @@
     <ClInclude Include="SceneManager.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="SceneComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="GameComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="GameComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="MeshRenderer.cpp">
@@ -53,6 +41,12 @@
     </ClCompile>
     <ClCompile Include="SceneManager.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="GameComponent.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -34,10 +34,11 @@ namespace fv
         bool createRenderPasses(const RenderConfig& rc);
         bool createRenderImages(const RenderConfig& rc);
         bool createFrameObjects(const RenderConfig& rc);
+        bool createPipelines(const RenderConfig& rc);
         bool createStandard(const RenderConfig& rc);
         bool reCreateSwapChain(const RenderConfig& rc, VkSurfaceKHR surface);
 
-        void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback);
+        void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, bool firstSubmit, const Function<bool (VkCommandBuffer cb)>& callback);
         void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
 
         // Resource creation/deletion
@@ -79,7 +80,6 @@ namespace fv
         RenderPassVK clearColorDepthPass;
         Vector<VkCommandPool> graphicsPools;
         Vector<VkQueue> graphicsQueues;
-        Map<u32, PipelineVK> pipelines;
         Vector<RenderImageVK> renderImages;
         Vector<DeviceResource> textures2d;
         Vector<DeviceResource> shaders;
@@ -89,6 +89,14 @@ namespace fv
         Vector<VkSemaphore> frameFinishSemaphores;
         Vector<VkFence> frameFinishFences;
         Vector<Vector<VkCommandBuffer>> frameGraphicsCmds;
+        Vector<VkCommandBuffer> activeGraphicsCmdBuffer;
+
+        // Pipelines
+        Map<u32, PipelineVK> pipelines;
+        //PipelineVK pipelineOpaqueStandard;
+        //PipelineVK pipelineOpaqueStandardTB;
+        //PipelineVK pipelineOpaqueStandardTBBones;
+        //PipelineVK pipelineOpaqueStandardBones;
 
         bool recreateSwapChain;
 

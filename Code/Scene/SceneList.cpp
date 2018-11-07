@@ -1,6 +1,7 @@
 #include "SceneList.h"
 #include "SceneComponent.h"
-#include "GameObject.h"
+#include "SceneManager.h"
+#include "../Core/GameObject.h"
 #include "../Core/Directories.h"
 #include "../Core/LogManager.h"
 #include "../Core/TextSerializer.h"
