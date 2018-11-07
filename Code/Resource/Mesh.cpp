@@ -111,9 +111,11 @@ namespace fv
 
     void Mesh::drawMT(u32 tIdx)
     {
-        for ( auto& rs : m_SubMeshes )
+        for ( u32 i=0; i<(u32)m_SubMeshes.size(); ++i )
         {
-            renderManager()->renderSubmesh( tIdx, rs );
+            auto& rs = m_SubMeshes[i];
+            auto& md = m_Materials[i];
+            renderManager()->renderSubmesh( tIdx, rs, md->data, PipelineState::FillStandard );
         }
     }
 

@@ -9,6 +9,9 @@
 
 namespace fv
 {
+    struct SubmeshVK;
+    struct PipelineVK;
+
     struct QueueFamilyIndicesVK
     {
         Optional<u32> graphics;
@@ -38,7 +41,7 @@ namespace fv
         bool createStandard(const RenderConfig& rc);
         bool reCreateSwapChain(const RenderConfig& rc, VkSurfaceKHR surface);
 
-        void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, bool firstSubmit, const Function<bool (VkCommandBuffer cb)>& callback);
+        void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback);
         void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
 
         // Resource creation/deletion
@@ -48,48 +51,61 @@ namespace fv
         FV_TS void deleteTexture2D(RTexture2D tex2d, bool removeFromList);
         FV_TS void deleteShader(RShader shader, bool removeFromList);
         FV_TS void deleteSubmesh(RSubmesh submesh, bool removeFromList);
-        FV_TS bool getOrCreatePipeline(u32 pipelineHash, const struct PipelineFormatVK& format, struct PipelineVK& pipelineOut);
-        FV_TS bool getOrCreatePipeline(const struct PipelineFormatVK& format, PipelineVK& pipelineOut);
+        FV_TS PipelineVK* getOrCreatePipeline(u32 pipelineHash, const struct PipelineFormatVK& format);
+        FV_TS PipelineVK* getOrCreatePipeline(const struct PipelineFormatVK& format);
 
         // Buffers
         FV_TS bool mapStagingBuffer(BufferVK& staging, void** pMapped);
         FV_TS void unmapStagingBuffer();
-        struct SwapChainVK* swapChain() const { return m_SwapChain; }
 
         // Frame syncronization and submission
         void waitForFences(u32 frameIndex);
         void resetFences(u32 frameIndex);
 
         u32 idx;
+        VmaAllocator allocator;
         VkInstance instance;
         VkDevice logical;
         VkPhysicalDevice physical;
-        VkQueue computeQueue;
-        VkQueue transferQueue;
-        VkQueue sparseQueue;
-        VkQueue presentQueue;
         VkPhysicalDeviceProperties properties;
         VkPhysicalDeviceMemoryProperties memProperties;
         VkPhysicalDeviceFeatures features;
         QueueFamilyIndicesVK queueIndices;
-        VkCommandPool transferPool;
+        VkQueue computeQueue;
+        VkQueue sparseQueue;
+        VkQueue presentQueue;
         VkExtent2D extent;
         VkFormat format;
-        VkShaderModule standardFrag;
-        VkShaderModule standardVert;
-        RenderPassVK clearColorDepthPass;
-        Vector<VkCommandPool> graphicsPools;
-        Vector<VkQueue> graphicsQueues;
-        Vector<RenderImageVK> renderImages;
+        
+        // Transfer
+        VkQueue transferQueue;
+        VkCommandPool transferPool;
+        Vector<VkCommandBuffer> singleTimeCmds;
+
+        // Resources
         Vector<DeviceResource> textures2d;
         Vector<DeviceResource> shaders;
         Vector<RSubmesh> submeshes;
-        Vector<VkCommandBuffer> singleTimeCmds;
-        VmaAllocator allocator;
+
+        // Standard
+        VkShaderModule standardFrag;
+        VkShaderModule standardVert;
+        RenderPassVK clearColorDepthPass;
+        RenderPassVK renderStandardPass;
+
+        // Per frame per thread, eg 2 frames 4 threads is array size of 8.
         Vector<VkSemaphore> frameFinishSemaphores;
-        Vector<VkFence> frameFinishFences;
         Vector<Vector<VkCommandBuffer>> frameGraphicsCmds;
+
+        // Per thread
         Vector<VkCommandBuffer> activeGraphicsCmdBuffer;
+        Vector<VkCommandPool> graphicsPools;
+        Vector<VkQueue> graphicsQueues;
+        Vector<Map<PipelineVK*, Vector<SubmeshVK*>>> renderLists;
+
+        // Per frame
+        Vector<RenderImageVK> renderImages;
+        Vector<VkFence> frameFinishFences;
 
         // Pipelines
         Map<u32, PipelineVK> pipelines;
@@ -98,12 +114,13 @@ namespace fv
         //PipelineVK pipelineOpaqueStandardTBBones;
         //PipelineVK pipelineOpaqueStandardBones;
 
+        // Swapchain
+        struct SwapChainVK* swapChain;
         bool recreateSwapChain;
 
     private:
-        struct SwapChainVK* m_SwapChain;
-        Mutex m_StagingBufferMutex;
-        BufferVK m_StagingBuffer;
+        Mutex stageBufferMtx;
+        BufferVK stageBuffer;
         Mutex pipelineMutex;
         Mutex tex2dMutex;
         Mutex shaderMutex;

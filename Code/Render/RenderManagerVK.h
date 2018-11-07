@@ -3,6 +3,7 @@
 #if FV_VULKAN
 #include "DeviceVK.h"
 #include "SwapChainVK.h"
+#include "PipelineVK.h"
 
 namespace fv
 {
@@ -14,7 +15,6 @@ namespace fv
         FV_BG bool initGraphics() override;
         void closeGraphics() override;
         void drawFrame(const Mat4& view) override;
-
 
         void waitOnDeviceIdle() override;
 
@@ -42,8 +42,8 @@ namespace fv
         FV_TS void deleteSubmesh(RSubmesh submesh) override;
 
         // Rendering
-        void renderSubmesh(u32 tIdx, RSubmesh submesh) override;
-        void renderOpaque(DeviceVK* dv, u32 graphicsQueueIdx, VkSemaphore waitSemaphore, u32 renderImageIndex);
+        void renderSubmesh(u32 tIdx, RSubmesh submesh, const MaterialData& mdata, PipelineState pipelineState) override;
+    //    void renderOpaque(DeviceVK* dv, u32 graphicsQueueIdx, VkSemaphore waitSemaphore, u32 renderImageIndex);
 
         VkInstance m_Instance{};
         VkSurfaceKHR m_Surface{};
@@ -60,11 +60,8 @@ namespace fv
         Vector<const char*> m_RequiredPhysicalExtensions;
         Vector<const char*> m_RequiredPhysicalLayers;
 
-        // Opaque drawables are drawn from multiple threads as there is no dependency in in drawing order.
-        Vector<Vector<class Component*>> m_ListDrawablesOpaque;
-
-        // Transparent drawables are sorted back to front and drawn single threaded as there is a drawing dependency.
-        Vector<class Component*> m_ListDrawablesTransparent;
+        PipelineFormatVK m_PipelineFormatOpaque{};
+        PipelineFormatVK m_PipelineFormatTransparent{};
     };
 }
 #endif

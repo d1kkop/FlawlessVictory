@@ -40,6 +40,13 @@ namespace fv
         Optimized
     };
 
+    enum class PipelineState
+    {
+        FillStandard,
+        FillTransparent,
+        WireFrame,
+    };
+
     enum class ImageFormat
     {
         RGBA8,
@@ -130,7 +137,7 @@ namespace fv
         FV_TS virtual void deleteSubmesh( RSubmesh submesh ) = 0;
 
         // Rendering
-        FV_TS virtual void renderSubmesh( u32 tIdx, RSubmesh submesh ) = 0;
+        FV_TS virtual void renderSubmesh( u32 tIdx, RSubmesh submesh, const MaterialData& mdata, PipelineState pipelineState ) = 0;
         
         void readRenderConfig();
         virtual void drawFrame(const Mat4& view) = 0;

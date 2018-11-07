@@ -24,7 +24,7 @@ namespace fv
         for ( auto& s : frameFinishSemaphores ) vkDestroySemaphore(logical, s, nullptr);
         for ( auto& f : frameFinishFences ) vkDestroyFence(logical, f, nullptr);
         for ( auto& gp : graphicsPools ) vkDestroyCommandPool(logical, gp, nullptr);
-        m_StagingBuffer.release();
+        stageBuffer.release();
         releaseSwapchain();
         vkDestroyShaderModule( logical, standardFrag, nullptr );
         vkDestroyShaderModule( logical, standardVert, nullptr );
@@ -35,7 +35,7 @@ namespace fv
 
     void DeviceVK::releaseSwapchain()
     {
-        delete m_SwapChain; m_SwapChain = nullptr;
+        delete swapChain; swapChain = nullptr;
         for ( auto& ri : renderImages ) ri.release();
         renderImages.clear();
         clearColorDepthPass.release();
@@ -76,10 +76,10 @@ namespace fv
 
     void DeviceVK::setFormatAndExtent(const RenderConfig& rc)
     {
-        if ( m_SwapChain )
+        if ( swapChain )
         {
-            format = m_SwapChain->surfaceFormat().format;
-            extent = m_SwapChain->extent();
+            format = swapChain->surfaceFormat().format;
+            extent = swapChain->extent();
         }
         else
         {
@@ -128,8 +128,8 @@ namespace fv
                                                                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
                                                                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT );
         u32 queueIdxs [] = { queueIndices.graphics.value(), queueIndices.transfer.value() };
-        m_StagingBuffer = BufferVK::create( *this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, queueIdxs, 2, nullptr );
-        if ( !m_StagingBuffer.valid() )
+        stageBuffer = BufferVK::create( *this, STAGING_BUFFER_SIZE, vkUsage, vmaUsage, queueIdxs, 2, nullptr );
+        if ( !stageBuffer.valid() )
         {
             LOGC("VK Failed to create staging buffer(s).");
             return false;
@@ -139,10 +139,10 @@ namespace fv
 
     bool DeviceVK::createSwapChain(const RenderConfig& rc, VkSurfaceKHR surface)
     {
-        assert(logical && physical && surface && !m_SwapChain);
-        m_SwapChain = SwapChainVK::create(*this, surface, rc.numFramesBehind, rc.windowWidth, rc.windowHeight, rc.numImages, rc.numLayers, 
+        assert(logical && physical && surface && !swapChain);
+        swapChain = SwapChainVK::create(*this, surface, rc.numFramesBehind, rc.windowWidth, rc.windowHeight, rc.numImages, rc.numLayers, 
                                           queueIndices.graphics, queueIndices.present, nullptr);
-        return m_SwapChain != nullptr;
+        return swapChain != nullptr;
     }
 
     bool DeviceVK::createRenderPasses(const RenderConfig& rc)
@@ -153,6 +153,7 @@ namespace fv
             LOGC("Cannot create main render pass. Render setup failed.");
             return false;
         }
+        renderStandardPass = RenderPassVK::create(*this, format, rc.numSamples, false);
         return true;
     }
 
@@ -166,17 +167,17 @@ namespace fv
             createRenderPasses( rc );
             createRenderImages( rc );
         }
-        return m_SwapChain != nullptr;
+        return swapChain != nullptr;
     }
 
     bool DeviceVK::createRenderImages(const struct RenderConfig& rc)
     {
         assert(renderImages.size()==0 && rc.numImages > 0 && rc.numSamples >= 1);
-        renderImages.resize(swapChain() ? swapChain()->images().size() : rc.numImages);
+        renderImages.resize(swapChain ? swapChain->images().size() : rc.numImages);
         u32 i=0;
         for ( auto& ri : renderImages )
         {
-            VkImage swapChainImg = swapChain() ? swapChain()->images()[i++] : nullptr;
+            VkImage swapChainImg = swapChain ? swapChain->images()[i++] : nullptr;
             if ( !ri.initialize( *this, rc, swapChainImg, clearColorDepthPass.renderPass() ) )
             {
                 return false;
@@ -287,7 +288,7 @@ namespace fv
         return true;
     }
 
-    bool DeviceVK::getOrCreatePipeline(u32 pipelineHash, const PipelineFormatVK& format, PipelineVK& pipelineOut)
+    PipelineVK* DeviceVK::getOrCreatePipeline(u32 pipelineHash, const PipelineFormatVK& format)
     {
         scoped_lock lk(pipelineMutex);
         auto pIt = pipelines.find(pipelineHash);
@@ -303,7 +304,7 @@ namespace fv
             vertexBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
             vertexBinding.stride = vertexSize;
             Vector<VkVertexInputBindingDescription> vertexBindings;
-            if ( vertexAttribs.size() )
+            if ( !vertexAttribs.empty() )
                 vertexBindings.emplace_back(vertexBinding);
 
             // Conduct default viewport (Scissor is deduced from this, it can be changed at anytime).
@@ -316,47 +317,48 @@ namespace fv
             vp.maxDepth = 1.f;
 
             // Create pipeline
-            pipelineOut = PipelineVK::create(*this, pipelineHash, format, vp, vertexBindings, vertexAttribs);
-            if ( !pipelineOut.valid() )
+            PipelineVK pipeline = PipelineVK::create(*this, pipelineHash, format, vp, vertexBindings, vertexAttribs);
+            if ( !pipeline.valid() )
             {
-                return false;
+                return nullptr;
             }
 
-            pipelines[pipelineHash] = std::move(pipelineOut);
+            pipelines[pipelineHash] = std::move(pipeline);
+            return &pipelines[pipelineHash];
         }
         else
         {
-            pipelineOut = pIt->second;
+            return &pIt->second;
         }
 
-        return true;
+        return nullptr;
     }
 
-    bool DeviceVK::getOrCreatePipeline(const PipelineFormatVK& format, PipelineVK& pipelineOut)
+    PipelineVK* DeviceVK::getOrCreatePipeline(const PipelineFormatVK& format)
     {
         u32 pipelineHash = Hash32((const char*)&format, sizeof(format));
-        return getOrCreatePipeline( pipelineHash, format, pipelineOut );
+        return getOrCreatePipeline( pipelineHash, format );
     }
 
     bool DeviceVK::mapStagingBuffer(BufferVK& staging, void** pMapped)
     {
         assert( pMapped );
-        m_StagingBufferMutex.lock();
-        if ( !m_StagingBuffer.map( pMapped ) || !(*pMapped) )
+        stageBufferMtx.lock();
+        if ( !stageBuffer.map( pMapped ) || !(*pMapped) )
         {
-            m_StagingBufferMutex.unlock();
+            stageBufferMtx.unlock();
             LOGC("VK Failed to map staging buffer.");
             return false;
         }
-        staging = m_StagingBuffer;
+        staging = stageBuffer;
         return true;
     }
 
     void DeviceVK::unmapStagingBuffer()
     {
-        m_StagingBuffer.unmap();
-        m_StagingBuffer.flush();
-        m_StagingBufferMutex.unlock();
+        stageBuffer.unmap();
+        stageBuffer.flush();
+        stageBufferMtx.unlock();
     }
 
     void DeviceVK::waitForFences(u32 frameIndex)
@@ -372,7 +374,7 @@ namespace fv
                                 frameFinishFences.data()+frameIdex*graphicsQueues.size()));
     }
 
-    void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, bool firstSubmit,
+    void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore,
                                           const Function<bool (VkCommandBuffer cb)>& callback)
     {
         auto gq = graphicsQueues[queueIdx];
@@ -393,7 +395,7 @@ namespace fv
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        if ( waitSemaphore && firstSubmit )
+        if ( waitSemaphore )
         {
             VkSemaphore waitSemaphores[] = { waitSemaphore };
             submitInfo.waitSemaphoreCount = 1;

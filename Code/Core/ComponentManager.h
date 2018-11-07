@@ -112,10 +112,10 @@ namespace fv
         PrepareList( components, listOut );
         Sort( listOut, cmpFunc );
     }
-
-    inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>& listOut)
+    
+    template <class T, class Cb>
+    inline void Flatten(Map<u32, Vector<ComponentArray>>& components, const Cb& cb)
     {
-        listOut.clear();
         for ( auto& kvp : components )
         {
             Vector<ComponentArray>& compArrayList = kvp.second;
@@ -123,33 +123,29 @@ namespace fv
             {
                 for ( u32 i=0; i<compArray.size; ++i )
                 {
-                    Component* c = (Component*) ((char*)compArray.elements + i*compArray.compSize);
-                    if ( c->inUse() )listOut.emplace_back( c );
+                    T* c = (T*) ((char*)compArray.elements + i*compArray.compSize);
+                    if ( c->inUse() ) cb( c );
                 }
             }
         }
     }
 
+    inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>& listOut)
+    {
+        listOut.clear();
+        Flatten<Component>( components, [&](Component* c) { listOut.emplace_back(c); });
+    }
+
     inline void Flatten(Map<u32, Vector<ComponentArray>>& components, Vector<Component*>* listOut, u32 numLists)
     {
-        u32 k=0;
-        for ( u32 i=0; i<numLists; ++i) listOut[i].clear();
-        for ( auto& kvp : components )
+        u32 i;
+        for ( i=0; i<numLists; ++i) listOut[i].clear();
+        i = 0;
+        Flatten<Component>( components, [&](Component* c) 
         {
-            Vector<ComponentArray>& compArrayList = kvp.second;
-            for ( auto& compArray : compArrayList )
-            {
-                for ( u32 i=0; i<compArray.size; ++i )
-                {
-                    Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
-                    if ( c->inUse() )
-                    {
-                        listOut[k++].emplace_back(c);
-                        if ( k == numLists ) k = 0;
-                    }
-                }
-            }
-        }
+            listOut[i++].emplace_back(c);
+            if ( i == numLists ) i = 0;
+        });
     }
 
     template <class CmpFunc>
@@ -158,6 +154,4 @@ namespace fv
         Flatten(components, listOut);
         Sort(listOut, cmpFunc);
     }
-
-
 }
