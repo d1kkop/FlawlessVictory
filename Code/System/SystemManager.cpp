@@ -111,7 +111,7 @@ namespace fv
             }
 
             // Call MT update on components
-            ParallelComponentFor<GameComponent>( m_ListUpdatables, [](GameComponent& gc)
+            ParallelComponentFor<GameComponent>( m_ListUpdatables, [](GameComponent& gc, u32 tIdx)
             {
                 gc.updateMT( Time::networkDt() );
             });

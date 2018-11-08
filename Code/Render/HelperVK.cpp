@@ -239,42 +239,6 @@ namespace fv
         return createShaderModule( device, code.data(), (u32)code.size(), shaderModule );
     }
 
-    bool HelperVK::createRenderPass(VkDevice device, VkFormat colorFormat, u32 samples, VkRenderPass& renderPass)
-    {
-        VkAttachmentDescription colorAttachment = {};
-        colorAttachment.format  = colorFormat;
-        colorAttachment.samples = (VkSampleCountFlagBits)samples;
-        colorAttachment.loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference colorAttachmentRef = {};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass = {};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-
-        VkRenderPassCreateInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-
-        if ( vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to create render pass.");
-            return false;
-        }
-        return true;
-    }
-
     bool HelperVK::createPipeline(VkDevice device,
                                   const PipelineFormatVK& format,
                                   const VkViewport& vp,
@@ -344,6 +308,18 @@ namespace fv
         rasterizer.cullMode  = format.cullmode;
         rasterizer.frontFace = format.frontFace;
         rasterizer.depthBiasEnable = VK_FALSE;
+
+        VkPipelineDepthStencilStateCreateInfo depthStencil = {};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = format.depthTest;
+        depthStencil.depthWriteEnable = format.depthWrite;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.minDepthBounds = 0.0f; // Optional
+        depthStencil.maxDepthBounds = 1.0f; // Optional
+        depthStencil.stencilTestEnable = format.stencilTest;
+        depthStencil.front = {}; // Optional
+        depthStencil.back = {}; // Optional
 
         VkPipelineMultisampleStateCreateInfo multisampling = {};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -434,67 +410,6 @@ namespace fv
             LOGC("VK Failed to create command pool.");
             return false;
         }
-        return true;
-    }
-
-    bool HelperVK::createVertexBuffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties,
-                                      const void* data, u32 bufferSize, bool shareInQueues, bool coherentMemory, 
-                                      VkBuffer& vertexBuffer, VkDeviceMemory& vertexBufferMemory)
-    {
-        assert( device && data && bufferSize != 0 );
-
-        VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = bufferSize;
-        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        bufferInfo.sharingMode = shareInQueues ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
-
-        if ( vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to create vertex buffer.");
-            return false;
-        }
-
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo = {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        u32 flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-        flags |= coherentMemory ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, memProperties, flags);
-
-        if ( vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS )
-        {
-            LOGC("VK Failed to allocate memory for vertex buffer.");
-            vkDestroyBuffer( device, vertexBuffer, nullptr );
-            vertexBuffer = nullptr;
-            return false;
-        }
-
-        if ( vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0) != VK_SUCCESS )
-        {
-            LOGC("VK Failed bind vertex buffer.");
-            vkDestroyBuffer( device, vertexBuffer, nullptr );
-            vkFreeMemory( device, vertexBufferMemory, nullptr );
-            vertexBuffer = nullptr;
-            vertexBufferMemory = nullptr;
-            return false;
-        }
-
-        void* mappedData;
-        if ( vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &mappedData) == VK_SUCCESS )
-        {
-            memcpy(mappedData, data, bufferSize);
-            vkUnmapMemory(device, vertexBufferMemory);
-        }
-        else 
-        {
-            LOGC("VK Failed to map and update vertex buffer.");
-            return false;
-        }
-
         return true;
     }
 
@@ -851,6 +766,32 @@ namespace fv
             return VK_FORMAT_A1R5G5B5_UNORM_PACK16;
         }
         return VK_FORMAT_UNDEFINED;
+    }
+
+    VkFormat HelperVK::findSupportedFormat(VkPhysicalDevice device, const Vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+    {
+        assert( device );
+        for ( VkFormat format : candidates )
+        {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(device, format, &props);
+            if ( tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features )
+            {
+                return format;
+            }
+            else if ( tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features )
+            {
+                return format;
+            }
+        }
+        return VK_FORMAT_UNDEFINED;
+    }
+
+    VkFormat HelperVK::findDepthFormat(VkPhysicalDevice device)
+    {
+        return findSupportedFormat(device, { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+                                   VK_IMAGE_TILING_OPTIMAL,
+                                   VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     }
 
 }

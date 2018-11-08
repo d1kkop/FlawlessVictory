@@ -115,7 +115,7 @@ namespace fv
         {
             auto& rs = m_SubMeshes[i];
             auto& md = m_Materials[i];
-            renderManager()->renderSubmesh( tIdx, rs, md->data, PipelineState::FillStandard );
+            renderManager()->addToRenderList( tIdx, rs, md->data, DrawMethod::FillStandard );
         }
     }
 

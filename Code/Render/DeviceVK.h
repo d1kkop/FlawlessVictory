@@ -62,6 +62,10 @@ namespace fv
         void waitForFences(u32 frameIndex);
         void resetFences(u32 frameIndex);
 
+        // Rendering
+        void prepareDrawMethods( u32 frameIdx, u32 tIdx );
+        void renderDrawMethod( DrawMethod drawMethod, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore );
+
         u32 idx;
         VmaAllocator allocator;
         VkInstance instance;
@@ -91,7 +95,7 @@ namespace fv
         VkShaderModule standardFrag;
         VkShaderModule standardVert;
         RenderPassVK clearColorDepthPass;
-        RenderPassVK renderStandardPass;
+        RenderPassVK standardPass;
 
         // Per frame per thread, eg 2 frames 4 threads is array size of 8.
         Vector<VkSemaphore> frameFinishSemaphores;
@@ -101,7 +105,9 @@ namespace fv
         Vector<VkCommandBuffer> activeGraphicsCmdBuffer;
         Vector<VkCommandPool> graphicsPools;
         Vector<VkQueue> graphicsQueues;
-        Vector<Map<PipelineVK*, Vector<SubmeshVK*>>> renderLists;
+
+        // Per Thread per DrawMethod per Pipeline a list of submeshes.
+        Vector<Vector<HashMap<PipelineVK*, Vector<SubmeshVK*>>>> renderListsMt;
 
         // Per frame
         Vector<RenderImageVK> renderImages;

@@ -1,6 +1,7 @@
 #pragma once
 #include "RenderManager.h"
 #if FV_VULKAN
+#include "../Core/JobManager.h"
 #include "DeviceVK.h"
 #include "SwapChainVK.h"
 #include "PipelineVK.h"
@@ -42,8 +43,7 @@ namespace fv
         FV_TS void deleteSubmesh(RSubmesh submesh) override;
 
         // Rendering
-        void renderSubmesh(u32 tIdx, RSubmesh submesh, const MaterialData& mdata, PipelineState pipelineState) override;
-    //    void renderOpaque(DeviceVK* dv, u32 graphicsQueueIdx, VkSemaphore waitSemaphore, u32 renderImageIndex);
+        void addToRenderList(u32 tIdx, RSubmesh submesh, const MaterialData& mdata, DrawMethod drawMethod) override;
 
         VkInstance m_Instance{};
         VkSurfaceKHR m_Surface{};
@@ -62,6 +62,7 @@ namespace fv
 
         PipelineFormatVK m_PipelineFormatOpaque{};
         PipelineFormatVK m_PipelineFormatTransparent{};
+        Vector<M<Job>> m_RenderJobs;
     };
 }
 #endif

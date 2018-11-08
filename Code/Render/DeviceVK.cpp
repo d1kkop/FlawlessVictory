@@ -147,13 +147,68 @@ namespace fv
 
     bool DeviceVK::createRenderPasses(const RenderConfig& rc)
     {
-        clearColorDepthPass = RenderPassVK::create(*this, format, rc.numSamples, false);
+        clearColorDepthPass = RenderPassVK::create(*this, 2, 1, 0, [&](u32 idx, VkAttachmentDescription& atd, VkAttachmentReference& atr)
+        {
+            if ( idx == 0 ) // Color
+            {
+                atd.format  = format;
+                atd.loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                atd.finalLayout = VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR;
+                // attachment ref 
+                atr.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            }
+            else if ( idx == 1 ) // Depth
+            {
+                atd.format  = HelperVK::findDepthFormat( physical );
+                atd.loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                atd.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                // attachment ref 
+                atr.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            }
+        }, [](u32 idx, VkSubpassDescription& sd, const Vector<VkAttachmentReference>& refs)
+        {
+            sd.colorAttachmentCount = 1;
+            sd.pColorAttachments = refs.data();
+            sd.pDepthStencilAttachment = &refs.back();
+        }, [](u32 idx, VkSubpassDependency& dp) {});
+
         if ( !clearColorDepthPass.valid() )
         {
             LOGC("Cannot create main render pass. Render setup failed.");
             return false;
         }
-        renderStandardPass = RenderPassVK::create(*this, format, rc.numSamples, false);
+
+        standardPass = RenderPassVK::create(*this, 2, 1, 0, [&](u32 idx, VkAttachmentDescription& atd, VkAttachmentReference& atr)
+        {
+            if ( idx == 0 ) // Color
+            {
+                atd.format  = format;
+                atd.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                atd.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+                // attachment ref 
+                atr.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            }
+            else if ( idx == 1 ) // Depth
+            {
+                atd.format = HelperVK::findDepthFormat( physical );
+                atd.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                atd.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                // attachment ref 
+                atr.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            }
+        }, [](u32 idx, VkSubpassDescription& sd, const Vector<VkAttachmentReference>& refs)
+        {
+            sd.colorAttachmentCount = 1;
+            sd.pColorAttachments = refs.data();
+            sd.pDepthStencilAttachment = &refs.back();
+        }, [](u32 idx, VkSubpassDependency& sd) {} );
+
+        if ( !standardPass.valid() )
+        {
+            LOGC("Cannot create standard pass. Render setup failed.");
+            return false;
+        }
+
         return true;
     }
 
@@ -372,6 +427,33 @@ namespace fv
     {
         FV_VKCALL(vkResetFences(logical, (u32)graphicsQueues.size(),
                                 frameFinishFences.data()+frameIdex*graphicsQueues.size()));
+    }
+
+    void DeviceVK::prepareDrawMethods(u32 frameIdx, u32 tIdx)
+    {
+        // Clear previous command buffers for this frameIndex [ 0 to N ], where N is usually 1, 2 or 3.
+        u32 offs = frameIdx*(u32)graphicsQueues.size();
+        HelperVK::freeCommandBuffers(logical, graphicsPools[tIdx], frameGraphicsCmds[offs + tIdx].data(), (u32)frameGraphicsCmds[offs +tIdx].size());
+        frameGraphicsCmds[offs +tIdx].clear();
+    }
+
+    void DeviceVK::renderDrawMethod(DrawMethod drawMethod, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore)
+    {
+        HashMap<PipelineVK*, Vector<SubmeshVK*>>& pipeLines = renderListsMt[tIdx][(u32)drawMethod];
+        submitGraphicsCommands(frameIdx, tIdx, waitSemaphore, [&, tIdx](VkCommandBuffer cb)
+        {
+            // TODO render pass begin from draw method
+            for ( auto& pipel : pipeLines )
+            {
+                pipel.first->bind( cb );
+                for ( auto& s : pipel.second ) // submeshes
+                {
+                    s->render( cb );
+                }
+            }
+            // TODO render pass end from draw method
+            return false;
+        });
     }
 
     void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore,

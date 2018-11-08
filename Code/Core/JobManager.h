@@ -94,7 +94,7 @@ namespace fv
         for ( i=0; i<kThreads && kRemaining>0; ++i )
         {
             u32 count = Min(kRemaining, kPerThread);
-            jobs[i] = jobManager()->addJob([=,&collection,&cb]()
+            jobs[i] = jobManager()->addJobOn(i, [=,&collection,&cb]()
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
                 {
@@ -103,7 +103,7 @@ namespace fv
                     {
                         T* comp = (T*)((char*)compArray.elements + k*compArray.compSize);
                         if ( comp->inUse() )
-                            cb ( *comp );
+                            cb ( *comp, i );
                     }
                 }
             });
@@ -125,7 +125,7 @@ namespace fv
         for ( i=0; i<kThreads && kRemaining>0; ++i )
         {
             u32 count = Min(kRemaining, kPerThread);
-            jobs[i] = jobManager()->addJob([=,&collection,&cb]()
+            jobs[i] = jobManager()->addJobOn(i, [=,&collection,&cb]()
             {
                 for ( u32 j=ofs; j<ofs+count; ++j )
                 {
@@ -136,5 +136,15 @@ namespace fv
             ofs += kPerThread;
         }
         for ( i32 a=0; a<i; ++a ) jobs[a]->wait();
+    }
+
+    template <class T, class C, class Cb>
+    inline void ParallelFlatten(Map<u32, C>& components, const Cb& cb)
+    {
+        for ( auto& kvp : components )
+        {
+            C& compArrayList = kvp.second;
+            ParallelComponentFor<T>(compArrayList, cb);
+        }
     }
 }

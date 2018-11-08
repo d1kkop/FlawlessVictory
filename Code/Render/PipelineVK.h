@@ -19,6 +19,9 @@ namespace fv
         float lineWidth;
         u32 numSamples;
         u32 vertexSize;
+        bool depthTest;
+        bool depthWrite;
+        bool stencilTest;
     };
 
     struct PipelineVK

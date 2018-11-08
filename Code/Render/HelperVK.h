@@ -33,7 +33,6 @@ namespace fv
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
-        static bool createRenderPass(VkDevice device, VkFormat format, u32 samples, VkRenderPass& renderPass);
         static bool createPipeline(VkDevice device,
                                    const struct PipelineFormatVK& format,
                                    const VkViewport& vp,
@@ -43,7 +42,6 @@ namespace fv
                                    VkPipelineLayout& pipelineLayout);
         static bool createFramebuffer(VkDevice device, const VkExtent2D& size, VkRenderPass renderPass, const Vector<VkImageView>& attachments, VkFramebuffer& framebuffer);
         static bool createCommandPool(VkDevice device, u32 familyQueueIndex, VkCommandPool& pool);
-        static bool createVertexBuffer(VkDevice device, const VkPhysicalDeviceMemoryProperties& memProperties, const void* data, u32 bufferSize, bool shareInQueues, bool coherentMemory, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         static void createVertexAttribs(const struct SubmeshInput& sinput, Vector<VkVertexInputAttributeDescription>& inputAttribs, u32& vertexSize);
 
         // Command buffers
@@ -71,8 +69,10 @@ namespace fv
                                     VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extent);
 
         // Misc
-        static u32  findMemoryType(u32 typeFilter, const VkPhysicalDeviceMemoryProperties& memProperties, VkMemoryPropertyFlags propertyFlags);
+        static u32 findMemoryType(u32 typeFilter, const VkPhysicalDeviceMemoryProperties& memProperties, VkMemoryPropertyFlags propertyFlags);
         static VkFormat convert( enum class ImageFormat imgFormat );
+        static VkFormat findSupportedFormat(VkPhysicalDevice device, const Vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+        static VkFormat findDepthFormat(VkPhysicalDevice device);
     };
 }
 #endif
