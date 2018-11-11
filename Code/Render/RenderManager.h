@@ -30,7 +30,7 @@ namespace fv
 
     using RSubmesh = void*;
     using RShader = DeviceResource;
-    using RTexture2D = DeviceResource;
+    using RTexture2D = void*;
     using RMaterial = DeviceResource;
     using RRenderPass = DeviceResource;
 
@@ -45,6 +45,7 @@ namespace fv
         FillStandard,
         FillTransparent,
         WireFrame,
+        Count
     };
 
     enum class ImageFormat

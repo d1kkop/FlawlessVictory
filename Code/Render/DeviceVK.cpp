@@ -4,6 +4,7 @@
 #include "HelperVK.h"
 #include "SwapChainVK.h"
 #include "BufferVK.h"
+#include "ImageVK.h"
 #include "SubmeshVK.h"
 #include "../Core/Directories.h"
 #include "../Core/LogManager.h"
@@ -15,6 +16,89 @@
 namespace fv
 {
     constexpr u32 STAGING_BUFFER_SIZE = 1024*1024*64; // 64 MB
+
+    DeviceVK* DeviceVK::create(VkInstance instance, VkPhysicalDevice physical, u32 idx, VkSurfaceKHR surface, u32 numGraphicQueues,
+                               const Vector<const char*>& physicalExtensions,
+                               const Vector<const char*>& physicalLayers)
+    {
+        assert( instance && physical && numGraphicQueues > 0 );
+
+        VkPhysicalDeviceFeatures features;
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceMemoryProperties memProperties;
+
+        vkGetPhysicalDeviceFeatures(physical, &features);
+        vkGetPhysicalDeviceProperties(physical, &properties);
+        vkGetPhysicalDeviceMemoryProperties(physical, &memProperties);
+
+        if ( !((properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+                properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) &&
+               features.geometryShader) )
+        {
+            LOGC("VK Found a graphic device, but required features not available. Discarding device.");
+            return nullptr;
+        }
+
+        QueueFamilyIndicesVK queueIndices;
+        HelperVK::getQueueIndices(physical, surface, queueIndices);
+
+        VkQueue computeQueue= {}, transferQueue= {}, sparseQueue= {}, presentQueue= {};
+        Set<u32> uniqueQueueIndices;
+        if ( queueIndices.compute )     uniqueQueueIndices.insert(queueIndices.compute.value());
+        if ( queueIndices.transfer )    uniqueQueueIndices.insert(queueIndices.transfer.value());
+        if ( queueIndices.sparse )      uniqueQueueIndices.insert(queueIndices.sparse.value());
+        if ( queueIndices.present )     uniqueQueueIndices.insert(queueIndices.present.value());
+
+        Vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        float priorities[128] = {};
+        assert( uniqueQueueIndices.size() <= 128 );
+        for ( auto& uIdx : uniqueQueueIndices )
+        {
+            VkDeviceQueueCreateInfo dqci {};
+            dqci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            dqci.queueCount = (queueIndices.graphics.has_value () && uIdx == queueIndices.graphics.value()) ? numGraphicQueues : 1;
+            dqci.queueFamilyIndex = uIdx;
+            dqci.pQueuePriorities = priorities;
+            queueCreateInfos.emplace_back(dqci);
+        }
+
+        VkDevice logical;
+        if (!HelperVK::createDevice(instance, physical, queueCreateInfos, physicalExtensions, physicalLayers, logical))
+        {
+            return nullptr;
+        }
+
+        DeviceVK* d = new DeviceVK{};
+        assert( d->idx==-1 );
+        d->idx = idx;
+        d->physical = physical;
+        d->logical = logical;
+        d->properties = properties;
+        d->features = features;
+        d->memProperties = memProperties;
+        d->queueIndices = queueIndices;
+        
+        if ( queueIndices.graphics )
+        {
+            for ( u32 i=0; i<numGraphicQueues; ++i )
+            {
+                VkQueue graphicQueue;
+                vkGetDeviceQueue( logical, queueIndices.graphics.value(), i, &graphicQueue );
+                d->graphicsQueues.emplace_back( graphicQueue );
+            }
+        }
+        if ( queueIndices.compute ) vkGetDeviceQueue( logical, queueIndices.compute.value(), 0, &d->computeQueue );
+        if ( queueIndices.transfer ) vkGetDeviceQueue( logical, queueIndices.transfer.value(), 0, &d->transferQueue );
+        if ( queueIndices.sparse ) vkGetDeviceQueue( logical, queueIndices.sparse.value(), 0, &d->sparseQueue );
+
+        d->renderListsMt.resize(numGraphicQueues);
+        for ( auto& rl : d->renderListsMt )
+        {
+            rl.resize( (u32)DrawMethod::Count );
+        }
+
+        return d;
+    }
 
     void DeviceVK::release()
     {
@@ -44,33 +128,6 @@ namespace fv
             scoped_lock lk(pipelineMutex);
             for ( auto& kvp : pipelines ) kvp.second.release();
             pipelines.clear();
-        }
-    }
-
-    void DeviceVK::storeDeviceQueueFamilies(VkSurfaceKHR surface)
-    {
-        assert(physical); // Surface may be null. In that case no present queue is obtained.
-        uint32_t queueFamilyCount;
-        Vector<VkQueueFamilyProperties> queueFamilies;
-        vkGetPhysicalDeviceQueueFamilyProperties(physical, &queueFamilyCount, nullptr);
-        queueFamilies.resize(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(physical, &queueFamilyCount, queueFamilies.data());
-        for ( u32 i=0; i<queueFamilyCount; ++i )
-        {
-            auto& queueFam = queueFamilies[i];
-            if ( queueFam.queueCount > 0 )
-            {
-                if ( (queueFam.queueFlags & VK_QUEUE_GRAPHICS_BIT) ) queueIndices.graphics = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_COMPUTE_BIT) )  queueIndices.compute = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_TRANSFER_BIT) ) queueIndices.transfer = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) queueIndices.sparse = i;
-            }
-            VkBool32 presentSupported = false;
-            if ( surface )
-            {
-                vkGetPhysicalDeviceSurfaceSupportKHR(physical, i, surface, &presentSupported);
-                if ( presentSupported ) queueIndices.present = i;
-            }
         }
     }
 
@@ -178,7 +235,7 @@ namespace fv
             return false;
         }
 
-        standardPass = RenderPassVK::create(*this, 2, 1, 0, [&](u32 idx, VkAttachmentDescription& atd, VkAttachmentReference& atr)
+        RenderPassVK standardPass = RenderPassVK::create(*this, 2, 1, 0, [&](u32 idx, VkAttachmentDescription& atd, VkAttachmentReference& atr)
         {
             if ( idx == 0 ) // Color
             {
@@ -209,6 +266,9 @@ namespace fv
             return false;
         }
 
+        drawMethods.resize( (u32)DrawMethod::Count );
+        drawMethods[ (u32)DrawMethod::FillStandard ] = standardPass;
+
         return true;
     }
 
@@ -232,11 +292,53 @@ namespace fv
         u32 i=0;
         for ( auto& ri : renderImages )
         {
-            VkImage swapChainImg = swapChain ? swapChain->images()[i++] : nullptr;
-            if ( !ri.initialize( *this, rc, swapChainImg, clearColorDepthPass.renderPass() ) )
+            bool cbFailed = false;
+            bool bSetup = ri.initialize( *this, clearColorDepthPass.renderPass(), [&](u32 idx, VkImage& img, VkFormat& format, VkImageAspectFlags& flags, u32& numLayers)
             {
+                if ( idx == 0 )
+                {
+                    numLayers = rc.numLayers;
+                    flags = VK_IMAGE_ASPECT_COLOR_BIT;
+                    if ( swapChain )
+                    {
+                        img = swapChain->images()[i++];
+                        format = swapChain->surfaceFormat().format;
+                    }
+                    else
+                    {
+                        ImageVK* colorImg = (ImageVK*) createTexture2D( rc.resX, rc.resY, nullptr, 0, 1, rc.numLayers, rc.numSamples, this->format, 
+                                                                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY );
+                        if ( !colorImg )
+                        {
+                            cbFailed = true;
+                            LOGC("VK Failed to create render color image.");
+                            return false;
+                        }
+                        img = colorImg->image();
+                        format = colorImg->format();
+                    }
+                    return true; // continue for another image (depth)
+                }
+                else if (idx == 1)
+                {
+                    VkFormat depthFormat = HelperVK::findDepthFormat( physical );
+                    ImageVK* depthImg = (ImageVK*)createTexture2D(rc.resX, rc.resY, nullptr, 0, 1, rc.numLayers, rc.numSamples, depthFormat,
+                                                                   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+                    if ( !depthImg )
+                    {
+                        cbFailed = true;
+                        LOGC("VK Failed to create render depth image.");
+                        return false;
+                    }
+                    img = depthImg->image();
+                    format = depthImg->format();
+                    flags = flags = VK_IMAGE_ASPECT_DEPTH_BIT;
+                    numLayers = rc.numLayers;
+                    return false; // stop
+                }
                 return false;
-            }
+            });
+            if (!bSetup || cbFailed) return false;
         }
         return true;
     }
@@ -437,12 +539,13 @@ namespace fv
         frameGraphicsCmds[offs +tIdx].clear();
     }
 
-    void DeviceVK::renderDrawMethod(DrawMethod drawMethod, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore)
+    void DeviceVK::renderDrawMethod(DrawMethod drawMethod, VkFramebuffer fb, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore)
     {
+        assert( fb );
         HashMap<PipelineVK*, Vector<SubmeshVK*>>& pipeLines = renderListsMt[tIdx][(u32)drawMethod];
         submitGraphicsCommands(frameIdx, tIdx, waitSemaphore, [&, tIdx](VkCommandBuffer cb)
         {
-            // TODO render pass begin from draw method
+            drawMethods[ (u32) drawMethod ].begin( cb, fb, { 0, 0 }, extent, {} );
             for ( auto& pipel : pipeLines )
             {
                 pipel.first->bind( cb );
@@ -451,8 +554,8 @@ namespace fv
                     s->render( cb );
                 }
             }
-            // TODO render pass end from draw method
-            return false;
+            drawMethods[ (u32)drawMethod ].end( cb );
+            return true; // is last submit
         });
     }
 
@@ -470,8 +573,7 @@ namespace fv
         VkCommandBuffer cb;
         HelperVK::allocCommandBuffer(logical, gp, cb);
         HelperVK::beginCommandBuffer(logical, (VkCommandBufferUsageFlags)VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
-        activeGraphicsCmdBuffer[ queueIdx ] = cb;
-        bool lastSubmit = callback(cb);
+        bool isLastSubmit = callback(cb);
         HelperVK::endCommandBuffer(cb);
 
         VkSubmitInfo submitInfo = {};
@@ -489,7 +591,7 @@ namespace fv
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cb;
 
-        if ( !lastSubmit )
+        if ( !isLastSubmit )
         {
             FV_VKCALL(vkQueueSubmit(gq, 1, &submitInfo, VK_NULL_HANDLE));
         }
@@ -533,17 +635,30 @@ namespace fv
                                          u32 mipLevels, u32 layers, u32 samples, ImageFormat format,
                                          VkImageUsageFlagBits usageBits, VmaMemoryUsage memUsage)
     {
-        assert( width > 0 && height > 0 && data && size >= width*height && mipLevels > 0 && layers > 0 && samples > 0 && usageBits != 0 );
         VkFormat vkFormat = HelperVK::convert( format );
+        return createTexture2D( width, height, data, size, mipLevels, layers, samples, vkFormat, usageBits, memUsage);
+    }
+
+    RTexture2D DeviceVK::createTexture2D(u32 width, u32 height, const char* data, u32 size,
+                                         u32 mipLevels, u32 layers, u32 samples, VkFormat format,
+                                         VkImageUsageFlagBits usageBits, VmaMemoryUsage memUsage)
+    {
+        assert(width > 0 && height > 0 && mipLevels > 0 && layers > 0 && samples > 0 && usageBits != 0);
         DeviceResource dr = { idx };
-        if (!MemoryHelperVK::createImage(*this, width, height, vkFormat, mipLevels, layers, samples, 
-                                         false, queueIndices.graphics.value(), usageBits, memUsage, *(ImageVK*) &dr.resources))
+        u32 queueIdxes[] = { queueIndices.graphics.value() };
+        ImageVK* image = ImageVK::create(*this, width, height, 1, format, VK_IMAGE_TILING_OPTIMAL /* TODO CHECK */, mipLevels, layers, samples,
+                                         queueIdxes, 1, usageBits, memUsage, nullptr);
+        if ( !image )
         {
             return {};
         }
+        if ( data ) 
+        {
+            // upload .. TODO 
+        }
         scoped_lock lk(tex2dMutex);
-        textures2d.emplace_back( dr );
-        return dr;
+        textures2d.emplace_back(image);
+        return image;
     }
 
     RShader DeviceVK::createShader(const char* data, u32 size)
@@ -642,7 +757,8 @@ namespace fv
 
     void DeviceVK::deleteTexture2D(RTexture2D tex2d, bool removeFromList)
     {
-        MemoryHelperVK::freeImage( *(ImageVK*) &tex2d.resources );
+        ImageVK* img = (ImageVK*)tex2d;
+        delete img;
         scoped_lock lk(tex2dMutex);
         if ( removeFromList ) RemoveMemCmp( textures2d, tex2d );
     }

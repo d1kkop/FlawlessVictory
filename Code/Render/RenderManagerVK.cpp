@@ -5,6 +5,7 @@
 #include "PipelineVK.h"
 #include "RenderImageVK.h"
 #include "SubmeshVK.h"
+#include "ImageVK.h"
 #include "../Core/ComponentManager.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
@@ -198,11 +199,13 @@ namespace fv
 
             // Clear standard render image (single threaded)
             VkClearValue cv = { 0, 0, 0, 1 };
-            Vector<VkClearValue> cvs = { cv };
+            VkClearValue cv2 = { 0.f, 0 };
+            Vector<VkClearValue> cvs = { cv, cv2 };
+            auto& ri = dv->renderImages[renderImageIndex];
+            VkFramebuffer frameBuffer = ri.frameBuffer();
             dv->submitGraphicsCommands( m_FrameIndex, 0, waitSemaphore, [&](VkCommandBuffer cb)
             {
-                auto& ri = dv->renderImages[renderImageIndex];
-                dv->clearColorDepthPass.begin(cb, ri.frameBuffer(), { 0, 0 }, dv->extent, cvs);
+                dv->clearColorDepthPass.begin(cb, frameBuffer, { 0, 0 }, dv->extent, cvs);
                 dv->clearColorDepthPass.end(cb);
                 return false;
             });
@@ -215,7 +218,7 @@ namespace fv
                 M<Job> renderJob = jobManager()->addJobOn( i, [&, i]()
                 {
                     dv->prepareDrawMethods( m_FrameIndex, i );
-                    dv->renderDrawMethod( DrawMethod::FillStandard, m_FrameIndex, i , waitSemaphore );
+                    dv->renderDrawMethod( DrawMethod::FillStandard, frameBuffer, m_FrameIndex, i , waitSemaphore );
                 });
                 m_RenderJobs.emplace_back( renderJob );
             }
@@ -260,79 +263,23 @@ namespace fv
         physicalDevices.resize( deviceCount );
         FV_VKCALL( vkEnumeratePhysicalDevices(m_Instance, &deviceCount, physicalDevices.data()) );
 
-        DeviceVK* device = new DeviceVK();
         u32 numCreatedDevices = 0;
         for ( auto& physical : physicalDevices )
         {
-            auto& dv = *device;
-            dv.instance = m_Instance;
-            dv.physical = physical;
-
-            if ( !HelperVK::checkRequiredExtensions(m_RequiredPhysicalExtensions, physical) ||
-                 !HelperVK::checkRequiredLayers(m_RequiredPhysicalLayers, physical) )
+            DeviceVK* device = DeviceVK::create(m_Instance, physical, numCreatedDevices, m_Surface, numGraphicsQueues, 
+                                                m_RequiredPhysicalExtensions, m_RequiredPhysicalLayers);
+           
+            if ( device )
             {
-                continue; // not suitable
-            }
-
-            vkGetPhysicalDeviceFeatures(dv.physical, &dv.features);
-            vkGetPhysicalDeviceProperties(dv.physical, &dv.properties);
-            vkGetPhysicalDeviceMemoryProperties(dv.physical, &dv.memProperties);
-            dv.storeDeviceQueueFamilies( surface );
-
-            if ( !((dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
-                   dv.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) &&
-                   dv.features.geometryShader) )
-            {
-                continue; // Not suitable
-            }
-
-            // 128 must cover number of queues
-            assert( numGraphicsQueues <= 128 );
-            float priorities [128] = { 1.f };
-            Set<u32> uniqueQueueIndices = { *dv.queueIndices.graphics, *dv.queueIndices.compute, *dv.queueIndices.transfer, *dv.queueIndices.sparse };
-            Vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-            for ( auto& uIdx : uniqueQueueIndices )
-            {
-                VkDeviceQueueCreateInfo dqci {};
-                dqci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                dqci.queueCount = (uIdx == dv.queueIndices.graphics.value()) ? numGraphicsQueues : 1;
-                dqci.queueFamilyIndex = uIdx;
-                dqci.pQueuePriorities = priorities;
-                queueCreateInfos.emplace_back( dqci );
-            }
-
-            if ( !HelperVK::createDevice( m_Instance, dv.physical, queueCreateInfos, m_RequiredPhysicalExtensions, m_RequiredPhysicalLayers, dv.logical ) )
-            {
-                break;
-            }
-
-            if ( dv.queueIndices.graphics )
-            {
-                for ( u32 i=0; i< numGraphicsQueues; ++i )
+                m_Devices.emplace_back( device );
+                if ( ++numCreatedDevices >= m_RenderConfig.maxDevices )
                 {
-                    VkQueue graphicsQueue;
-                    vkGetDeviceQueue(dv.logical, *dv.queueIndices.graphics, i, &graphicsQueue);
-                    dv.graphicsQueues.emplace_back( graphicsQueue );
+                    LOG("VK Possible other suitable devices are discarded as num of max device (%d) was reached.", m_RenderConfig.maxDevices);
+                    break;
                 }
-            }
-            if ( dv.queueIndices.compute )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.compute, 0, &dv.computeQueue);
-            if ( dv.queueIndices.transfer ) vkGetDeviceQueue(dv.logical, *dv.queueIndices.transfer, 0, &dv.transferQueue);
-            if ( dv.queueIndices.sparse )   vkGetDeviceQueue(dv.logical, *dv.queueIndices.sparse, 0, &dv.sparseQueue);
-            if ( dv.queueIndices.present )  vkGetDeviceQueue(dv.logical, *dv.queueIndices.present, 0, &dv.presentQueue);
-
-            device->idx = numCreatedDevices;
-            device->activeGraphicsCmdBuffer.resize( numGraphicsQueues );
-            m_Devices.emplace_back( device );
-            device = new DeviceVK();
-
-            if ( ++numCreatedDevices >= m_RenderConfig.maxDevices )
-            {
-                LOG("VK Possible other suitable devices are discarded as num of max device (%d) was reached.", m_RenderConfig.maxDevices);
-                break;
             }
         }
 
-        delete device;
         if ( m_Devices.empty() )
         {
             LOGC("VK Did not find any suitable devices.");
@@ -350,7 +297,7 @@ namespace fv
     RTexture2D RenderManagerVK::createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,
                                                 u32 mipLevels, u32 layers, u32 samples, ImageFormat format)
     {
-        return m_Devices[deviceIdx]->createTexture2D( width, height, data, size, mipLevels, layers, samples, format, 
+        return m_Devices[deviceIdx]->createTexture2D(width, height, data, size, mipLevels, layers, samples, format, 
                                                      VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY );
     }
 
@@ -366,8 +313,9 @@ namespace fv
 
     void RenderManagerVK::deleteTexture2D(RTexture2D tex2d)
     {
-        if ( tex2d.device == -1 ) return;
-        m_Devices[tex2d.device]->deleteTexture2D( tex2d, true );
+        if (!tex2d) return;
+        ImageVK* img = (ImageVK*)tex2d;
+        img->device()->deleteTexture2D( tex2d, true );
     }
 
     void RenderManagerVK::deleteShader(RShader shader)

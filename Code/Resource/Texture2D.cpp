@@ -36,7 +36,7 @@ namespace fv
 
         RTexture2D graphic = renderManager()->createTexture2D(0, width, height, (const char*)data.data(), (u32)data.size(),
                                                               1, 1, 1, format );
-        if ( graphic.device == -1 )
+        if ( !graphic )
         {
             LOGW("Cannot create graphic resource for texture 2D. Loading failed.", rtl.loadPath.string().c_str());
             return;
@@ -46,8 +46,8 @@ namespace fv
         patch->width    = width;
         patch->height   = height;
         patch->imgFormat = format;
-        patch->graphic  = graphic;
-        patch->resource = rtl.resource;
+        patch->texture2D = graphic;
+        patch->resource  = rtl.resource;
         patch->submit();
     }
 

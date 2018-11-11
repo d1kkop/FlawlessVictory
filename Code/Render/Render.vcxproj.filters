@@ -34,12 +34,6 @@
     <ClInclude Include="PipelineVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
-    <ClInclude Include="MemoryHelperVK.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="IncVulkan.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
     <ClInclude Include="BufferVK.h">
       <Filter>DeviceParts</Filter>
     </ClInclude>
@@ -51,6 +45,12 @@
     </ClInclude>
     <ClInclude Include="RenderPassVK.h">
       <Filter>DeviceParts</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageVK.h">
+      <Filter>DeviceParts</Filter>
+    </ClInclude>
+    <ClInclude Include="IncVulkan.h">
+      <Filter>Managers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -75,9 +75,6 @@
     <ClCompile Include="PipelineVK.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
-    <ClCompile Include="MemoryHelperVK.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
     <ClCompile Include="BufferVK.cpp">
       <Filter>DeviceParts</Filter>
     </ClCompile>
@@ -89,6 +86,12 @@
     </ClCompile>
     <ClCompile Include="RenderComponent.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageVK.cpp">
+      <Filter>DeviceParts</Filter>
+    </ClCompile>
+    <ClCompile Include="IncVulkan.cpp">
+      <Filter>Managers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

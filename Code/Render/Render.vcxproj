@@ -79,8 +79,8 @@
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="DeviceVK.h" />
+    <ClInclude Include="ImageVK.h" />
     <ClInclude Include="IncVulkan.h" />
-    <ClInclude Include="MemoryHelperVK.h" />
     <ClInclude Include="PipelineVK.h" />
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="RenderImageVK.h" />
@@ -100,7 +100,8 @@
     <ClCompile Include="BufferVK.cpp" />
     <ClCompile Include="DeviceVK.cpp" />
     <ClCompile Include="HelperVK.cpp" />
-    <ClCompile Include="MemoryHelperVK.cpp" />
+    <ClCompile Include="ImageVK.cpp" />
+    <ClCompile Include="IncVulkan.cpp" />
     <ClCompile Include="PipelineVK.cpp" />
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RenderImageVK.cpp" />

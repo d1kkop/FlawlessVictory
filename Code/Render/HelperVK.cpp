@@ -1,7 +1,10 @@
 #include "HelperVK.h"
 #if FV_VULKAN
+// -- Change these includes to not need these anymore. HelperVK should only depend on Vulkan, not Higher level Vulkan implementations. --
 #include "RenderManager.h" // For RenderConfig
+#include "DeviceVK.h"
 #include "PipelineVK.h"
+// -- End change includes --- 
 #include "../Core/Algorithm.h"
 #include "../Core/Functions.h"
 #include "../Core/LogManager.h"
@@ -174,7 +177,7 @@ namespace fv
         return true;
     }
 
-    bool HelperVK::createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView)
+    bool HelperVK::createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageAspectFlags aspectFlags, VkImageView& imgView)
     {
         assert(device && image && format);
 
@@ -189,7 +192,7 @@ namespace fv
         createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.aspectMask = aspectFlags;
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;
@@ -542,7 +545,8 @@ namespace fv
         FV_VKCALL( vkBeginCommandBuffer(commandBuffer, &beginInfo) );
     }
 
-    void HelperVK::startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal)
+    void HelperVK::startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, 
+                                   const VkClearValue* clearValue, u32 numClearValues)
     {
         assert( commandBuffer && renderPass && frameBuffer );
         VkRenderPassBeginInfo renderPassInfo = {};
@@ -551,8 +555,8 @@ namespace fv
         renderPassInfo.framebuffer = frameBuffer;
         renderPassInfo.renderArea.offset = renderArea.offset;
         renderPassInfo.renderArea.extent = renderArea.extent;
-        renderPassInfo.clearValueCount = clearVal ? 1 : 0;
-        renderPassInfo.pClearValues = clearVal;
+        renderPassInfo.clearValueCount = numClearValues;
+        renderPassInfo.pClearValues = clearValue;
         vkCmdBeginRenderPass( commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
     }
 
@@ -638,6 +642,33 @@ namespace fv
             }
         }
         return true;
+    }
+
+    void HelperVK::getQueueIndices(VkPhysicalDevice physical, VkSurfaceKHR surface, QueueFamilyIndicesVK& queueIndices)
+    {
+        assert(physical); // Surface may be null. In that case no present queue is obtained.
+        uint32_t queueFamilyCount;
+        Vector<VkQueueFamilyProperties> queueFamilies;
+        vkGetPhysicalDeviceQueueFamilyProperties(physical, &queueFamilyCount, nullptr);
+        queueFamilies.resize(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physical, &queueFamilyCount, queueFamilies.data());
+        for ( u32 i=0; i<queueFamilyCount; ++i )
+        {
+            auto& queueFam = queueFamilies[i];
+            if ( queueFam.queueCount > 0 )
+            {
+                if ( (queueFam.queueFlags & VK_QUEUE_GRAPHICS_BIT) ) queueIndices.graphics = i;
+                if ( (queueFam.queueFlags & VK_QUEUE_COMPUTE_BIT) )  queueIndices.compute = i;
+                if ( (queueFam.queueFlags & VK_QUEUE_TRANSFER_BIT) ) queueIndices.transfer = i;
+                if ( (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) queueIndices.sparse = i;
+            }
+            VkBool32 presentSupported = false;
+            if ( surface )
+            {
+                vkGetPhysicalDeviceSurfaceSupportKHR(physical, i, surface, &presentSupported);
+                if ( presentSupported ) queueIndices.present = i;
+            }
+        }
     }
 
     bool HelperVK::chooseSwapChain(u32 width, u32 height, 

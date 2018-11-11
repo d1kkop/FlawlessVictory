@@ -1,5 +1,7 @@
 #pragma once
-#include "MemoryHelperVK.h"
+#include "../Core/Common.h"
+#if FV_VULKAN
+#include "IncVulkan.h"
 
 namespace fv
 {
@@ -24,16 +26,18 @@ namespace fv
 
         bool valid() const { return m_Valid; }
         VkBuffer buffer() const { return m_Buffer; }
-        u32 size() const { return m_Size; }
+        u32 requestedSize() const { return m_RequestedSize; }
+        u32 allocatedSize() const { return (u32)m_AllocationInfo.size; }
         DeviceVK* device() const { return m_Device; }
 
     private:
         bool m_Valid = false;
         DeviceVK* m_Device;
         VkBuffer m_Buffer;
+        u32 m_RequestedSize;
         VmaAllocation m_Allocation;
-        VmaAllocator m_Allocator;
-        u32 m_Size;
+        VmaAllocationInfo m_AllocationInfo;
         VmaMemoryUsage m_Usage;
     };
 }
+#endif

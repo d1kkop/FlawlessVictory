@@ -24,6 +24,7 @@ namespace fv
 
         PatchType patchType;
         DeviceResource graphic;
+        RTexture2D texture2D;
         M<Resource> resource;
         union
         {

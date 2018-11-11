@@ -11,6 +11,8 @@
 
 namespace fv
 {
+    struct QueueFamilyIndicesVK;
+
     using DebugCallbackVK = VKAPI_ATTR VkBool32 (VKAPI_CALL*)
         (VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagsEXT, const VkDebugUtilsMessengerCallbackDataEXT*, void*);
 
@@ -29,7 +31,7 @@ namespace fv
                                     const Optional<u32>& graphicsQueueIdx, const Optional<u32>& presentQueueIdx,
                                     VkSurfaceFormatKHR& chosenFormat, VkPresentModeKHR& chosenPresentMode,
                                     VkExtent2D& surfaceExtend, VkSwapchainKHR oldSwapChain, VkSwapchainKHR& swapChain);
-        static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageView& imgView);
+        static bool createImageView(VkDevice device, VkImage image, VkFormat format, u32 numLayers, VkImageAspectFlags aspectFlags, VkImageView& imgView);
         static bool createShaderFromBinary(VkDevice device, const Path& path, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const char* data, u32 size, VkShaderModule& shaderModule);
         static bool createShaderModule(VkDevice device, const Vector<char>& code, VkShaderModule& shaderModule);
@@ -48,7 +50,7 @@ namespace fv
         static void allocCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBuffer& commandBuffer);
         static void allocCommandBuffers(VkDevice device, VkCommandPool commandPool, u32 numCommandBuffers, Vector<VkCommandBuffer>& commandBuffers);
         static void beginCommandBuffer(VkDevice device, VkCommandBufferUsageFlags usage, VkCommandBuffer commandBuffer);
-        static void startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearVal);
+        static void startRenderPass(VkCommandBuffer commandBuffer, VkRenderPass renderPass, VkFramebuffer frameBuffer, const VkRect2D& renderArea, const VkClearValue* clearValue, u32 numClearValues);
         static void stopRenderPass(VkCommandBuffer commandBuffer);
         static void endCommandBuffer(VkCommandBuffer commandBuffer);
         static void freeCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer* buffers, u32 numBuffers);
@@ -60,6 +62,7 @@ namespace fv
         static void queryExtensions(Vector<String>& extensions, VkPhysicalDevice physicalDevice=nullptr);
         static void queryLayers(Vector<String>& layers, VkPhysicalDevice physicalDevice=nullptr);
         static bool validateNameList(const Vector<String>& found, const Vector<const char*>& required);
+        static void getQueueIndices(VkPhysicalDevice physical, VkSurfaceKHR surface, QueueFamilyIndicesVK& queueIndices);
 
         // Swap chain query and pick.
         static void querySwapChainInfo(VkPhysicalDevice device, VkSurfaceKHR surface, Vector<VkSurfaceFormatKHR>& formats,

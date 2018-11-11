@@ -26,9 +26,12 @@ namespace fv
     {
     public:
         DeviceVK() = default;
+        static DeviceVK* create(VkInstance instance, VkPhysicalDevice physical, u32 idx, VkSurfaceKHR surface, u32 numGraphicQueues,
+                                const Vector<const char*>& physicalExtensions,
+                                const Vector<const char*>& physicalLayers);
         void release(); // Do not put in destructor.
         void releaseSwapchain();
-        void storeDeviceQueueFamilies(VkSurfaceKHR surface);
+
         void setFormatAndExtent(const RenderConfig& rc);
         bool createAllocators();
         bool createCommandPools();
@@ -46,6 +49,7 @@ namespace fv
 
         // Resource creation/deletion
         FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, u32 mipLevels, u32 layers, u32 samples, ImageFormat format, VkImageUsageFlagBits imageUsageBits, VmaMemoryUsage memoryUsage);
+        FV_TS RTexture2D createTexture2D(u32 width, u32 height, const char* data, u32 size, u32 mipLevels, u32 layers, u32 samples, VkFormat format, VkImageUsageFlagBits imageUsageBits, VmaMemoryUsage memoryUsage);
         FV_TS RShader createShader(const char* data, u32 size);
         FV_TS RSubmesh createSubmesh(const Submesh& submesh, const SubmeshInput& si);
         FV_TS void deleteTexture2D(RTexture2D tex2d, bool removeFromList);
@@ -64,9 +68,9 @@ namespace fv
 
         // Rendering
         void prepareDrawMethods( u32 frameIdx, u32 tIdx );
-        void renderDrawMethod( DrawMethod drawMethod, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore );
+        void renderDrawMethod( DrawMethod drawMethod, VkFramebuffer fb, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore );
 
-        u32 idx;
+        u32 idx = -1;
         VmaAllocator allocator;
         VkInstance instance;
         VkDevice logical;
@@ -87,7 +91,7 @@ namespace fv
         Vector<VkCommandBuffer> singleTimeCmds;
 
         // Resources
-        Vector<DeviceResource> textures2d;
+        Vector<RTexture2D> textures2d;
         Vector<DeviceResource> shaders;
         Vector<RSubmesh> submeshes;
 
@@ -95,14 +99,13 @@ namespace fv
         VkShaderModule standardFrag;
         VkShaderModule standardVert;
         RenderPassVK clearColorDepthPass;
-        RenderPassVK standardPass;
+        Vector<RenderPassVK> drawMethods;
 
         // Per frame per thread, eg 2 frames 4 threads is array size of 8.
         Vector<VkSemaphore> frameFinishSemaphores;
         Vector<Vector<VkCommandBuffer>> frameGraphicsCmds;
 
         // Per thread
-        Vector<VkCommandBuffer> activeGraphicsCmdBuffer;
         Vector<VkCommandPool> graphicsPools;
         Vector<VkQueue> graphicsQueues;
 

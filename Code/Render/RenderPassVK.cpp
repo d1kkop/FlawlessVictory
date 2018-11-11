@@ -52,7 +52,7 @@ namespace fv
         }
 
         Vector<VkSubpassDependency> dependencies(numDependencies);
-        for ( u32 i=0; i<numSubpasses; ++i )
+        for ( u32 i=0; i<numDependencies; ++i )
         {
             VkSubpassDependency depen = {};
             dependencyCb( i, depen );
@@ -86,7 +86,7 @@ namespace fv
                              const Vector<VkClearValue>& clearValues)
     {
         assert(cb && fb);
-        HelperVK::startRenderPass( cb, m_RenderPass, fb, { offset, extent }, clearValues.data() );
+        HelperVK::startRenderPass( cb, m_RenderPass, fb, { offset, extent }, clearValues.data(), (u32)clearValues.size() );
     }
 
     void RenderPassVK::end( VkCommandBuffer cb )

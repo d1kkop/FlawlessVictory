@@ -1,10 +1,16 @@
 #include "BufferVK.h"
+#if FV_VULKAN
 #include "DeviceVK.h"
-#include "MemoryHelperVK.h"
 #include "../Core/LogManager.h"
 
 namespace fv
 {
+    void BufferVK::release()
+    {
+        if ( !m_Device ) return;
+        vmaDestroyBuffer(m_Device->allocator, m_Buffer, m_Allocation);
+    }
+
     BufferVK BufferVK::create(DeviceVK& device, u32 size, VkBufferUsageFlagBits usage, VmaMemoryUsage memUsage, 
                               const u32* queueIndices, u32 numQueueIndices, void** pMapped)
     {
@@ -24,33 +30,27 @@ namespace fv
         allocInfo.usage = memUsage;
         allocInfo.flags = (pMapped) ? VMA_ALLOCATION_CREATE_MAPPED_BIT : 0;
 
-        VmaAllocationInfo allocatedInfo;
-        if ( vmaCreateBuffer(device.allocator, &bufferInfo, &allocInfo, &bf.m_Buffer, &bf.m_Allocation, &allocatedInfo) != VK_SUCCESS )
+        if ( vmaCreateBuffer(device.allocator, &bufferInfo, &allocInfo, &bf.m_Buffer, &bf.m_Allocation, &bf.m_AllocationInfo) != VK_SUCCESS )
         {
             LOGW("VK Failed buffer allocation");
             return {};
         }
 
-        if ( pMapped && !allocatedInfo.pMappedData )
+        if ( pMapped && !bf.m_AllocationInfo.pMappedData )
         {
             LOGW("VK Failed buffer allocation as buffer could not be mapped while this was requested.");
+            vmaDestroyBuffer( device.allocator, bf.m_Buffer, bf.m_Allocation );
+            bf.m_Buffer = nullptr;
+            bf.m_Allocation = {};
             return {};
         }
 
-        assert(size <= allocatedInfo.size );
-        if ( size > allocatedInfo.size )
-        {
-            LOGW("VK Failed buffer allocation as provided size is smaller than requested.");
-            return {};
-        }
-        
-        bf.m_Allocator = device.allocator;
-        bf.m_Size = size;
+        bf.m_RequestedSize = size;
         bf.m_Usage = memUsage;
         if ( pMapped ) 
         {
-            assert( allocatedInfo.pMappedData );
-            *pMapped = allocatedInfo.pMappedData;
+            assert( bf.m_AllocationInfo.pMappedData );
+            *pMapped = bf.m_AllocationInfo.pMappedData;
         }
         bf.m_Valid = true;
 
@@ -102,24 +102,24 @@ namespace fv
     bool BufferVK::map(void** pData)
     {
         assert( pData );
-        if ( vmaMapMemory(m_Allocator, m_Allocation, pData) == VK_SUCCESS )
+        if ( vmaMapMemory(m_Device->allocator, m_Allocation, pData) == VK_SUCCESS )
             return true;
         return false;
     }
 
     void BufferVK::unmap()
     {
-        vmaUnmapMemory( m_Allocator, m_Allocation );
+        vmaUnmapMemory( m_Device->allocator, m_Allocation );
     }
 
     void BufferVK::flush()
     {
-        vmaFlushAllocation( m_Allocator, m_Allocation, 0, m_Size );
+        vmaFlushAllocation( m_Device->allocator, m_Allocation, 0, m_RequestedSize );
     }
 
     bool BufferVK::copyFrom(const void* data, u32 size)
     {
-        assert( size <= m_Size && data );
+        assert( size <= m_RequestedSize && data );
 
         void* pMapped;
         switch ( m_Usage )
@@ -149,7 +149,7 @@ namespace fv
             m_Device->submitOnetimeTransferCommand([&](VkCommandBuffer cb)
             {
                 VkBufferCopy region = {};
-                region.size = m_Size;
+                region.size = m_RequestedSize;
                 vkCmdCopyBuffer(cb, staging.buffer(), buffer(), 1, &region);
             });
         }
@@ -164,9 +164,5 @@ namespace fv
         return true;
     }
 
-    void BufferVK::release()
-    {
-        vmaDestroyBuffer( m_Allocator, m_Buffer, m_Allocation );
-    }
-
 }
+#endif

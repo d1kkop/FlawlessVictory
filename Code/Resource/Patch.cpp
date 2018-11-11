@@ -34,8 +34,8 @@ namespace fv
         FV_CHECK_MO();
         M<Texture2D> tex = std::static_pointer_cast<Texture2D>( resource );
         assert(tex);
-        tex->applyPatch( width, height, imgFormat, graphic );
-        graphic = {}; // Ownership transferred.
+        tex->applyPatch( width, height, imgFormat, texture2D );
+        texture2D = {}; // Ownership transferred.
     }
 
     FV_MO void Patch::applyShaderCode()

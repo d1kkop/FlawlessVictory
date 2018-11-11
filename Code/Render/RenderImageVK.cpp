@@ -3,64 +3,46 @@
 #include "RenderManager.h" // For config
 #include "DeviceVK.h"
 #include "HelperVK.h"
-#include "MemoryHelperVK.h"
+#include "ImageVK.h"
 
 namespace fv
 {
-    bool RenderImageVK::initialize(DeviceVK& device, const struct RenderConfig& rc, VkImage swapChainImage, VkRenderPass renderPass)
+    bool RenderImageVK::initialize(DeviceVK& device, VkRenderPass renderPass, const Function<bool (u32, VkImage& img, VkFormat& format, VkImageAspectFlags& flags, u32& layers)>& imagesCb)
     {
         m_Device = &device;
+        m_ImageViews.clear();
 
-        if ( !swapChainImage && !createImage(rc) )
+        bool bContinue = false;
+        u32 i=0;
+        do
+        {
+            VkImage img;
+            VkFormat format;
+            u32 layers;
+            VkImageAspectFlags aspectFlags;
+            bContinue = imagesCb( i++, img, format, aspectFlags, layers );
+            // Create img view for each attached image
+            VkImageView imgView;
+            if ( !HelperVK::createImageView(m_Device->logical, img, format, layers, aspectFlags, imgView) )
+            {
+                for ( auto& iv : m_ImageViews ) vkDestroyImageView( device.logical, iv, nullptr );
+            }
+            m_ImageViews.emplace_back( imgView );
+        } while (bContinue);
+
+        if ( !HelperVK::createFramebuffer(m_Device->logical, m_Device->extent, renderPass, m_ImageViews, m_FrameBuffer) )
+        {
             return false;
+        }
 
-      return createImageView(rc, swapChainImage) && createFrameBuffer(renderPass);
+        return true;
     }
 
     void RenderImageVK::release()
     {
         if (!m_Device ||!m_Device->logical) return;
-        if ( m_Image.allocation ) MemoryHelperVK::freeImage( m_Image ); /* If has swap chain, images are from not set up. */
-        vkDestroyImageView( m_Device->logical, m_ImageView, nullptr );
+        for ( auto& vi : m_ImageViews ) vkDestroyImageView( m_Device->logical, vi, nullptr );
         vkDestroyFramebuffer( m_Device->logical, m_FrameBuffer, nullptr );
-    }
-
-    bool RenderImageVK::createImage(const struct RenderConfig& rc)
-    {
-        if ( !MemoryHelperVK::createImage(*m_Device, m_Device->extent.width, m_Device->extent.height, m_Device->format, 1,
-                                          rc.numLayers, rc.numSamples, false, m_Device->queueIndices.graphics.value(),
-                                          (VkImageUsageFlagBits) (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT), VMA_MEMORY_USAGE_GPU_ONLY,
-                                          m_Image) )
-        {
-            return false;
-        }
-        return true;
-    }
-
-    bool RenderImageVK::createImageView(const struct RenderConfig& rc, VkImage swapChainImage)
-    {
-        VkImage chosenImage = m_Image.image;
-        if ( swapChainImage )
-        {
-            assert( !chosenImage );
-            chosenImage = swapChainImage;
-        }
-        if ( !HelperVK::createImageView(m_Device->logical, chosenImage, m_Device->format, rc.numLayers, m_ImageView) )
-        {
-            return false;
-        }
-        return true;
-    }
-
-    bool RenderImageVK::createFrameBuffer(VkRenderPass renderPass)
-    {
-        assert(renderPass);
-        Vector<VkImageView> attachments = { m_ImageView };
-        if ( !HelperVK::createFramebuffer(m_Device->logical, m_Device->extent, renderPass, attachments, m_FrameBuffer) )
-        {
-            return false;
-        }
-        return true;
     }
 
 }
