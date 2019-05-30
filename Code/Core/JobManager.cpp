@@ -43,7 +43,7 @@ namespace fv
         assert( newState == JobState::Cancelled || newState == JobState::Done );
         if ( m_OnDoneOrCancelled ) m_OnDoneOrCancelled( this );
         {
-            scoped_lock lk(m_StateMutex);
+            raii_lock lk(m_StateMutex);
             m_State = newState;
             if ( m_NumWaiters > 0 )
             {
@@ -77,7 +77,7 @@ namespace fv
     JobManager::~JobManager()
     {
         {
-            scoped_lock lk(m_QueueMutex);
+            raii_lock lk(m_QueueMutex);
             m_IsClosing = true;
             m_ThreadSuspendSignal.notify_all();
         }
@@ -108,7 +108,7 @@ namespace fv
         assert(job->m_NumWaiters == 0);
 
     #if FV_USEJOBSYSTEM
-        scoped_lock lk(m_QueueMutex);
+        raii_lock lk(m_QueueMutex);
         m_GlobalQueue.emplace_back(job);
         if ( m_NumThreadsSuspended > 0 )
         {

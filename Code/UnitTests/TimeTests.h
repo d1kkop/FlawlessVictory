@@ -36,7 +36,7 @@ UTESTBEGIN(BenchmarkQuatLock)
     Mutex m;
     s = RunTime();
     { 
-        scoped_lock lk(m);
+        raii_lock lk(m);
         for ( u32 i =0; i < numIters; ++i )
         {
             q *= r;

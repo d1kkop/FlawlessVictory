@@ -17,6 +17,7 @@ namespace fv
         static Vec2 up()        { return { 0, 1 }; }
         static Vec2 down()      { return { 0, -1 }; }
         static Vec2 zero()      { return { 0, 0 }; }
+        static Vec2 one()       { return { 1, 1 }; }
 
         Vec2 operator -() const { return { -x, -y }; }
         

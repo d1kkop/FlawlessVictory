@@ -50,7 +50,7 @@ UTESTBEGIN(ComponentManagerTest)
     for ( u32 j=0; j<10; j++) // See if components are reused on sequential iterations
     {
         u32 k=1000;
-        Vector<TestComponent*> comps;
+        Vector<M<TestComponent>> comps;
         for ( u32 i=0; i<k; ++i )
         {
             comps.emplace_back(componentManager()->newComponent<TestComponent>());
@@ -65,7 +65,6 @@ UTESTBEGIN(ComponentManagerTest)
         while ( comps.size() )
         {
             u32 r = rand() % comps.size();
-            componentManager()->freeComponent(comps[r]);
             comps.erase(comps.begin() + r);
         }
      //   printf("After free -> Num components %d \n", componentManager()->numComponents() );
@@ -86,9 +85,10 @@ UTESTBEGIN(IterTest)
     }
     assert(g == 0);
 
-    componentManager()->newComponent<TestUpdComponent>();
-    componentManager()->newComponent<TestUpdComponent>();
-    componentManager()->newComponent<TestUpdComponent>();
+    List<M<TestUpdComponent>> comps;
+    comps.emplace_back( componentManager()->newComponent<TestUpdComponent>() );
+    comps.emplace_back( componentManager()->newComponent<TestUpdComponent>() );
+    comps.emplace_back( componentManager()->newComponent<TestUpdComponent>() );
 
     // Should be 3 now
     g = 0;
@@ -99,27 +99,30 @@ UTESTBEGIN(IterTest)
     assert( g == 3 );
 
     // Test when bordering the buffer size of X (eg 128)
+    comps.clear();
+    List<M<TestComponent>> comps2;
     g = 0;
     for ( u32 i=0; i<1000; i++ )
     {
-        auto* c = componentManager()->newComponent<TestComponent>();
+        auto c = componentManager()->newComponent<TestComponent>();
+        comps2.emplace_back( c );
         c->s = "Hello Iterator";
         g++;
     }
-    assert( g==1000 );
+    assert( g==1000 && g==componentManager()->numComponents() );
 
     // Test if mapping to derived component is correct (no invalid ptr offsets)
     for ( auto& tc : Itr<TestComponent>() )
     {
         assert( tc.s == "Hello Iterator" );
     }
-    return true;
-
-    componentManager()->freeAllOfType<TestComponent>();
-    componentManager()->freeAllOfType<TestUpdComponent>();
+    comps2.clear();
+    componentManager()->freeAllMemory();
 
     assert( componentManager()->numComponents<TestComponent>() == 0 );
     assert( componentManager()->numComponents<TestUpdComponent>() == 0 );
+
+    return true;
 }
 UNITTESTEND(IterTest)
 

@@ -65,13 +65,13 @@ namespace fv
     M<T> ResourceManager::load(const String& filename)
     {
         bool wasAlreadyCreated;
-        return std::static_pointer_cast<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
+        return spc<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
     }
 
     template <class T>
     M<T> ResourceManager::create(const String& filename, bool& wasAlreadyCreated)
     {
-        return std::static_pointer_cast<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
+        return spc<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
     }
 
     FV_DLL ResourceManager* resourceManager();

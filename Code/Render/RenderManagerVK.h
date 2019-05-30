@@ -29,7 +29,7 @@ namespace fv
     private:
         bool createDevices(VkSurfaceKHR mainSurface, u32 numGraphicsQueues);
         u32 numDevices() const override { return (u32) m_Devices.size(); }
-        u32 autoDeviceIdx() override;
+        FV_TS u32 autoDeviceIdx() override;
 
         // Create
         FV_TS RTexture2D createTexture2D(u32 deviceIdx, u32 width, u32 height, const char* data, u32 size,

@@ -9,7 +9,7 @@
 #define FV_TYPE_COMMON(name) \
     public:\
     static FV_DLL u32 type() { auto* t=fv::typeManager()->typeInfo(#name); return t?t->hash:(-1); } \
-    static FV_DLL Type* create(u32 num) { return (num==1?(new name):(new name[num])); } /* Support single allocation for shared ptrs */ \
+    static FV_DLL Type* create(u32 num) { return (num==1?new name:new name[num]); }  /* in case of 1, use non-array alloc for compatability with default shared ptr delete */ \
     static FV_DLL void reset(Type* c) { new (sc<name*>(c))name; }
 
 #define FV_TYPE(name) \

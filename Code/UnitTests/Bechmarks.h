@@ -2,7 +2,6 @@
 #include "UnitTest.h"
 #include "../Core.h"
 #include "../Core/ComponentManager.h"
-#include "../Core/ComponentManager2.h"
 #include "../Scene/GameComponent.h"
 #include <cassert>
 using namespace fv;
@@ -56,10 +55,11 @@ UTESTBEGIN(BenchLoopOverComponents)
             c->multiply();
         }
         s2 = RunTime();
-        printf("Loop over scattered memory %.3f us\n", (s2-s)*1000.f*1000.f);
+        printf("Loop over 'scattered' memory %.3f us\n", (s2-s)*1000.f*1000.f);
+        List<M<BenchComponent>> comps;
         for ( u32 i=0; i<numItrs; ++i )
         {
-            componentManager()->newComponent<BenchComponent>();
+            comps.emplace_back( componentManager()->newComponent<BenchComponent>() );
         }
         s = RunTime();
         for ( BenchComponent& c : Itr<BenchComponent>() )
@@ -69,7 +69,8 @@ UTESTBEGIN(BenchLoopOverComponents)
         s2 = RunTime();
         printf("Loop over contiguous array %.3f us\n", (s2-s)*1000.f*1000.f);
         for ( auto* c : benchComps ) delete c;
-        componentManager()->freeAllOfType<BenchComponent>();
+        comps.clear();
+        componentManager()->freeAllMemory();
     }
     return true;
 }
@@ -85,9 +86,10 @@ UTESTBEGIN(BenchLoopOverComponents2)
         numItrs=1000;
     #endif
         double s, s2;
+        List<M<BenchComponent>> comps;
         for ( u32 i=0; i<numItrs; ++i )
         {
-            componentManager()->newComponent<BenchComponent>();
+            comps.emplace_back( componentManager()->newComponent<BenchComponent>() );
         }
         s = RunTime();
         for ( BenchComponent& c : Itr<BenchComponent>() )
@@ -95,21 +97,23 @@ UTESTBEGIN(BenchLoopOverComponents2)
             c.multiply();
         }
         s2 = RunTime();
+        comps.clear();
         printf("Loop over contiguous array %.3f us\n", (s2-s)*1000.f*1000.f);
-        componentManager()->freeAllOfType<BenchComponent>();
+        componentManager()->freeAllMemory();
         // -----------------------------------------------------------------------------------
         for ( u32 i=0; i<numItrs; ++i )
         {
-            componentManager2()->newComponent<BenchComponent>();
+            comps.emplace_back( componentManager()->newComponent<BenchComponent>() );
         }
         s = RunTime();
-        for ( BenchComponent& c : Itr2<BenchComponent>() )
+        for ( BenchComponent& c : Itr<BenchComponent>() )
         {
             c.multiply();
         }
         s2 = RunTime();
         printf("Loop over shared ptr contiguous array %.3f us\n", (s2-s)*1000.f*1000.f);
-        componentManager2()->freeAllOfType<BenchComponent>();
+        comps.clear();
+        componentManager()->freeAllMemory();
     }
     return true;
 }
@@ -120,16 +124,17 @@ UNITTESTEND(BenchLoopOverComponents2)
 UTESTBEGIN(BenchLoopOverComponents3)
 {
     printf("10 Times loop over scattered and contiguous memory\n");
-    for ( u32 t = 0; t < 10; t++ )
+    for ( u32 t = 0; t < 4; t++ )
     {
-        u32 numItrs=1000000;
+        u32 numItrs=4000000;
     #if FV_DEBUG
         numItrs=1000;
     #endif
         double s, s2;
+        List<M<BenchComponent>> comps;
         for ( u32 i=0; i<numItrs; ++i )
         {
-            componentManager()->newComponent<BenchComponent>();
+            comps.emplace_back( componentManager()->newComponent<BenchComponent>() );
         }
         s = RunTime();
         for ( BenchComponent& c : Itr<BenchComponent>() )
@@ -138,20 +143,23 @@ UTESTBEGIN(BenchLoopOverComponents3)
         }
         s2 = RunTime();
         printf("Loop over contiguous array (ST) %.3f us\n", (s2-s)*1000.f*1000.f);
-        componentManager()->freeAllOfType<BenchComponent>();
+        comps.clear();
+        componentManager()->freeAllMemory();
         // -----------------------------------------------------------------------------------
         for ( u32 i=0; i<numItrs; ++i )
         {
-            componentManager()->newComponent<BenchComponent>();
+            comps.emplace_back( componentManager()->newComponent<BenchComponent>() );
         }
-        s = RunTime();
+        double tt, t2;
+        tt = RunTime();
         ParallelComponentFor<BenchComponent>( componentManager()->componentsOfType<BenchComponent>(), [](BenchComponent& bc, u32 tIdx)
         {
             bc.multiply();
         });
-        s2 = RunTime();
-        printf("Loop over contiguous array (MT) %.3f us\n", (s2-s)*1000.f*1000.f);
-        componentManager()->freeAllOfType<BenchComponent>();
+        t2 = RunTime();
+        printf("Loop over contiguous array (MT) %.3f us | MT %.3fX faster than ST\n", (t2-tt)*1000.f*1000.f, 1.0/((t2-tt)/(s2-s)));
+        comps.clear();
+        componentManager()->freeAllMemory();
     }
     return true;
 }

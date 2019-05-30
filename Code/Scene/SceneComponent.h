@@ -28,7 +28,7 @@ namespace fv
         FV_DLL const Vec3& scale() const;
 
         /*  Detaches from parent and attaches to new component if any. 
-            World position/rotation/scale is not affeected. */
+            World position/rotation/scale is not affected. */
         FV_MO FV_DLL bool attach(SceneComponent* other);
         FV_MO FV_DLL void detachFromParent();
         FV_MO FV_DLL void detachChildren();

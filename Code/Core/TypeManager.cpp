@@ -67,24 +67,6 @@ namespace fv
         return nullptr;
     }
 
-    Type* TypeManager::createTypes(u32 type, u32 num)
-    {
-        const TypeInfo* ti = typeInfo(type);
-        if (!ti) return nullptr;
-        assert(type == ti->hash);
-        return createTypes(*ti, num);
-    }
-
-    Type* TypeManager::createTypes(const TypeInfo& ti, u32 num)
-    {
-        Type* types = ti.createFunc(num);
-        for ( u32 i=0; i<num; ++i )
-        {
-            ((Type*)((char*)types + i*ti.size))->m_Type = ti.hash;
-        }
-        return types;
-    }
-
     void TypeManager::setType(u32 type, Type& t)
     {
         t.m_Type = type;

@@ -18,8 +18,8 @@ namespace fv
     u32 g_Ticks = 0;
     double g_LastFpsMeasurement = 0;
 
-    u64 frameNumber()           { return g_FrameNumber; }
-    u32 frameRate()             { return g_FrameRate; }
+    u64 Time::frameNumber()     { return g_FrameNumber; }
+    u32 Time::frameRate()       { return g_FrameRate; }
     float Time::frameTime()     { return g_FrameTime; }
     float Time::dt()            { return g_Dt; }
     float Time::elapsed()       { return g_Elapsed; }

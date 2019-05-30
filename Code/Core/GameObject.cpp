@@ -8,7 +8,7 @@
 
 namespace fv
 {
-    GameObject::GameObject():
+    GameObject::GameObject() :
         m_LocalToWorld( transformManager()->newLocalToWorldMatrix() ),
         m_WorldToLocal( transformManager()->newWorldToLocalMatrix() )
     {
@@ -23,17 +23,17 @@ namespace fv
         m_Components.clear();
     }
 
-    Component* GameObject::addComponent(u32 type)
+    M<Component> GameObject::addComponent( u32 type )
     {
         FV_CHECK_MO();
-        Component* c = getComponent(type);
-        if ( c ) 
+        auto c = getComponent( type );
+        if ( c )
         {
-            auto* ti = typeManager()->typeInfo(type);
-            LOGW("Component of type %s already added.", ti?ti->name->c_str():"unknown" );
+            auto* ti = typeManager()->typeInfo( type );
+            LOGW( "Component of type %s already added.", ti?ti->name->c_str():"unknown" );
             return c;
         }
-        c = sc<Component*>(componentManager()->newComponent( type ));
+        c = componentManager()->newComponent( type );
         if ( c )
         { // Is null if type no longer exists
             m_Components[type] = c;
@@ -42,7 +42,15 @@ namespace fv
         return c;
     }
 
-    Component* GameObject::getComponent(u32 type)
+    M<Component> GameObject::addOrGetComponent( u32 type )
+    {
+        FV_CHECK_MO();
+        auto c = getComponent( type );
+        if ( c ) return c;
+        return addComponent( type );
+    }
+
+    M<Component> GameObject::getComponent( u32 type )
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find( type );
@@ -53,19 +61,18 @@ namespace fv
         return nullptr;
     }
 
-    bool GameObject::hasComponent(u32 type)
+    bool GameObject::hasComponent( u32 type ) const
     {
         FV_CHECK_MO();
-        return m_Components.count(type)!=0;
+        return m_Components.count( type )!=0;
     }
 
-    bool GameObject::removeComponent(u32 type)
+    bool GameObject::removeComponent( u32 type )
     {
         FV_CHECK_MO();
-        auto cIt = m_Components.find(type);
+        auto cIt = m_Components.find( type );
         if ( cIt != m_Components.end() )
         {
-            componentManager()->freeComponent( cIt->second );
             m_Components.erase( cIt );
             return true;
         }
@@ -75,10 +82,6 @@ namespace fv
     void GameObject::removeAllComponents()
     {
         FV_CHECK_MO();
-        for ( auto& kvp : m_Components )
-        {
-            componentManager()->freeComponent( kvp.second );
-        }
         m_Components.clear();
     }
 
@@ -100,18 +103,18 @@ namespace fv
         return m_Name;
     }
 
-    void GameObject::serialize(TextSerializer& ts)
+    void GameObject::serialize( TextSerializer& ts )
     {
         FV_CHECK_MO();
         if ( ts.isWriting() )
         {
-            ts.pushArray("components");
+            ts.pushArray( "components" );
             for ( auto& kvp : m_Components )
             {
                 ts.beginArrayElement();
                 u32 type = kvp.second->type();
-                auto ti  = typeManager()->typeInfo(type);
-                if (ti)
+                auto ti  = typeManager()->typeInfo( type );
+                if ( ti )
                 {
                     String name = *ti->name;
                     ts.serialize( "type", type );
@@ -124,17 +127,17 @@ namespace fv
         }
         else
         {
-            ts.pushArray("components");
+            ts.pushArray( "components" );
             while ( ts.beginArrayElement() )
             {
                 u32 compType;
                 String name;
-                ts.serialize("type", compType);
+                ts.serialize( "type", compType );
                 const TypeInfo* ti = typeManager()->typeInfo( compType );
-                if (ti)
+                if ( ti )
                 {
-                    auto* c = addComponent(compType);
-                    if (c) c->serialize( ts );
+                    auto c = addComponent( compType );
+                    if ( c ) c->serialize( ts );
                 }
                 ts.endArrayElement();
             }
@@ -142,11 +145,11 @@ namespace fv
         }
     }
 
-    SparseArray<GameObject>* g_GameObjectManager {};
-    SparseArray<GameObject>* gameObjectManager() { return CreateOnce(g_GameObjectManager); }
+    SparseArray<GameObject>* g_GameObjectManager{};
+    SparseArray<GameObject>* gameObjectManager() { return CreateOnce( g_GameObjectManager ); }
     void deleteGameObjectManager() { delete g_GameObjectManager; g_GameObjectManager=nullptr; }
 
-    void DestroyGameObject(GameObject* go)
+    void DestroyGameObject( GameObject* go )
     {
         FV_CHECK_MO();
         if ( !go ) return;

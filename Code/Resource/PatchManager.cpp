@@ -27,7 +27,7 @@ namespace fv
     void PatchManager::submitPatch(Patch* p)
     {
         assert( p );
-        scoped_lock lk(m_PatchSubmitMutex);
+        raii_lock lk(m_PatchSubmitMutex);
         m_PatchSubmitList.emplace_back( p );
     }
 
@@ -36,7 +36,7 @@ namespace fv
         FV_CHECK_MO();
         Vector<Patch*> submitListCpy;
         {
-            scoped_lock lk(m_PatchSubmitMutex);
+            raii_lock lk(m_PatchSubmitMutex);
             submitListCpy = m_PatchSubmitList;
             m_PatchSubmitList.clear();
         }

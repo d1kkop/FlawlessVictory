@@ -82,7 +82,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Component.cpp" />
-    <ClCompile Include="ComponentManager2.cpp" />
     <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="Directories.cpp" />
     <ClCompile Include="Functions.cpp" />
@@ -110,7 +109,6 @@
     <ClInclude Include="BinarySerialize.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
-    <ClInclude Include="ComponentManager2.h" />
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />

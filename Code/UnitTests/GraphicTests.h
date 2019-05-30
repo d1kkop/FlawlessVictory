@@ -9,7 +9,7 @@ using namespace fv;
 UTESTBEGIN(LoadTexture2D)
 {
     Vector<M<Texture2D>> textures;
-    printf("10 Times loop over scattered and contiguous memory\n");
+    printf("10 times 1000 texture loads of same texture.\n");
     for ( u32 t = 0; t < 10; t ++ )
     {
         u32 tk = 1000;

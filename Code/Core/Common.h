@@ -14,6 +14,7 @@ namespace fv
 
     template <class T, class S> using Pair = std::pair<T, S>;
     template <class T> using Vector  = std::vector<T>;
+	template <class T> using List    = Vector<T>;
     template <class T> using Queue   = std::queue<T>;
     template <class T> using Stack   = std::stack<T>;
     template <class T> using Deck    = std::deque<T>;
@@ -33,15 +34,8 @@ namespace fv
     using Thread        = std::thread;
     using Mutex         = std::mutex;
     using RMutex        = std::recursive_mutex;
-    using scoped_lock   = std::lock_guard<Mutex>;
-    using rscoped_lock  = std::lock_guard<RMutex>;
-
-    template <class T, class F>
-    inline T rc (F&& f) { return reinterpret_cast<T>(f); }
-    template <class T, class F>
-    inline T sc (F&& f) { return static_cast<T>(f); }
-    template <class T, class F>
-    inline T scc (F&& f) { return static_cast<T>(const_cast<T>(f)); }
+    using raii_lock     = std::scoped_lock<Mutex>;
+    using rraii_lock    = std::scoped_lock<RMutex>;
 
     // Managed ptr
     template <class T> using M = std::shared_ptr<T>;
@@ -51,4 +45,17 @@ namespace fv
 
     // Can become null if owning shared ptr loses its reference
     template <class T> using W = std::weak_ptr<T>;
+
+    template <class T, class F>
+    inline T rc (F&& f) { return reinterpret_cast<T>(f); }
+    template <class T, class F>
+    inline T sc (F&& f) { return static_cast<T>(f); }
+    template <class T, class F>
+    inline T scc (const F&& f) { return static_cast<T>(const_cast<T>(f)); }
+	template <class T, class F>
+    inline M<T> spc( const F&& f ) { return std::static_pointer_cast<T>(f); }
+    template <class T, class F>
+    inline M<T> dpc( const F&& f ) { return std::dynamic_pointer_cast<T>(f); }
+    template <class T, class F>
+    inline M<T> rpc( const F&& f ) { return std::reinterpret_pointer_cast<T>(f); }
 }

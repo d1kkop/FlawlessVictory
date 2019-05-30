@@ -125,7 +125,7 @@ namespace fv
         clearColorDepthPass.release();
         // Resource thread may try to add new pipeline while recreating swap chain. Do lock.
         {
-            scoped_lock lk(pipelineMutex);
+            raii_lock lk(pipelineMutex);
             for ( auto& kvp : pipelines ) kvp.second.release();
             pipelines.clear();
         }
@@ -447,7 +447,7 @@ namespace fv
 
     PipelineVK* DeviceVK::getOrCreatePipeline(u32 pipelineHash, const PipelineFormatVK& format)
     {
-        scoped_lock lk(pipelineMutex);
+        raii_lock lk(pipelineMutex);
         auto pIt = pipelines.find(pipelineHash);
         if ( pIt == pipelines.end() )
         {
@@ -656,7 +656,7 @@ namespace fv
         {
             // upload .. TODO 
         }
-        scoped_lock lk(tex2dMutex);
+        raii_lock lk(tex2dMutex);
         textures2d.emplace_back(image);
         return image;
     }
@@ -668,7 +668,7 @@ namespace fv
         {
             return {};
         }
-        scoped_lock lk(shaderMutex);
+        raii_lock lk(shaderMutex);
         shaders.emplace_back( dr );
         return dr;
     }
@@ -749,7 +749,7 @@ namespace fv
             return {};
         }
         
-        scoped_lock lk(submeshMutex);
+        raii_lock lk(submeshMutex);
         submeshes.emplace_back( submeshVK );
 
         return submeshVK;
@@ -759,14 +759,14 @@ namespace fv
     {
         ImageVK* img = (ImageVK*)tex2d;
         delete img;
-        scoped_lock lk(tex2dMutex);
+        raii_lock lk(tex2dMutex);
         if ( removeFromList ) RemoveMemCmp( textures2d, tex2d );
     }
 
     void DeviceVK::deleteShader(RShader shader, bool removeFromList)
     {
         vkDestroyShaderModule( logical, (VkShaderModule) shader.resources[0], nullptr );
-        scoped_lock lk(shaderMutex);
+        raii_lock lk(shaderMutex);
         if ( removeFromList ) RemoveMemCmp( shaders, shader );
     }
 
@@ -774,7 +774,7 @@ namespace fv
     {
         SubmeshVK* s = (SubmeshVK*)submesh;
         delete s;
-        scoped_lock lk(submeshMutex);
+        raii_lock lk(submeshMutex);
         if ( removeFromList ) Remove( submeshes, submesh );
     }
 

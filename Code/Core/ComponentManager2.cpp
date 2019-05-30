@@ -1,4 +1,5 @@
 #include "PCH.h"
+#include "ComponentManager.h"
 #include "ComponentManager2.h"
 #include "Algorithm.h"
 #include "Functions.h"
@@ -13,17 +14,23 @@ namespace fv
         for ( auto& kvp : m_Components )
         {
             Vector<ComponentArray2>& objs = kvp.second;
-            for ( auto& ar : objs )
-                if ( ComponentBufferSize != 1 )
-                    delete[] ar.elements;
-                else
-                    delete ar.elements;
+			for (auto& ar : objs)
+				delete[] ar.elements;
         }
     }
+
+	void shared_ptr_deleter(Component* c)
+	{
+		componentManager()->freeComponent(c);
+	}
 
     M<Component> ComponentManager2::newComponent(u32 type)
     {
         FV_CHECK_MO();
+		auto comp = componentManager()->newComponent(type);
+		if (!comp) return nullptr;
+		return std::make_shared<Component>(comp, shared_ptr_deleter);
+
         const TypeInfo* ti = typeManager()->typeInfo(type);
         if (!ti) 
         {
@@ -31,6 +38,7 @@ namespace fv
             return nullptr;
         }
         assert( ti->hash == type );
+
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
@@ -38,7 +46,7 @@ namespace fv
             M<Component>* sharedArray = new M<Component>[ComponentBufferSize];
             for ( u32 i=0; i<ComponentBufferSize; ++i )
             {
-                Type* newComp = typeManager()->createTypes( *ti, 1 );
+				Type* newComp = (Type*)malloc(ti->size);
                 sharedArray[i] = M<Component>( sc<Component*>(newComp) );
                 freeComps.insert( sharedArray[i] );
             }

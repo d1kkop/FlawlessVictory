@@ -17,7 +17,11 @@ namespace fv
         static Vec3 forward()   { return { 0, 0, 1 }; }
         static Vec3 right()     { return { 1, 0, 0 }; }
         static Vec3 up()        { return { 0, 1, 0 }; }
+        static Vec3 back()      { return { 0, 0, -1 }; }
+        static Vec3 left()      { return { -1, 0, 0 }; }
+        static Vec3 down()      { return { 0, -1, 0 }; }
         static Vec3 zero()      { return { 0, 0, 0 }; }
+        static Vec3 one()       { return { 1, 1, 1 }; }
 
         Vec3 operator -() const { return { -x, -y, -z }; }
 

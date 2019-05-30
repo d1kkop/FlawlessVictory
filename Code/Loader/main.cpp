@@ -4,7 +4,6 @@
 #include "../Core/InputManager.h"
 #include "../Core/Functions.h"
 #include "../Core/GameObject.h"
-#include "../Core/ComponentManager2.h"
 #include "../Core/TransformManager.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/ResourceManager.h"
@@ -15,7 +14,7 @@
 #include "../System/SystemManager.h"
 using namespace fv;
 
-#define FV_LOAD_TEST_MODULE 0
+#define FV_LOAD_TEST_MODULE 1
 
 
 void shutdown()
@@ -27,7 +26,6 @@ void shutdown()
     deletePatchManager();
     // Delete components and game object manager so that refcount of resources is deduced.
     deleteComponentManager();
-    deleteComponentManager2();
     deleteGameObjectManager();
     deleteShaderCompiler();
     deleteTextureImporter();

@@ -16,7 +16,7 @@ namespace fv
 
     void LogManager::log(LogType type, const char* functionName, u64 line, const char* msg, ...)
     {
-        rscoped_lock lk(m_LogMutex);
+        rraii_lock lk(m_LogMutex);
 
         char buff[8192];
         va_list myargs;

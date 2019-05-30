@@ -14,15 +14,17 @@ namespace fv
     public:
         virtual ~Component() = default;
 
-        FV_MO FV_DLL Component* addComponent(u32 type);
+        FV_MO FV_DLL M<Component> addComponent(u32 type);
         FV_MO FV_DLL bool removeComponent(u32 type);
-        FV_DLL Component* getComponent(u32 type);
-        FV_DLL bool hasComponent(u32 type);
+
+        FV_DLL M<Component> getComponent(u32 type);
+        FV_DLL bool hasComponent( u32 type ) const;
         FV_DLL GameObject* gameObject() const;
-        FV_MO template <class T> T* addComponent();
+
+        FV_MO template <class T> M<T> addComponent();
         FV_MO template <class T> bool removeComponent();
-        template <class T> T* getComponent();
-        template <class T> bool hasComponent();
+        template <class T> M<T> getComponent();
+        template <class T> bool hasComponent() const;
 
         FV_MO virtual void serialize(TextSerializer& ts) { }
 
@@ -33,11 +35,11 @@ namespace fv
     };
 
     template <class T>
-    T* Component::addComponent() { return sc<T*>(addComponent(T::type())); }
+    M<T> Component::addComponent() { return spc<T>(addComponent(T::type())); }
     template <class T>
-    T* Component::getComponent() { return sc<T*>(getComponent(T::type())); }
+    M<T> Component::getComponent() { return spc<T>(getComponent(T::type())); }
     template <class T>
-    bool Component::hasComponent() { return hasComponent(T::type); }
+    bool Component::hasComponent() const { return hasComponent(T::type); }
     template <class T>
     bool Component::removeComponent() { return removeComponent(T::type()); }
 

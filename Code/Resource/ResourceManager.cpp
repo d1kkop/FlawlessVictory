@@ -23,8 +23,8 @@ namespace fv
 
     void ResourceManager::cleanupResourcesWithoutReferences()
     {
-        scoped_lock cl(m_ResourcesNotCopiedMutex); // Ensure reources are not copied during this check as otherwise the refcount is never 1.
-        scoped_lock lk(m_NameToResourceMutex);
+        raii_lock cl(m_ResourcesNotCopiedMutex); // Ensure reources are not copied during this check as otherwise the refcount is never 1.
+        raii_lock lk(m_NameToResourceMutex);
         for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); )
         {
             if ( it->second.resource.use_count()==1 )
@@ -105,7 +105,7 @@ namespace fv
     {
         // See if already exists
         wasAlreadyCreated = false;
-        scoped_lock lk(m_NameToResourceMutex);
+        raii_lock lk(m_NameToResourceMutex);
         auto rIt = m_NameToResource.find(filename);
         if ( rIt != m_NameToResource.end() )
         {
@@ -163,11 +163,10 @@ namespace fv
 
             // Copy list to avoid main thread to await the expensinve FileTime function while having lock.
             {
-                scoped_lock lk(m_NameToResourceMutex);
+                raii_lock lk(m_NameToResourceMutex);
                 for ( auto& kvp : m_NameToResource )
                 {
                     LoadedResourceInfo lri = kvp.second;
-                    kvp.second.loaded = true;
                     m_LoadedResourcesCopy.emplace_back( lri );
                 }
             }
@@ -184,6 +183,7 @@ namespace fv
                 {
                     ResourceToLoad rtl = { rsi.resource, rsi.path, reimport };
                     rsi.resource->load( rtl );
+                    rsi.loaded = true;
                 }
             }
 

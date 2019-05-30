@@ -134,7 +134,7 @@ namespace fv
         if ( !go ) return nullptr;
         if ( sceneMask!=0 )
         {
-            SceneComponent* sc = go->addComponent<SceneComponent>();
+            auto sc = go->addComponent<SceneComponent>();
             sc->sceneBits() |= sceneMask;
         }
         return go;

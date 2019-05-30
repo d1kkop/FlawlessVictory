@@ -21,7 +21,7 @@ namespace fv
     String LocalTime()
     {
         static Mutex timeMutex;
-        scoped_lock lk(timeMutex);
+        raii_lock lk(timeMutex);
         time_t rawtime;
         ::time (&rawtime);
         char asciitime[256];

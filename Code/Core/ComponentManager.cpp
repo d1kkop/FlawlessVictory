@@ -8,7 +8,6 @@
 
 namespace fv
 {
-
     ComponentManager::ComponentManager(u32 componentBufferSize):
         m_ComponentBufferSize(componentBufferSize)
     {
@@ -16,18 +15,10 @@ namespace fv
 
     ComponentManager::~ComponentManager()
     {
-        for ( auto& kvp : m_Components ) 
-        {
-            Vector<ComponentArray>& objs = kvp.second;
-            for ( auto& ar : objs )
-                if ( m_ComponentBufferSize != 1 )
-                    delete [] ar.elements;
-                else
-                    delete ar.elements;
-        }
+        freeAllMemory();
     }
 
-    Component* ComponentManager::newComponent(u32 type)
+    M<Component> ComponentManager::newComponent(u32 type)
     {
         FV_CHECK_MO();
         const TypeInfo* ti = typeManager()->typeInfo(type);
@@ -40,7 +31,7 @@ namespace fv
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
-            Component* newComps = sc<Component*>(typeManager()->createTypes( *ti, m_ComponentBufferSize )); // Allocates contiguous array
+			Component* newComps = (Component*) malloc( ti->size * m_ComponentBufferSize );
             assert( newComps && freeComps.size() == 0 );
             for ( u32 i=0; i<m_ComponentBufferSize; ++i )
             {
@@ -61,14 +52,20 @@ namespace fv
         u32 oldVersion = c->m_Version; // Version was already incremented when freed.
         ti->resetFunc( c ); // Calls constructor without with reused memory
         c->m_Freed = false;
-        c->m_Version = oldVersion;
+        c->m_Version = oldVersion; // Re set this, as value is set to 0 from resetFunc.
         TypeManager::setType( type, *c );
         m_NumComponents++;
-        return c;
+        return M<Component>( c, recycleFromShared );
     }
 
-    void ComponentManager::freeComponent(Component* c)
+    void ComponentManager::recycleFromShared( Component *c )
     {
+        componentManager()->recycleComponent( c );
+    }
+
+    void ComponentManager::recycleComponent( Component* c )
+    {
+		if (!c) return;
         FV_CHECK_MO();
         if ( !c->m_Freed )
         {
@@ -93,18 +90,22 @@ namespace fv
         }
     }
 
-    void ComponentManager::freeAllOfType(u32 type)
+    void ComponentManager::freeAllMemory()
     {
         FV_CHECK_MO();
-        auto& compVector = m_Components[type];
-        for ( auto& compArray : compVector )
+        for ( auto& kvp : m_Components )
         {
-            for ( u32 i = 0; i < compArray.size; i++ )
-            {
-                Component* c = (Component*)((char*)compArray.elements + i*compArray.compSize);
-                if (!c->m_Freed) freeComponent(c);
-            }
+            Vector<ComponentArray>& objs = kvp.second;
+            for ( auto& ar : objs )
+                ::free( ar.elements );
         }
+        m_Components.clear();
+        m_UpdateComponents.clear();
+        m_PhysicsComponents.clear();
+        m_NetworkComponents.clear();
+        m_DrawComponents.clear();
+        m_FreeComponents.clear();
+        m_NumComponents = 0;
     }
 
     u32 ComponentManager::numComponents() const

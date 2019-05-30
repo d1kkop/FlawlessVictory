@@ -33,7 +33,7 @@ namespace fv
                                  const PipelineFormatVK& format, const VkViewport& vp,
                                  const Vector<VkVertexInputBindingDescription>& vertexBindings,
                                  const Vector<VkVertexInputAttributeDescription>& vertexAttribs);
-;
+
 
         bool valid() const { return m_Valid; }
         struct DeviceVK& device() const { return *m_Device; }

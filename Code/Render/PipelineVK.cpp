@@ -26,7 +26,7 @@ namespace fv
         {
             return {};
         }
-        PipelineVK p;
+		PipelineVK p{};
         p.m_Valid = true;
         p.m_Device = &device;
         p.m_Pipeline = pipeline;
