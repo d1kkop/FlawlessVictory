@@ -44,7 +44,12 @@ namespace fv
         bool createStandard(const RenderConfig& rc);
         bool reCreateSwapChain(const RenderConfig& rc, VkSurfaceKHR surface);
 
-        void submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore, const Function<bool (VkCommandBuffer cb)>& callback);
+        void submitGraphicsCommand( u32 frameIndex, u32 queueIdx,
+                                    VkCommandBuffer commandBuffer,
+                                    VkSemaphore waitSemaphore, VkSemaphore signalSemaphore,
+                                    bool submit,
+                                    const Function<bool( VkCommandBuffer cb )>& callback );
+
         void submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback);
 
         // Resource creation/deletion
@@ -63,8 +68,8 @@ namespace fv
         FV_TS void unmapStagingBuffer();
 
         // Frame syncronization and submission
-        void waitForFences(u32 frameIndex);
-        void resetFences(u32 frameIndex);
+        void waitForFrameFinishFences(u32 frameIndex);
+        void resetFrameFinishFences(u32 frameIndex);
 
         // Rendering
         void prepareDrawMethods( u32 frameIdx, u32 tIdx );
@@ -101,9 +106,10 @@ namespace fv
         RenderPassVK clearColorDepthPass;
         Vector<RenderPassVK> drawMethods;
 
-        // Per frame per thread, eg 2 frames 4 threads is array size of 8.
-        Vector<VkSemaphore> frameFinishSemaphores;
+        // Per thread, for K frames behind
         Vector<Vector<VkCommandBuffer>> frameGraphicsCmds;
+        Vector<Vector<VkSemaphore>> frameFinishSemaphores;
+        Vector<Vector<VkFence>> frameFinishFences;
 
         // Per thread
         Vector<VkCommandPool> graphicsPools;
@@ -114,7 +120,6 @@ namespace fv
 
         // Per frame
         Vector<RenderImageVK> renderImages;
-        Vector<VkFence> frameFinishFences;
 
         // Pipelines
         Map<u32, PipelineVK> pipelines;

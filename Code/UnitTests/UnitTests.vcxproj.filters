@@ -34,5 +34,8 @@
     <ClInclude Include="GraphicTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C++11Tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@
 #include "../Core/JobManager.h"
 #include "../Core/TextSerializer.h"
 #include "../Core/OSLayer.h"
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 namespace fv
 {
@@ -21,27 +21,25 @@ namespace fv
         }
     }
 
-    void ResourceManager::cleanupResourcesWithoutReferences()
+    FV_TS void ResourceManager::cleanupResourcesWithoutReferences()
     {
-        raii_lock cl(m_ResourcesNotCopiedMutex); // Ensure reources are not copied during this check as otherwise the refcount is never 1.
-        raii_lock lk(m_NameToResourceMutex);
-        for ( auto it = m_NameToResource.begin(); it != m_NameToResource.end(); )
+        Lock lk(m_ResourcesMutex);
+        for ( auto it = m_Resources.begin(); it != m_Resources.end(); )
         {
-            if ( it->second.resource.use_count()==1 )
+            if ( it->second->resource.use_count()==1 )
             {
-                it = m_NameToResource.erase(it);
+                it = m_Resources.erase(it);
                 continue;
             }
             ++it;
         }
     }
 
-    void ResourceManager::initialize()
+    FV_BG void ResourceManager::initialize()
     {
         FV_CHECK_BG();
         readResourceConfig(m_Config);
-        cacheSearchDirectories();
-        cacheFiletimes();
+        cacheFiletimes( true );
         m_ResourceThread = Thread([this]()
         {
             OSSetThreadName("ResourcesLoad");
@@ -49,157 +47,142 @@ namespace fv
         });
     }
 
-    void ResourceManager::readResourceConfig(ResourceConfig& config)
+    FV_BG void ResourceManager::readResourceConfig(ResourceConfig& config)
     {
         FV_CHECK_BG();
         // TODO actually read from config
         config.loadThreadSleepTimeMs = 10;
+        config.autoCleanupUnreferencedAssets = false;
     }
 
-    void ResourceManager::cacheSearchDirectories()
+    void ResourceManager::cacheFiletimes(bool isRead)
     {
-        FV_CHECK_BG();
-        for ( auto& pathIt : fs::recursive_directory_iterator(Directories::assets().c_str()) )
+        if ( isRead )
         {
-            const Path& dir = pathIt.path();
-            Path filename = dir.filename();
-            auto fIt = m_CachedFilenameToDirectories.find(filename);
-            if ( fIt == m_CachedFilenameToDirectories.end() )
+            FV_CHECK_BG();
+        }
+        Path chachedFiletimes = Directories::intermediate() / g_CachedFiletimes;
+        TextSerializer ts( chachedFiletimes.string().c_str(), isRead );
+        ts.serializeMap( "filetimes", m_CachedFiletimes );
+        if ( !isRead ) ts.flushWrites();
+        if ( ts.hasSerializeErrors() )
+        {
+            if ( isRead )
             {
-                m_CachedFilenameToDirectories[filename] = dir;
+                LOGW( "Failed to read %s. All assets will reimport (slow process).", chachedFiletimes.c_str() );
             }
             else
             {
-                LOGW("Multiple resources with the name '%s' found. '%s' and '%s'. All must have unique name.",
-                     filename.string().c_str(), dir.string().c_str(), m_CachedFilenameToDirectories[filename].string().c_str());
+                LOGW( "Failed to write filetimes to %s.", chachedFiletimes.c_str() );
             }
         }
     }
 
-    void ResourceManager::cacheFiletimes()
-    {
-        FV_CHECK_BG();
-        Path chachedFiletimes = Directories::intermediate() / g_CachedFiletimes;
-        TextSerializer ts(chachedFiletimes.string().c_str());
-        if ( !ts.hasSerializeErrors() )
-        {
-            ts.serializeMap("filetimes", m_CachedFiletimes);
-        }
-        else
-        {
-            LOGW("Failed to load %s. All assets will reimport themselves. May take a long time...", chachedFiletimes.string().c_str());
-        }
-    }
-
-    Path ResourceManager::filenameToDirectory(const String& name) const
-    {
-        auto fIt = m_CachedFilenameToDirectories.find(name);
-        if ( fIt == m_CachedFilenameToDirectories.end() )
-        {
-            return "";
-        }
-        return fIt->second;
-    }
-
-    M<Resource> ResourceManager::findOrCreateResource(const String& filename, u32 type, bool& wasAlreadyCreated)
+    FV_TS M<Resource> ResourceManager::findOrCreateResource(const String& path, u32 type, bool& wasAlreadyCreated)
     {
         // See if already exists
-        wasAlreadyCreated = false;
-        raii_lock lk(m_NameToResourceMutex);
-        auto rIt = m_NameToResource.find(filename);
-        if ( rIt != m_NameToResource.end() )
         {
-            wasAlreadyCreated = true;
-            return rIt->second.resource;
+            wasAlreadyCreated = false;
+            Lock lk(m_ResourcesMutex);
+            auto rIt = m_Resources.find(path);
+            if ( rIt != m_Resources.end() )
+            {
+                wasAlreadyCreated = true;
+                return rIt->second->resource;
+            }
         }
+        // Did not exist, get constructor from type.
         const TypeInfo* ti = typeManager()->typeInfo(type);
-        if ( !ti ) return nullptr;
+        if ( !ti ) 
+        {
+            LOGW( "Failed to find %s.", path.c_str() );
+            return nullptr;
+        }
+        // Try construct new resource.
         M<Resource> resource = M<Resource>(sc<Resource*>(ti->createFunc(1)));
         if (!resource) return nullptr; // Type to static create function failed.
-        m_NameToResource[filename] = { resource, filenameToDirectory(filename) }; // Store while having lock.
-        resource->m_Filename = filename;
+        auto rsi = make_shared<LoadedResourceInfo>();
+        rsi->loadedOnce = false;
+        rsi->path = Directories::assets() / path;
+        rsi->resource = resource;
+        resource->m_Filename = path;
+        Lock lk(m_ResourcesMutex);
+        m_Resources[path] = rsi; // Store while having lock.
         return resource;
     }
 
-    u64 ResourceManager::getAndUpdateCachedFiletime(const String& filename, u64 newDiskTime, bool& fileTimesUpdated)
+    u64 ResourceManager::getAndUpdateCachedFiletime(const String& path, u64 newDiskTime, bool& fileTimesUpdated)
     {
+        assert(newDiskTime != -1);
+        if ( newDiskTime==-1 ) return -1; // Do not allow to store invalid disk time.
         u64 oldTime = -1;
-        auto cIt = m_CachedFiletimes.find( filename );
+        fileTimesUpdated = false;
+        auto cIt = m_CachedFiletimes.find( path );
         if ( cIt != m_CachedFiletimes.end() )
         {
             oldTime = cIt->second;
             cIt->second = newDiskTime;
-            fileTimesUpdated = true;
+            fileTimesUpdated = newDiskTime != oldTime;
         }
-        else if ( newDiskTime != -1 ) // Do not store invalid file time
+        else
         {
-            m_CachedFiletimes[filename] = newDiskTime;
+            m_CachedFiletimes[path] = newDiskTime;
             fileTimesUpdated = true;
         }
         return oldTime;
     }
 
-    void ResourceManager::writeCachedFiletimes()
-    {
-        TextSerializer ts;
-        ts.serializeMap("filetimes", m_CachedFiletimes);
-        if ( !ts.hasSerializeErrors() )
-        {
-            ts.writeToFile((Directories::intermediate() / g_CachedFiletimes).string().c_str());
-        }
-        else
-        {
-            LOGW("Failed to write file times file %s.", g_CachedFiletimes);
-        }
-    }
-
     void ResourceManager::loadThread()
     {
+        Vector<M<LoadedResourceInfo>> resourcesCopy;
+
         while ( !m_Closing )
         {
-            // Between this lock and m_ResourcesNotCopiedMutex.unlock(), resources are copied (ref count incremented).
-            // As such, a call to cleanupResourcesWithoutReferences will do nothing as refCount is at least 2.
-            m_ResourcesNotCopiedMutex.lock();
-
             // Copy list to avoid main thread to await the expensinve FileTime function while having lock.
             {
-                raii_lock lk(m_NameToResourceMutex);
-                for ( auto& kvp : m_NameToResource )
+                Lock lk(m_ResourcesMutex);
+                for ( auto& kvp : m_Resources )
                 {
-                    LoadedResourceInfo lri = kvp.second;
-                    m_LoadedResourcesCopy.emplace_back( lri );
+                    auto lri = kvp.second;
+                    resourcesCopy.emplace_back( lri );
                 }
             }
 
             // Check to see if files must reimport (or just load if is first time).
             bool fileTimesWereUpdated = false;
-            for ( auto& rsi : m_LoadedResourcesCopy )
+            for ( auto& rsi : resourcesCopy )
             {
-                if ( rsi.path.empty() ) continue; // Skip not found resources
-                u64 diskFiletime   = FileModifiedTime( rsi.path.string().c_str() );
-                u64 cachedFiletime = getAndUpdateCachedFiletime( rsi.path.filename().string(), diskFiletime, fileTimesWereUpdated );
+                if ( rsi->path.empty() ) continue; // Skip not found resources
+                u64 diskFiletime   = FileModifiedTime( rsi->path.string().c_str() );
+                bool fileTimeWasUpdated = false;
+                u64 cachedFiletime = getAndUpdateCachedFiletime( rsi->path.string(), diskFiletime, fileTimeWasUpdated );
+                if ( fileTimeWasUpdated && !fileTimesWereUpdated ) fileTimesWereUpdated = true;
                 bool reimport = ( diskFiletime != cachedFiletime || cachedFiletime == -1 );
-                if ( reimport || !rsi.loaded )
+                if ( reimport || !rsi->loadedOnce )
                 {
-                    ResourceToLoad rtl = { rsi.resource, rsi.path, reimport };
-                    rsi.resource->load( rtl );
-                    rsi.loaded = true;
+                    ResourceToLoad rtl = { rsi->resource, rsi->path, reimport };
+                    rsi->resource->load_RT( rtl );
+                    rsi->loadedOnce = true;
                 }
             }
+            resourcesCopy.clear();
 
-            // Reduces ref count. As such, calling cleanupResourcesWithoutReferences() may cleanup resources.
-            m_LoadedResourcesCopy.clear(); 
-            m_ResourcesNotCopiedMutex.unlock();
-
-            // If any file times were updated, write back cached file. So that next
-            // startup of engine, changes in mean time can be detected against cached file.
+            // If tile time was changed, write the new time so that when engine restarts all files
+            // that were changed in the mean time can be detected. As such we are not dealing
+            // with outdated 'generated' intermediate assets.
             if ( fileTimesWereUpdated )
             {
-                writeCachedFiletimes();
+                cacheFiletimes( false );
             }
 
-            // Wait for next iteration
+            // Wait for next iteration.
             Suspend( m_Config.loadThreadSleepTimeMs *.001 );
+
+            // Cleanup unreferenced assets.
+            if ( m_Config.autoCleanupUnreferencedAssets )
+            {
+                cleanupResourcesWithoutReferences();
+            }
         }
     }
 

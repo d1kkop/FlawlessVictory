@@ -21,7 +21,7 @@ namespace fv
     String LocalTime()
     {
         static Mutex timeMutex;
-        raii_lock lk(timeMutex);
+        Lock lk(timeMutex);
         time_t rawtime;
         ::time (&rawtime);
         char asciitime[256];
@@ -118,7 +118,12 @@ namespace fv
         return ::rand();
     }
 
-    void Suspend(double seconds)
+    u32 Random( u32 min, u32 max )
+    {
+        return (Random() % (max-min)) + min;
+    }
+
+    void Suspend( double seconds )
     {
         std::this_thread::sleep_for( duration<double>(seconds) );
     }

@@ -13,7 +13,7 @@ namespace fv
         FV_MO void applyPatch( const RShader& graphic );
 
     private:
-        FV_DLL void load(const ResourceToLoad& rtl) override;
+        FV_DLL void load_RT(const ResourceToLoad& rtl) override;
 
         RShader m_Graphic{};
     };

@@ -16,20 +16,21 @@ namespace fv
 
         FV_MO FV_DLL M<Component> addComponent( u32 type );
         FV_MO FV_DLL M<Component> addOrGetComponent( u32 type );
-        FV_MO FV_DLL bool hasComponent( u32 type ) const;
-        FV_MO FV_DLL M<Component> getComponent( u32 type );
         FV_MO FV_DLL bool removeComponent( u32 type );
+        FV_DLL bool hasComponent( u32 type ) const;
+        FV_DLL M<Component> getComponent( u32 type );
 
         template <class T> FV_MO M<T> addComponent();
-        template <class T> FV_MO M<T> getComponent();
-        template <class T> FV_MO bool hasComponent();
         template <class T> FV_MO bool removeComponent();
+        template <class T> M<T> getComponent();
+        template <class T> bool hasComponent();
 
         FV_MO FV_DLL void removeAllComponents();
-        FV_MO FV_DLL u32 numComponents();
-        FV_MO FV_DLL u32 prototypeId() const;
-        FV_MO FV_DLL const String& name() const;
+        FV_DLL u32 numComponents();
         FV_MO FV_DLL void serialize( TextSerializer& ts );
+
+        FV_MO FV_DLL const String& name() const;
+        FV_TC FV_DLL u32 prototypeId() const;
 
         FV_DLL Mat4& localToWorld() { return *m_LocalToWorld; }
         FV_DLL Mat4& worldToLocal() { return *m_WorldToLocal; }
@@ -45,9 +46,15 @@ namespace fv
 
 
     template <class T>
-    M<T> GameObject::addComponent()
+    FV_MO M<T> GameObject::addComponent()
     {
         return spc<T>( addComponent( T::type() ) );
+    }
+
+    template <class T>
+    FV_MO bool GameObject::removeComponent()
+    {
+        return removeComponent( T::type() );
     }
 
     template <class T>
@@ -60,12 +67,6 @@ namespace fv
     bool GameObject::hasComponent()
     {
         return hasComponent( T::type() );
-    }
-
-    template <class T>
-    bool GameObject::removeComponent()
-    {
-        return removeComponent( T::type() );
     }
 
 

@@ -768,7 +768,7 @@ namespace fv
         return -1;
     }
 
-    VkFormat HelperVK::convert(ImageFormat imgFormat)
+    VkFormat HelperVK::convert(enum class ImageFormat imgFormat)
     {
         switch ( imgFormat )
         {

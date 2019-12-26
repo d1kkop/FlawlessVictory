@@ -31,21 +31,21 @@ FV_TYPE_IMPL(BenchComponent)
 
 UTESTBEGIN(BenchLoopOverComponents)
 {
-    printf("10 Times loop over scattered and contiguous memory\n");
+    printf("10 Times loop over scattered and contiguous memory (rawPtr)\n");
     for ( u32 t = 0; t < 10; t ++ )
     {
-        u32 numItrs=1000000;
+        u32 numItrs=100000;
     #if FV_DEBUG
             numItrs=1000;
     #endif
         Vector<BenchComponent*> benchComps;
-        volatile char* garbage = new volatile char[1024];
+        Vector<volatile char*> garbages;
         for ( u32 i=0; i<numItrs; ++i )
         {
             BenchComponent* comp = new BenchComponent;
-            delete [] garbage; 
-            garbage = new volatile char[1024];
+            volatile char* garbage = new volatile char[Random(1024,1283)];
             benchComps.emplace_back( comp );
+            garbages.emplace_back( garbage );
         }
         float s, s2;
         s = RunTime();
@@ -55,6 +55,7 @@ UTESTBEGIN(BenchLoopOverComponents)
             c->multiply();
         }
         s2 = RunTime();
+        for ( auto g : garbages ) delete [] g;
         printf("Loop over 'scattered' memory %.3f us\n", (s2-s)*1000.f*1000.f);
         List<M<BenchComponent>> comps;
         for ( u32 i=0; i<numItrs; ++i )
@@ -78,18 +79,21 @@ UNITTESTEND(BenchLoopOverComponents)
 
 UTESTBEGIN(BenchLoopOverComponents2)
 {
-    printf("10 Times loop over scattered and contiguous memory\n");
+    printf("10 Times loop over scattered and contiguous memory (shrdPtr)\n");
     for ( u32 t = 0; t < 10; t++ )
     {
-        u32 numItrs=1000000;
+        u32 numItrs=100000;
     #if FV_DEBUG
         numItrs=1000;
     #endif
         double s, s2;
         List<M<BenchComponent>> comps;
+        List<volatile char*> garbages;
         for ( u32 i=0; i<numItrs; ++i )
         {
             comps.emplace_back( componentManager()->newComponent<BenchComponent>() );
+            volatile char* garbage = new char[Random(1024,1123)];
+            garbages.emplace_back( garbage );
         }
         s = RunTime();
         for ( BenchComponent& c : Itr<BenchComponent>() )
@@ -98,6 +102,7 @@ UTESTBEGIN(BenchLoopOverComponents2)
         }
         s2 = RunTime();
         comps.clear();
+        for ( auto g : garbages ) delete [] g;
         printf("Loop over contiguous array %.3f us\n", (s2-s)*1000.f*1000.f);
         componentManager()->freeAllMemory();
         // -----------------------------------------------------------------------------------
@@ -126,7 +131,7 @@ UTESTBEGIN(BenchLoopOverComponents3)
     printf("10 Times loop over scattered and contiguous memory\n");
     for ( u32 t = 0; t < 4; t++ )
     {
-        u32 numItrs=4000000;
+        u32 numItrs=400000;
     #if FV_DEBUG
         numItrs=1000;
     #endif

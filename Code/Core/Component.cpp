@@ -5,11 +5,18 @@
 
 namespace fv
 {
-    M<Component> Component::addComponent(u32 type)
+    FV_MO M<Component> Component::addComponent(u32 type)
     {
         FV_CHECK_MO();
         assert(m_GameObject);
         return m_GameObject->addComponent(type);
+    }
+
+    FV_MO bool Component::removeComponent( u32 type )
+    {
+        FV_CHECK_MO();
+        assert( m_GameObject );
+        return m_GameObject->removeComponent( type );
     }
 
     M<Component> Component::getComponent(u32 type)
@@ -22,13 +29,6 @@ namespace fv
     {
         assert(m_GameObject);
         return m_GameObject->hasComponent(type);
-    }
-
-    bool Component::removeComponent(u32 type)
-    {
-        FV_CHECK_MO();
-        assert(m_GameObject);
-        return m_GameObject->removeComponent(type);
     }
 
     GameObject* Component::gameObject() const

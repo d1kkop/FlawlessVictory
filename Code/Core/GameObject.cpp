@@ -8,14 +8,14 @@
 
 namespace fv
 {
-    GameObject::GameObject() :
+    FV_MO GameObject::GameObject() :
         m_LocalToWorld( transformManager()->newLocalToWorldMatrix() ),
         m_WorldToLocal( transformManager()->newWorldToLocalMatrix() )
     {
         FV_CHECK_MO();
     }
 
-    GameObject::~GameObject()
+    FV_MO GameObject::~GameObject()
     {
         FV_CHECK_MO();
         transformManager()->freeLocalToWorldMatrix( m_LocalToWorld );
@@ -23,7 +23,7 @@ namespace fv
         m_Components.clear();
     }
 
-    M<Component> GameObject::addComponent( u32 type )
+    FV_MO M<Component> GameObject::addComponent( u32 type )
     {
         FV_CHECK_MO();
         auto c = getComponent( type );
@@ -42,7 +42,7 @@ namespace fv
         return c;
     }
 
-    M<Component> GameObject::addOrGetComponent( u32 type )
+    FV_MO FV_DLL M<Component> GameObject::addOrGetComponent( u32 type )
     {
         FV_CHECK_MO();
         auto c = getComponent( type );
@@ -50,24 +50,7 @@ namespace fv
         return addComponent( type );
     }
 
-    M<Component> GameObject::getComponent( u32 type )
-    {
-        FV_CHECK_MO();
-        auto cIt = m_Components.find( type );
-        if ( cIt != m_Components.end() )
-        {
-            return cIt->second;
-        }
-        return nullptr;
-    }
-
-    bool GameObject::hasComponent( u32 type ) const
-    {
-        FV_CHECK_MO();
-        return m_Components.count( type )!=0;
-    }
-
-    bool GameObject::removeComponent( u32 type )
+    FV_MO FV_DLL bool GameObject::removeComponent( u32 type )
     {
         FV_CHECK_MO();
         auto cIt = m_Components.find( type );
@@ -79,31 +62,33 @@ namespace fv
         return false;
     }
 
-    void GameObject::removeAllComponents()
+    FV_DLL M<Component> GameObject::getComponent( u32 type )
     {
-        FV_CHECK_MO();
+        auto cIt = m_Components.find( type );
+        if ( cIt != m_Components.end() )
+        {
+            return cIt->second;
+        }
+        return nullptr;
+    }
+
+    FV_DLL bool GameObject::hasComponent( u32 type ) const
+    {
+        return m_Components.count( type )!=0;
+    }
+
+    FV_MO FV_DLL void GameObject::removeAllComponents()
+    {
+        FV_CHECK_MO()
         m_Components.clear();
     }
 
     u32 GameObject::numComponents()
     {
-        FV_CHECK_MO();
         return (u32)m_Components.size();
     }
 
-    u32 GameObject::prototypeId() const
-    {
-        FV_CHECK_MO();
-        return m_PrototypeId;
-    }
-
-    const String& GameObject::name() const
-    {
-        FV_CHECK_MO();
-        return m_Name;
-    }
-
-    void GameObject::serialize( TextSerializer& ts )
+    FV_MO void GameObject::serialize( TextSerializer& ts )
     {
         FV_CHECK_MO();
         if ( ts.isWriting() )
@@ -143,6 +128,17 @@ namespace fv
             }
             ts.popArray();
         }
+    }
+
+    FV_MO const String& GameObject::name() const
+    {
+        FV_CHECK_MO();
+        return m_Name;
+    }
+
+    FV_TC u32 GameObject::prototypeId() const
+    {
+        return m_PrototypeId;
     }
 
     SparseArray<GameObject>* g_GameObjectManager{};

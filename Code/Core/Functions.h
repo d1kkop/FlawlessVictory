@@ -26,6 +26,9 @@ namespace fv
     // Returns random integer.
     FV_DLL u32 Random();
 
+    // Inclusive min, exclusive max.
+    FV_DLL u32 Random(u32 min, u32 max);
+
     // Sleeps the thread for seconds.
     FV_DLL void Suspend(double seconds);
 

@@ -205,13 +205,15 @@ UTESTBEGIN(RemoveFromMapWhileIterating)
     map["Beer"] = "Apple";
     map["Knife"] = "Test";
     map["Knife2"] = "Test2";
-    for ( auto it = map.begin(); it != map.end(); ++it )
+    for ( auto it = map.begin(); it != map.end(); )
     {
         printf("Name %s\n", it->first.c_str());
         if ( it->second =="Test" )
         {
             it = map.erase(it);
+            continue;
         }
+        it++;
     }
     return true;
 }

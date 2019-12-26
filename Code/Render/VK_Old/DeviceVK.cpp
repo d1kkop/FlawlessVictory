@@ -105,9 +105,9 @@ namespace fv
         for ( auto& tex2d: textures2d ) deleteTexture2D( tex2d, false );
         for ( auto& shad: shaders) deleteShader( shad, false );
         for ( auto& subm : submeshes) deleteSubmesh( subm, false );
-        for ( auto& s : frameFinishSemaphores ) vkDestroySemaphore(logical, s, nullptr);
-        for ( auto& f : frameFinishFences ) vkDestroyFence(logical, f, nullptr);
-        for ( auto& gp : graphicsPools ) vkDestroyCommandPool(logical, gp, nullptr);
+        for ( auto& qs : frameFinishSemaphores ) for (auto& s : qs) vkDestroySemaphore(logical, s, nullptr);
+        for ( auto& qs : frameFinishFences ) for (auto& f : qs) vkDestroyFence(logical, f, nullptr);
+        for ( auto& cp : graphicsPools ) vkDestroyCommandPool(logical, cp, nullptr);
         stageBuffer.release();
         releaseSwapchain();
         vkDestroyShaderModule( logical, standardFrag, nullptr );
@@ -285,7 +285,7 @@ namespace fv
         return swapChain != nullptr;
     }
 
-    bool DeviceVK::createRenderImages(const struct RenderConfig& rc)
+    bool DeviceVK::createRenderImages( const struct RenderConfig& rc )
     {
         assert(renderImages.size()==0 && rc.numImages > 0 && rc.numSamples >= 1);
         renderImages.resize(swapChain ? swapChain->images().size() : rc.numImages);
@@ -354,26 +354,29 @@ namespace fv
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for ( u32 i=0; i<rc.numFramesBehind; ++i )
+        frameFinishSemaphores.resize(graphicsQueues.size());
+        frameFinishFences.resize(graphicsQueues.size());
+        frameGraphicsCmds.resize(graphicsQueues.size());
+        for ( u32 i=0; i<(u32)graphicsQueues.size(); ++i )
         {
-            for ( u32 j=0; j<(u32)graphicsQueues.size(); ++j )
+            frameGraphicsCmds[i].resize(rc.numFramesBehind);
+            for ( u32 i=0; i<rc.numFramesBehind; ++i )
             {
                 VkSemaphore imageFinished;
                 VkFence frameFence;
 
-                if ( vkCreateSemaphore(logical, &semaphoreInfo, nullptr, &imageFinished) != VK_SUCCESS ||
-                     vkCreateFence(logical, &fenceInfo, nullptr, &frameFence) != VK_SUCCESS )
+                if ( vkCreateSemaphore( logical, &semaphoreInfo, nullptr, &imageFinished ) != VK_SUCCESS ||
+                     vkCreateFence( logical, &fenceInfo, nullptr, &frameFence ) != VK_SUCCESS )
                 {
-                    LOGC("VK Cannot create frame sync objects.");
+                    LOGC( "VK Cannot create frame sync objects." );
                     return false;
                 }
 
-                frameFinishSemaphores.emplace_back(imageFinished);
-                frameFinishFences.emplace_back(frameFence);
+                frameFinishSemaphores[i].emplace_back( imageFinished );
+                frameFinishFences[i].emplace_back( frameFence );
             }
         }
 
-        frameGraphicsCmds.resize( rc.numFramesBehind * graphicsQueues.size() );
         return true;
     }
 
@@ -518,17 +521,20 @@ namespace fv
         stageBufferMtx.unlock();
     }
 
-    void DeviceVK::waitForFences(u32 frameIndex)
+    void DeviceVK::waitForFrameFinishFences(u32 frameIndex)
     {
-        while ( vkWaitForFences(logical, (u32)graphicsQueues.size(), 
-                                frameFinishFences.data()+frameIndex*graphicsQueues.size(),
-                                VK_TRUE, -1) == VK_TIMEOUT );
+        for ( auto& fencesPerQueue : frameFinishFences )
+        {
+            while ( vkWaitForFences( logical, 1, &fencesPerQueue[frameIndex], VK_TRUE, -1 ) == VK_TIMEOUT );
+        }
     }
 
-    void DeviceVK::resetFences(u32 frameIdex)
+    void DeviceVK::resetFrameFinishFences(u32 frameIndex)
     {
-        FV_VKCALL(vkResetFences(logical, (u32)graphicsQueues.size(),
-                                frameFinishFences.data()+frameIdex*graphicsQueues.size()));
+        for ( auto& fencesPerQueue : frameFinishFences )
+        {
+            FV_VKCALL( vkResetFences( logical, 1, &fencesPerQueue[frameIndex] ) );
+        }
     }
 
     void DeviceVK::prepareDrawMethods(u32 frameIdx, u32 tIdx)
@@ -541,70 +547,57 @@ namespace fv
 
     void DeviceVK::renderDrawMethod(DrawMethod drawMethod, VkFramebuffer fb, u32 frameIdx, u32 tIdx, VkSemaphore waitSemaphore)
     {
-        assert( fb );
-        HashMap<PipelineVK*, Vector<SubmeshVK*>>& pipeLines = renderListsMt[tIdx][(u32)drawMethod];
-        submitGraphicsCommands(frameIdx, tIdx, waitSemaphore, [&, tIdx](VkCommandBuffer cb)
-        {
-            drawMethods[ (u32) drawMethod ].begin( cb, fb, { 0, 0 }, extent, {} );
-            for ( auto& pipel : pipeLines )
-            {
-                pipel.first->bind( cb );
-                for ( auto& s : pipel.second ) // submeshes
-                {
-                    s->render( cb );
-                }
-            }
-            drawMethods[ (u32)drawMethod ].end( cb );
-            return true; // is last submit
-        });
+        //assert( fb );
+        //HashMap<PipelineVK*, Vector<SubmeshVK*>>& pipeLines = renderListsMt[tIdx][(u32)drawMethod];
+        //submitGraphicsCommands(frameIdx, tIdx, waitSemaphore, [&, tIdx](VkCommandBuffer cb)
+        //{
+        //    drawMethods[ (u32) drawMethod ].begin( cb, fb, { 0, 0 }, extent, {} );
+        //    for ( auto& pipel : pipeLines )
+        //    {
+        //        pipel.first->bind( cb );
+        //        for ( auto& s : pipel.second ) // submeshes
+        //        {
+        //            s->render( cb );
+        //        }
+        //    }
+        //    drawMethods[ (u32)drawMethod ].end( cb );
+        //    return true; // is last submit
+        //});
     }
 
-    void DeviceVK::submitGraphicsCommands(u32 frameIndex, u32 queueIdx, VkSemaphore waitSemaphore,
-                                          const Function<bool (VkCommandBuffer cb)>& callback)
+    void DeviceVK::submitGraphicsCommand( u32 frameIndex, u32 queueIdx,
+                                          VkCommandBuffer commandBuffer,
+                                          VkSemaphore waitSemaphore, VkSemaphore signalSemaphore,
+                                          bool submit,
+                                          const Function<bool( VkCommandBuffer cb )>& callback )
     {
-        auto gq = graphicsQueues[queueIdx];
-        auto gp = graphicsPools[queueIdx];
-        u32 arrIdx = frameIndex*(u32)graphicsQueues.size()+queueIdx;
-        VkSemaphore doneSemaphore = frameFinishSemaphores[arrIdx];
-        VkFence doneFence = frameFinishFences[arrIdx];
-        Vector<VkCommandBuffer>& frameCmds = frameGraphicsCmds[arrIdx];
-        assert( frameCmds.empty() );
+        callback( commandBuffer );
 
-        VkCommandBuffer cb;
-        HelperVK::allocCommandBuffer(logical, gp, cb);
-        HelperVK::beginCommandBuffer(logical, (VkCommandBufferUsageFlags)VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, cb);
-        bool isLastSubmit = callback(cb);
-        HelperVK::endCommandBuffer(cb);
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        if ( waitSemaphore )
+        if ( submit )
         {
-            VkSemaphore waitSemaphores[] = { waitSemaphore };
-            submitInfo.waitSemaphoreCount = 1;
-            submitInfo.pWaitSemaphores = waitSemaphores;
-            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
-            submitInfo.pWaitDstStageMask = waitStages;
-        }
 
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &cb;
+            VkSubmitInfo submitInfo ={};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        if ( !isLastSubmit )
-        {
-            FV_VKCALL(vkQueueSubmit(gq, 1, &submitInfo, VK_NULL_HANDLE));
-        }
-        else
-        {
-            VkSemaphore signalSemaphores[]  = { doneSemaphore };
-            submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores = signalSemaphores;
-            auto res = vkQueueSubmit(gq, 1, &submitInfo, doneFence);
-            assert(res == VK_SUCCESS);
-        }
+            if ( waitSemaphore )
+            {
+                VkSemaphore waitSemaphores[] ={ waitSemaphore };
+                submitInfo.waitSemaphoreCount = 1;
+                submitInfo.pWaitSemaphores = waitSemaphores;
+                VkPipelineStageFlags waitStages[] ={ VK_PIPELINE_STAGE_TRANSFER_BIT };
+                submitInfo.pWaitDstStageMask = waitStages;
+            }
 
-        frameCmds.emplace_back(cb);
+            if ( signalSemaphore )
+            {
+                VkSemaphore signalSemaphores[] ={ signalSemaphore };
+                submitInfo.signalSemaphoreCount = 1;
+                submitInfo.pSignalSemaphores = signalSemaphores;
+            }
+
+            auto& gq = graphicsQueues[queueIdx];
+            FV_VKCALL( vkQueueSubmit( gq, 1, &submitInfo, VK_NULL_HANDLE ) );
+        }
     }
 
     void DeviceVK::submitOnetimeTransferCommand(const Function<void (VkCommandBuffer)>& callback)

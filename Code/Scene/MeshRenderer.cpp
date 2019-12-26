@@ -11,7 +11,6 @@ namespace fv
     void MeshRenderer::setMesh(const M<Mesh> mesh)
     {
         m_Mesh = mesh;
-        m_DeviceIdx = m_Mesh->deviceIdx();
     }
 
     M<Mesh>& MeshRenderer::mesh()
@@ -31,7 +30,7 @@ namespace fv
         m_Mesh->drawMT(tIdx);
     }
 
-    void MeshRenderer::serialize(TextSerializer& ts)
+    FV_MO void MeshRenderer::serialize(TextSerializer& ts)
     {
         FV_CHECK_MO();
         if ( ts.isWriting() )

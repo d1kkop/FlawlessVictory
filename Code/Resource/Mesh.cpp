@@ -15,7 +15,7 @@ namespace fv
     {
         for ( auto sm : m_SubMeshes )
         {
-            renderManager()->deleteSubmesh( sm );
+           // renderManager()->deleteSubmesh( sm );
         }
     }
 
@@ -25,7 +25,7 @@ namespace fv
 
         for ( auto sm : m_SubMeshes )
         {
-            renderManager()->deleteSubmesh( sm );
+            // renderManager()->deleteSubmesh( sm );
         }
 
         m_SubMeshes  = std::move(submeshes);
@@ -33,12 +33,10 @@ namespace fv
         m_Materials  = std::move(materials);
     }
 
-    void Mesh::load(const ResourceToLoad& rtl)
+    void Mesh::load_RT(const ResourceToLoad& rtl)
     {
         Vector<Submesh> subMeshes;
         Vector<M<Material>> materials;
-        u32 devIdx = renderManager()->autoDeviceIdx();
-        m_DeviceIdx = devIdx;
 
         // Try get import settings from file
         MeshImportSettings settings {};
@@ -49,7 +47,7 @@ namespace fv
             // Write import file
             if ( !settings.write(rtl.loadPath) )
             {
-                LOGW("Failed to write import file for %s.", rtl.loadPath.string().c_str()); // Continue though
+                LOGW("Failed to write import file for %s.", rtl.loadPath.c_str()); // Continue though
             }
         }
         
@@ -62,7 +60,7 @@ namespace fv
             if ( !modelImporter()->reimport(rtl.loadPath, settings, subMeshes, materials) ||
                  subMeshes.empty() )
             {
-                LOGW("Failed to load %s (num submeshes %d).", rtl.loadPath.string().c_str(), (u32)subMeshes.size());
+                LOGW("Failed to load %s (num submeshes %d).", rtl.loadPath.c_str(), (u32)subMeshes.size());
                 return;
             }
         }
@@ -84,13 +82,13 @@ namespace fv
             si.extras[3] = sm.extra4.size();
             si.bones = sm.weights.size() && sm.boneIndices.size();
 
-            RSubmesh graphicSubmesh = renderManager()->createSubmesh( devIdx, sm, si );
+            RSubmesh graphicSubmesh = 0;// = renderManager()->createSubmesh( devIdx, sm, si );
             if ( !graphicSubmesh )
             {
-                LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
+                LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.c_str());
                 for ( auto& gsm : graphicSubmeshes )
                 {
-                    renderManager()->deleteSubmesh( gsm );
+                  //  renderManager()->deleteSubmesh( gsm );
                 }
                 return;
             }
@@ -115,7 +113,7 @@ namespace fv
         {
             auto& rs = m_SubMeshes[i];
             auto& md = m_Materials[i];
-            renderManager()->addToRenderList( tIdx, rs, md->data, DrawMethod::FillStandard );
+        //    renderManager()->addToRenderList( tIdx, rs, md->data, DrawMethod::FillStandard );
         }
     }
 

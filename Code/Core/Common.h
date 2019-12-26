@@ -26,7 +26,7 @@ namespace fv
     template <class Key, class Value> using HashMap = std::unordered_map<Key, Value>;
 
     using String        = std::string;
-    using Path          = std::experimental::filesystem::path;
+    using Path          = std::filesystem::path;
     using CondVar       = std::condition_variable;
 
     template <class T>
@@ -34,8 +34,8 @@ namespace fv
     using Thread        = std::thread;
     using Mutex         = std::mutex;
     using RMutex        = std::recursive_mutex;
-    using raii_lock     = std::scoped_lock<Mutex>;
-    using rraii_lock    = std::scoped_lock<RMutex>;
+    using Lock          = std::scoped_lock<Mutex>;
+    using RLock         = std::scoped_lock<RMutex>;
 
     // Managed ptr
     template <class T> using M = std::shared_ptr<T>;

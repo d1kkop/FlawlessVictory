@@ -8,6 +8,7 @@ namespace fv
     struct ResourceConfig
     {
         u32 loadThreadSleepTimeMs = 200;
+        bool autoCleanupUnreferencedAssets = true;
     };
 
     struct ResourceToLoad
@@ -21,39 +22,40 @@ namespace fv
     {
         M<Resource> resource;
         Path path;
-        bool loaded;
+        bool loadedOnce;
     };
 
+    /*  The ResourceManager converts/loads raw resources to binary (generated) resources.
+        It keeps track of filetimes so that a consequative engine startup detects 
+        changed raw resources.
+        It also auto reloads resources when the engine is running and raw assets are changed. */
     class ResourceManager
     {
     public:
         ~ResourceManager();
         FV_TS FV_DLL void cleanupResourcesWithoutReferences();
 
+        // Path must be relative to Assets folder.
         template <class T>
-        FV_TS M<T> load(const String& filename);
+        FV_TS M<T> load(const String& path);
 
         template <class T>
-        FV_TS M<T> create(const String& filename, bool& wasAlreadyCreated);
+        FV_TS M<T> create(const String& path, bool& wasAlreadyCreated);
 
     private:
         FV_BG FV_DLL void initialize(); 
+        FV_TS FV_DLL M<Resource> findOrCreateResource(const String& path, u32 type, bool& wasAlreadyCreated);
         FV_BG void readResourceConfig(ResourceConfig& config);
-        FV_BG void cacheSearchDirectories();
-        FV_BG void cacheFiletimes();
-        FV_TS Path filenameToDirectory(const String& filename) const; // Thread safe because directories are cached on startup.
-        FV_TS FV_DLL M<Resource> findOrCreateResource(const String& filename, u32 type, bool& wasAlreadyCreated);
-        u64  getAndUpdateCachedFiletime( const String& filename, u64 newDiskTime, bool& fileTimesUpdated );
-        void writeCachedFiletimes();
+        // Writes or reads cached filetimes. Each raw resource has an associated filetime.
+        void cacheFiletimes(bool isRead);
+        // Sets new filetime and returns old (if existed, else -1 is returned).
+        u64  getAndUpdateCachedFiletime( const String& path, u64 newDiskTime, bool& fileTimesUpdated );
         void loadThread();
 
-        Map<Path, LoadedResourceInfo> m_NameToResource;
-        Vector<LoadedResourceInfo> m_LoadedResourcesCopy;
-        Map<Path, Path> m_CachedFilenameToDirectories;
+        Map<Path, M<LoadedResourceInfo>> m_Resources;
         Map<String, u64> m_CachedFiletimes;
         Thread m_ResourceThread;
-        Mutex m_NameToResourceMutex;
-        Mutex m_ResourcesNotCopiedMutex;
+        Mutex  m_ResourcesMutex;
         ResourceConfig m_Config{};
         Atomic<bool> m_Closing = false;
 
@@ -62,23 +64,23 @@ namespace fv
 
 
     template <class T>
-    M<T> ResourceManager::load(const String& filename)
+    FV_TS M<T> ResourceManager::load(const String& path)
     {
         bool wasAlreadyCreated;
-        return spc<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
+        return spc<T>( findOrCreateResource(path, T::type(), wasAlreadyCreated) );
     }
 
     template <class T>
-    M<T> ResourceManager::create(const String& filename, bool& wasAlreadyCreated)
+    FV_TS M<T> ResourceManager::create(const String& path, bool& wasAlreadyCreated)
     {
-        return spc<T>( findOrCreateResource(filename, T::type(), wasAlreadyCreated) );
+        return spc<T>( findOrCreateResource(path, T::type(), wasAlreadyCreated) );
     }
 
     FV_DLL ResourceManager* resourceManager();
     FV_DLL void deleteResourceManager();
 
     template <class T>
-    M<T> Load(const String& filename)
+    FV_TS M<T> Load(const String& filename)
     {
         return resourceManager()->load<T>(filename);
     }

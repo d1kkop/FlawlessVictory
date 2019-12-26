@@ -11,12 +11,12 @@ namespace fv
     LogManager::LogManager()
     {
         Path filename = Format( "FVLOG_%ld.txt", (u64)(EpochTime()*1000) );
-        m_Filename = ( Directories::log() / filename ).string();
+        m_Filename = (Directories::log() / filename).string();
     }
 
     void LogManager::log(LogType type, const char* functionName, u64 line, const char* msg, ...)
     {
-        rraii_lock lk(m_LogMutex);
+        RLock lk(m_LogMutex);
 
         char buff[8192];
         va_list myargs;

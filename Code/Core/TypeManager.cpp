@@ -45,7 +45,7 @@ namespace fv
         return typeInfo(name)->hash;
     }
 
-    const TypeInfo* TypeManager::typeInfo(const char* name)
+    FV_TS const TypeInfo* TypeManager::typeInfo(const char* name)
     {
         auto nIt = m_NameToType.find(name);
         if ( nIt != m_NameToType.end() )
@@ -56,7 +56,7 @@ namespace fv
         return nullptr;
     }
 
-    const TypeInfo* TypeManager::typeInfo(u32 hash)
+    FV_TS const TypeInfo* TypeManager::typeInfo(u32 hash)
     {
         auto nIt = m_HashToType.find(hash);
         if ( nIt != m_HashToType.end() )

@@ -14,17 +14,17 @@ namespace fv
 
     Shader::~Shader()
     {
-        renderManager()->deleteShader(m_Graphic);
+      //  renderManager()->deleteShader(m_Graphic);
     }
 
     void Shader::applyPatch(const RShader& graphic)
     {
         FV_CHECK_MO();
-        renderManager()->deleteShader(m_Graphic);
+        // renderManager()->deleteShader(m_Graphic);
         m_Graphic = graphic;
     }
 
-    void Shader::load(const ResourceToLoad& rtl)
+    void Shader::load_RT(const ResourceToLoad& rtl)
     {
         Vector<char> code;
 
@@ -43,7 +43,7 @@ namespace fv
 
         if ( !code.empty() )
         {
-            RShader graphic = renderManager()->createShader( 0, code.data(), (u32)code.size() );
+            RShader graphic ;//= renderManager()->createShader( 0, code.data(), (u32)code.size() );
             if ( graphic.device != -1 )
             {
                 Patch* p = patchManager()->createPatch(PatchType::ShaderCode);

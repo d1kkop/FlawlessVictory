@@ -1,9 +1,11 @@
+#undef NDEBUG
 #include "UnitTest.h"
 #include "MemoryTests.h"
 #include "MathTests.h"
 #include "TimeTests.h"
 #include "Bechmarks.h"
 #include "GraphicTests.h"
+#include "C++11Tests.h"
 #include "../Core/Reflection.h"
 #include "../Core/Component.h"
 #include <iostream>

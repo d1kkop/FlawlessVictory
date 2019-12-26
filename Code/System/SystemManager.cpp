@@ -27,9 +27,9 @@ namespace fv
         resourceManager()->initialize();
 
         // Initialize graphics.
-        if ( !renderManager()->initGraphics() )
+      //  if ( !renderManager()->initGraphics() )
         {
-            return false;
+     //       return false;
         }
 
         StopBeginFase();
@@ -124,13 +124,13 @@ namespace fv
 
 
             Mat4 view = Mat4::identity();
-            renderManager()->drawFrame( view );
+        //    renderManager()->drawFrame( view );
 
             // Update timings
             TimeUpdate();
         }
 
-        renderManager()->waitOnDeviceIdle();
+        // renderManager()->finishFrame();
     }
 
     SystemManager* g_SystemManager {};

@@ -1,97 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Managers">
-      <UniqueIdentifier>{9ec88728-1529-47b7-a8d8-d9f5f8822296}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DeviceParts">
-      <UniqueIdentifier>{3a0a2efd-ada8-4d5d-9851-37483575bef5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Components">
       <UniqueIdentifier>{2810b301-b756-467c-9e52-d478686e445b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VK">
+      <UniqueIdentifier>{64915bce-0160-4d6a-9778-7b9d2fd86261}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VK\Classes">
+      <UniqueIdentifier>{04fa6ef8-ffcd-4b57-aa20-fac51e41749d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Render.h" />
-    <ClInclude Include="RenderManagerVK.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderManager.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="HelperVK.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderImageVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
-    <ClInclude Include="SwapChainVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
-    <ClInclude Include="PipelineVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
-    <ClInclude Include="BufferVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
-    <ClInclude Include="SubmeshVK.h">
-      <Filter>DeviceParts</Filter>
-    </ClInclude>
     <ClInclude Include="RenderComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="RenderPassVK.h">
-      <Filter>DeviceParts</Filter>
+    <ClInclude Include="VK\RenderManagerVK.h">
+      <Filter>VK</Filter>
     </ClInclude>
-    <ClInclude Include="ImageVK.h">
-      <Filter>DeviceParts</Filter>
+    <ClInclude Include="VK\IncVulkan.h">
+      <Filter>VK</Filter>
     </ClInclude>
-    <ClInclude Include="IncVulkan.h">
-      <Filter>Managers</Filter>
-    </ClInclude>
+    <ClInclude Include="RenderManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderManager.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderManagerVK.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="HelperVK.cpp">
-      <Filter>Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="DeviceVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderImageVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="SwapChainVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="PipelineVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="BufferVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="SubmeshVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderPassVK.cpp">
-      <Filter>DeviceParts</Filter>
-    </ClCompile>
     <ClCompile Include="RenderComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="ImageVK.cpp">
-      <Filter>DeviceParts</Filter>
+    <ClCompile Include="VK\RenderManagerVK.cpp">
+      <Filter>VK</Filter>
     </ClCompile>
-    <ClCompile Include="IncVulkan.cpp">
-      <Filter>Managers</Filter>
+    <ClCompile Include="VK\IncVulkan.cpp">
+      <Filter>VK</Filter>
     </ClCompile>
+    <ClCompile Include="RenderManager.cpp" />
   </ItemGroup>
 </Project>

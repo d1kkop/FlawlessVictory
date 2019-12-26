@@ -32,16 +32,14 @@ namespace fv
     /*  Retrieving type info from typemanager is thread safe as it is initialized upon static object initialization. No further changes
         are then made to the registered types anymore. 
         The TypeManager is designed for unknown types that are to be created in different user DLL's. As such, the type can be mapped from 
-        integer to a static create and placement new operator.
-        Using an enum would not suffice as the types need to be known beforehand. */
+        integer to a static create and placement new operator. 
+        Eg. With the help of reflection you can do: ExampleComponent::create( kComponents ) or if ( ExampleComponent::type() == activeComponent->type() ).. */
     class TypeManager
     {
     public:
         FV_DLL u32 registerType(const char* typeName, u32 size, CreateFunc cfunc, ResetFunc rfunc, u32 flags);
-        FV_DLL const TypeInfo* typeInfo(const char* typeName);
-        FV_DLL const TypeInfo* typeInfo(u32 hash);
-        FV_DLL Type* createTypes(u32 type, u32 num);
-        FV_DLL Type* createTypes(const TypeInfo&, u32 num);
+        FV_TC FV_DLL const TypeInfo* typeInfo(const char* typeName);
+        FV_TC FV_DLL const TypeInfo* typeInfo(u32 hash);
 
         static void setType( u32 type, Type& t );
 

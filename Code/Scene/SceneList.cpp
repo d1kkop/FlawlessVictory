@@ -39,11 +39,11 @@ namespace fv
                 ts.endArrayElement();
             }
             ts.popArray();
-            ts.writeToFile( (Directories::scenes() / filename).string().c_str() );
+            ts.flushWrites( &(Directories::scenes() / filename).string() );
         }
         else
         {
-            TextSerializer ts( (Directories::scenes() / filename).string().c_str() );
+            TextSerializer ts( (Directories::scenes() / filename).string(), true );
             if (ts.hasSerializeErrors()) return;
             try
             {

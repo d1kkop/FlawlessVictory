@@ -17,7 +17,7 @@ namespace fv
 
     private:
         // From different thread
-        FV_DLL void load(const ResourceToLoad& rtl) override;
+        FV_DLL void load_RT(const ResourceToLoad& rtl) override;
 
         u32 m_Width  = 0;
         u32 m_Height = 0;

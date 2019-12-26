@@ -12,51 +12,59 @@ namespace fv
         m_Active = m_Stack.top();
     }
 
-    TextSerializer::TextSerializer(const char* inputFilePath):
-        m_IsWriting(false)
+    TextSerializer::TextSerializer(const String& path, bool isRead):
+        m_Path(path),
+        m_IsWriting(!isRead)
     {
-        ifstream file( inputFilePath );
-        if ( file.is_open() )
+        if ( !m_IsWriting )
         {
-            try
+            ifstream file( path );
+            if ( file.is_open() )
             {
-            #if FV_NLOHMANJSON
-                file >> m_Document;
-            #else
+                try
+                {
+                #if FV_NLOHMANJSON
+                    file >> m_Document;
+                #else
                 #error no implementation
-            #endif
-                file.close();
-                m_Stack.push(&m_Document);
-                m_Active = m_Stack.top();
+                #endif
+                    file.close();
+                    m_Stack.push( &m_Document );
+                    m_Active = m_Stack.top();
+                }
+                catch ( ... )
+                {
+                    if ( file.is_open() ) file.close();
+                    m_HasSerializeErrors = true;
+                }
             }
-            catch (...)
-            {
-                if ( file.is_open() ) file.close();
-                m_HasSerializeErrors = true;
-            }
-        } else m_HasSerializeErrors = true;
+            else m_HasSerializeErrors = true;
+        }
     }
 
     TextSerializer::~TextSerializer()
-    {
-    }
+    = default;
 
-    void TextSerializer::writeToFile(const char* outputFilePath)
+    void TextSerializer::flushWrites(const String* outputPathOverride)
     {
         if ( !m_IsWriting )
         {
             LOGW("Tried to write to a serializer that was opened for reading.");
             m_HasSerializeErrors = true;
+            assert(false);
             return;
         }
 
-        ofstream file( outputFilePath );
+        String outputPath = m_Path;
+        if ( outputPathOverride) outputPath = *outputPathOverride;
+
+        ofstream file( outputPath );
         if ( file.is_open() )
         {
             try
             {
             #if FV_NLOHMANJSON
-                file << setw(4) << m_Document << endl;
+                file /*<< setw(4) */<< m_Document << endl;
             #else
                 #error no implementation
             #endif

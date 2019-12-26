@@ -7,7 +7,7 @@
 
 namespace fv
 {
-    enum JobState
+    enum class JobState
     {
         Scheduled,
         InProgress,

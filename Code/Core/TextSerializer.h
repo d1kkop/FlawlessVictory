@@ -13,9 +13,9 @@ namespace fv
     {
     public:
         FV_DLL TextSerializer(); // This assumes to write a file.
-        FV_DLL TextSerializer(const char* inputFilePath); // This assumes to read a file.
+        FV_DLL TextSerializer(const String& path, bool isRead);
         FV_DLL ~TextSerializer();
-        FV_DLL void writeToFile( const char* outputFilePath );
+        FV_DLL void flushWrites(const String* outputPathOverride=nullptr);
 
         FV_DLL void pushArray(const String& name);
         FV_DLL bool beginArrayElement();
@@ -41,8 +41,9 @@ namespace fv
     #if FV_NLOHMANJSON
         json m_Document;
         Stack<json*> m_Stack;
-        json* m_Active;
+        json* m_Active = {};
         Stack<json::iterator> m_ArrayIt;
+        String m_Path;
     #endif
     };
 

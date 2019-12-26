@@ -23,7 +23,7 @@ namespace fv
     {   
         Path importPath = Directories::intermediateMeshes() / path.filename();
         importPath.replace_extension(Assets::importExtension());
-        TextSerializer importSerializer( importPath.string().c_str() );
+        TextSerializer importSerializer( importPath.string(), true );
         if ( !importSerializer.hasSerializeErrors() )
         {
             serialize(importSerializer);
@@ -37,7 +37,7 @@ namespace fv
         importPath.replace_extension(Assets::importExtension());
         TextSerializer importSerializer;
         serialize(importSerializer);
-        importSerializer.writeToFile(importPath.string().c_str());
+        importSerializer.flushWrites(&importPath.string());
         return !importSerializer.hasSerializeErrors();
     }
 

@@ -2,6 +2,7 @@
 
 #define FV_MO /* A mono function that only be called from main thread. */
 #define FV_TS /* A thread safe function. Can be called from any thread. */
+#define FV_TC /* Thread safe in a sense that the data returned from this function is set from the constructor. */
 #define FV_BG /* A function that must be called before begin fase has marked over. */
 
 #if _DEBUG
