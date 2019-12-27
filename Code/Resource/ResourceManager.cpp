@@ -21,20 +21,6 @@ namespace fv
         }
     }
 
-    FV_TS void ResourceManager::cleanupResourcesWithoutReferences()
-    {
-        Lock lk(m_ResourcesMutex);
-        for ( auto it = m_Resources.begin(); it != m_Resources.end(); )
-        {
-            if ( it->second->resource.use_count()==1 )
-            {
-                it = m_Resources.erase(it);
-                continue;
-            }
-            ++it;
-        }
-    }
-
     FV_BG void ResourceManager::initialize()
     {
         FV_CHECK_BG();
@@ -53,6 +39,20 @@ namespace fv
         // TODO actually read from config
         config.loadThreadSleepTimeMs = 10;
         config.autoCleanupUnreferencedAssets = false;
+    }
+
+    FV_TS void ResourceManager::cleanupResourcesWithoutReferences()
+    {
+        Lock lk( m_ResourcesMutex );
+        for ( auto it = m_Resources.begin(); it != m_Resources.end(); )
+        {
+            if ( it->second->resource.use_count()==1 )
+            {
+                it = m_Resources.erase( it );
+                continue;
+            }
+            ++it;
+        }
     }
 
     void ResourceManager::cacheFiletimes(bool isRead)

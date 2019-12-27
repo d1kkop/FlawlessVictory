@@ -39,7 +39,9 @@ class TestUpdComponent: public TestComponent
 public:
     TestUpdComponent() { }
 
-    ~TestUpdComponent() override { }
+    ~TestUpdComponent() override { 
+        int j = 0;
+    }
     void serialize( TextSerializer& ts ) override { }
 };
 FV_TYPE_IMPL(TestUpdComponent)

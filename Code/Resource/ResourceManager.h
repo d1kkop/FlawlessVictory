@@ -33,6 +33,12 @@ namespace fv
     {
     public:
         ~ResourceManager();
+
+    private:
+        FV_BG FV_DLL void initialize(); 
+        FV_BG void readResourceConfig(ResourceConfig& config);
+
+    public:
         FV_TS FV_DLL void cleanupResourcesWithoutReferences();
 
         // Path must be relative to Assets folder.
@@ -43,11 +49,11 @@ namespace fv
         FV_TS M<T> create(const String& path, bool& wasAlreadyCreated);
 
     private:
-        FV_BG FV_DLL void initialize(); 
         FV_TS FV_DLL M<Resource> findOrCreateResource(const String& path, u32 type, bool& wasAlreadyCreated);
-        FV_BG void readResourceConfig(ResourceConfig& config);
+
         // Writes or reads cached filetimes. Each raw resource has an associated filetime.
         void cacheFiletimes(bool isRead);
+
         // Sets new filetime and returns old (if existed, else -1 is returned).
         u64  getAndUpdateCachedFiletime( const String& path, u64 newDiskTime, bool& fileTimesUpdated );
         void loadThread();

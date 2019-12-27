@@ -31,27 +31,30 @@ namespace fv
         auto& freeComps = m_FreeComponents[type];
         if ( freeComps.empty() )
         {
-			Component* newComps = (Component*) malloc( ti->size * m_ComponentBufferSize );
+			Component* newComps = rc<Component*>( malloc( ti->size * m_ComponentBufferSize ) );
             assert( newComps && freeComps.size() == 0 );
             for ( u32 i=0; i<m_ComponentBufferSize; ++i )
             {
-                Component* c = (Component*)( (char*)newComps + i*ti->size );
+                Component* c = rc<Component*>( (char*)newComps + i*ti->size );
+                // Need to set this as we deliberatly do not call the constructor.
+                // The function inUse() checks the m_Freed field to see if it is in use.
+                c->m_Version = 0;
+                c->m_Freed = true;
                 freeComps.insert( c );
             }
             auto& comps = m_Components[type];
             ComponentArray ca = { newComps, m_ComponentBufferSize, ti->size };
             comps.emplace_back( ca ); 
             // check base types
-            if ( ti->flags & FV_UPDATE ) m_UpdateComponents[type].emplace_back( ca );
+            if ( ti->flags & FV_UPDATE )  m_UpdateComponents[type].emplace_back( ca );
             if ( ti->flags & FV_PHYSICS ) m_PhysicsComponents[type].emplace_back( ca );
             if ( ti->flags & FV_NETWORK ) m_NetworkComponents[type].emplace_back( ca );
-            if ( ti->flags & FV_DRAW ) m_DrawComponents[type].emplace_back( ca );
+            if ( ti->flags & FV_DRAW )    m_DrawComponents[type].emplace_back( ca );
         }
         Component* c = *freeComps.begin();
         freeComps.erase(freeComps.begin());
         u32 oldVersion = c->m_Version; // Version was already incremented when freed.
-        ti->resetFunc( c ); // Calls constructor without with reused memory
-        c->m_Freed = false;
+        ti->resetFunc( c ); // Calls constructor with reused memory
         c->m_Version = oldVersion; // Re set this, as value is set to 0 from resetFunc.
         TypeManager::setType( type, *c );
         m_NumComponents++;

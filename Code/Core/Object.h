@@ -14,7 +14,7 @@ namespace fv
 
     private:
         u32 m_Version = 0;
-        bool m_Freed  = true;
+        bool m_Freed  = false;
 
         template <class T>
         friend class SparseArray;
