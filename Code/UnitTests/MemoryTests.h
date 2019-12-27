@@ -220,3 +220,22 @@ UTESTBEGIN(RemoveFromMapWhileIterating)
     return true;
 }
 UNITTESTEND(RemoveFromMapWhileIterating)
+
+
+UTESTBEGIN( AllocateLots )
+{
+    u32 k = 10000;
+#if _DEBUG
+    k = 100000;
+#endif
+    printf("Allocate %d components\n", k);
+    float t = RunTime();
+    for ( u32 i=0; i<k; i++ )
+    {
+        auto c = componentManager()->newComponent<TestComponent>();
+    }
+    float f = RunTime()-t;
+    printf("Time %fms\n", f*1000);
+    return true;
+}
+UNITTESTEND( AllocateLots )

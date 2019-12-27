@@ -3,7 +3,7 @@
         {
             "components": [
                 {
-                    "filename": "cow.obj",
+                    "filename": "Meshes/cow.obj",
                     "name": "MeshRenderer",
                     "type": 3025127384
                 },
@@ -36,6 +36,11 @@
                 {
                     "name": "PlayerComponent",
                     "type": 219967790
+                },
+                {
+                    "filename": "Meshes/cow.obj",
+                    "name": "MeshRenderer",
+                    "type": 3025127384
                 },
                 {
                     "name": "SceneComponent",

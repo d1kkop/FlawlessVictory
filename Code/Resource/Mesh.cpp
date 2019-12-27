@@ -85,7 +85,7 @@ namespace fv
             RSubmesh graphicSubmesh = 0;// = renderManager()->createSubmesh( devIdx, sm, si );
             if ( !graphicSubmesh )
             {
-                LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.c_str());
+                LOGW("Failed to update one or more submeshes of mesh %s. Complete update discarded.", rtl.loadPath.string().c_str());
                 for ( auto& gsm : graphicSubmeshes )
                 {
                   //  renderManager()->deleteSubmesh( gsm );

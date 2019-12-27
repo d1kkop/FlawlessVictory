@@ -29,6 +29,9 @@ namespace fv
     // Inclusive min, exclusive max.
     FV_DLL u32 Random(u32 min, u32 max);
 
+    // Inclusive min, inclusive max.
+    FV_DLL float Randomf( float min, float max );
+
     // Sleeps the thread for seconds.
     FV_DLL void Suspend(double seconds);
 
@@ -42,13 +45,16 @@ namespace fv
     FV_DLL bool LoadBinaryFile(const char* path, Vector<char>& data);
 
     // Opens a file.
-    FV_DLL bool OpenFile( FILE*& file, const char* path, const char* mode );
+    FV_DLL bool FileOpen( FILE*& file, const char* path, const char* mode );
 
     // Closes a file.
-    FV_DLL void CloseFile( FILE* file, bool flush = false );
+    FV_DLL void FileClose( FILE* file, bool flush = false );
 
     // Returns file's last modified time.
     FV_DLL u64 FileModifiedTime( const char* path );
+
+    // Returns if file exists.
+    FV_DLL bool FileExists( const char* path );
 
     // Useful for destructors that depend on manager that may not exist anymore.
     FV_DLL bool IsEngineClosing();

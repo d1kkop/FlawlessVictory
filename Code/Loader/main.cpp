@@ -14,7 +14,7 @@
 #include "../System/SystemManager.h"
 using namespace fv;
 
-#define FV_LOAD_TEST_MODULE 1
+#define FV_LOAD_TEST_MODULE 0
 
 
 void shutdown()

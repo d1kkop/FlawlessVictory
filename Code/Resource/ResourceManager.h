@@ -21,8 +21,10 @@ namespace fv
     struct LoadedResourceInfo
     {
         M<Resource> resource;
-        Path path;
-        bool loadedOnce;
+        Path diskPath;  // Path to file on disk
+        Path assetPath; // Path relative to Assets folder
+        bool triedLoadOnce = false;
+        bool pathExists = false;
     };
 
     /*  The ResourceManager converts/loads raw resources to binary (generated) resources.

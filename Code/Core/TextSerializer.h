@@ -51,6 +51,8 @@ namespace fv
     template <class T>
     void TextSerializer::serialize(const String& key, T& value)
     {
+        if ( m_HasSerializeErrors ) return;
+    #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
             (*m_Active)[key] = value;
@@ -59,11 +61,16 @@ namespace fv
         {
             value = (*m_Active)[key];
         }
+    #else
+        #error no implementation
+    #endif
     }
 
     template <>
     inline void TextSerializer::serialize(const String& key, Vec3& v)
     {
+        if ( m_HasSerializeErrors ) return;
+    #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
             (*m_Active)[key] = { v.x, v.y, v.z };
@@ -72,16 +79,23 @@ namespace fv
         {
             auto& val = (*m_Active)[key];
             if ( !(val.is_array() && val.size()==3) )
-                throw;
+            {
+                m_HasSerializeErrors = true;
+                return;
+            }
             v.x = val[0];
             v.y = val[1];
             v.z = val[2];
         }
+    #else
+        #error no implementation
+    #endif
     }
 
     template <>
     inline void TextSerializer::serialize(const String& key, Quat& v)
     {
+        if ( m_HasSerializeErrors ) return;
     #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
@@ -91,7 +105,10 @@ namespace fv
         {
             auto& val = (*m_Active)[key];
             if ( !(val.is_array() && val.size()==4) )
-                throw;
+            {
+                m_HasSerializeErrors = true;
+                return;
+            }
             v.x = val[0];
             v.y = val[1];
             v.z = val[2];
@@ -108,6 +125,7 @@ namespace fv
     template <class T>
     void TextSerializer::serializeVector(const String& key, Vector<T>& value)
     {
+        if ( m_HasSerializeErrors ) return;
         #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {
@@ -132,6 +150,7 @@ namespace fv
     template <class K, class V>
     void TextSerializer::serializeMap(const String& key, Map<K, V>& value)
     {
+        if ( m_HasSerializeErrors ) return;
         #if FV_NLOHMANJSON
         if ( m_IsWriting )
         {

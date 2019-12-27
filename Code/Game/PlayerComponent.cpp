@@ -6,8 +6,8 @@ namespace game
 
     void PlayerComponent::serialize(TextSerializer& ts)
     {
-        m_FragShader = resourceManager()->load<Shader>("sample.frag");
-        m_VertShader = resourceManager()->load<Shader>("sample.vert");
+        m_FragShader = resourceManager()->load<Shader>("Shaders/sample.frag");
+        m_VertShader = resourceManager()->load<Shader>("Shaders/sample.vert");
     }
 
     void PlayerComponent::updateMT(float t)

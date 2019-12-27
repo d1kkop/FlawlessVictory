@@ -18,7 +18,7 @@ extern "C"
             {
                 u64 scene = sceneManager()->addScene( "MainScene" );
                 auto g = NewGameObject(scene);
-                g->addComponent<MeshRenderer>()->setMesh(Load<Mesh>("cow.obj"));
+                g->addComponent<MeshRenderer>()->setMesh(Load<Mesh>("Meshes/cow.obj"));
                 auto c = NewGameObject(scene);
                 c->addComponent<Camera>();
                 c->addComponent<PlayerComponent>();

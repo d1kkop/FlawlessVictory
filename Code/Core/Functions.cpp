@@ -123,6 +123,12 @@ namespace fv
         return (Random() % (max-min)) + min;
     }
 
+    float Randomf( float min, float max )
+    {
+        float r = (float)Random() / RAND_MAX;
+        return r * (max - min) + min;
+    }
+
     void Suspend( double seconds )
     {
         std::this_thread::sleep_for( duration<double>(seconds) );
@@ -172,17 +178,17 @@ namespace fv
         return true;
     }
 
-    bool OpenFile(FILE*& file, const char* path, const char* mode)
+    bool FileOpen(FILE*& file, const char* path, const char* mode)
     {
     #if FV_SECURE_CRT
         fopen_s( &file, path, mode );
     #else
-        f = fopen(path, mode);
+        file = fopen(path, mode);
     #endif
-        return file;
+        return file != nullptr;
     }
 
-    void CloseFile(FILE* file, bool flush)
+    void FileClose(FILE* file, bool flush)
     {
         if (!file) return;
         if ( flush ) fflush(file);
@@ -197,6 +203,14 @@ namespace fv
             return (u64)st.st_mtime;
         }
         return -1;
+    }
+
+    bool FileExists( const char* path )
+    {
+        ifstream f( path );
+        return f.good();
+        /*struct stat st;
+        return stat(path, &st) == 0;*/
     }
 
     bool IsEngineClosing()

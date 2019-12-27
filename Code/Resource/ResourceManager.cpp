@@ -69,7 +69,7 @@ namespace fv
         {
             if ( isRead )
             {
-                LOGW( "Failed to read %s. All assets will reimport (slow process).", chachedFiletimes.c_str() );
+                LOGW( "%s not found. All assets will reimport (slow process). If this is the first run, then this is expected behaviour.", chachedFiletimes.string().c_str() );
             }
             else
             {
@@ -102,8 +102,8 @@ namespace fv
         M<Resource> resource = M<Resource>(sc<Resource*>(ti->createFunc(1)));
         if (!resource) return nullptr; // Type to static create function failed.
         auto rsi = make_shared<LoadedResourceInfo>();
-        rsi->loadedOnce = false;
-        rsi->path = Directories::assets() / path;
+        rsi->diskPath  = Directories::assets() / path;
+        rsi->assetPath = path;
         rsi->resource = resource;
         resource->m_Filename = path;
         Lock lk(m_ResourcesMutex);
@@ -113,22 +113,21 @@ namespace fv
 
     u64 ResourceManager::getAndUpdateCachedFiletime(const String& path, u64 newDiskTime, bool& fileTimesUpdated)
     {
-        assert(newDiskTime != -1);
+        fileTimesUpdated = false;
         if ( newDiskTime==-1 ) return -1; // Do not allow to store invalid disk time.
         u64 oldTime = -1;
-        fileTimesUpdated = false;
         auto cIt = m_CachedFiletimes.find( path );
         if ( cIt != m_CachedFiletimes.end() )
         {
             oldTime = cIt->second;
             cIt->second = newDiskTime;
-            fileTimesUpdated = newDiskTime != oldTime;
         }
         else
         {
             m_CachedFiletimes[path] = newDiskTime;
-            fileTimesUpdated = true;
         }
+        // FiletimesUpdated means that it was written to the list, the newDiskTime might however be the same as the oldTime.
+        fileTimesUpdated = true;
         return oldTime;
     }
 
@@ -152,17 +151,29 @@ namespace fv
             bool fileTimesWereUpdated = false;
             for ( auto& rsi : resourcesCopy )
             {
-                if ( rsi->path.empty() ) continue; // Skip not found resources
-                u64 diskFiletime   = FileModifiedTime( rsi->path.string().c_str() );
+                // Do no disk access if we already know that this path does not exists.
+                if ( rsi->triedLoadOnce && !rsi->pathExists )
+                {
+                    continue;
+                }
+                if ( !FileExists(rsi->diskPath.string().c_str()) )
+                {
+                    LOGW( "Failed to find disk path %s. Cannot load resource.", rsi->diskPath.string().c_str() );
+                    // Mark tried to load it once, this file cannot be found, do no longer attempt to find it.
+                    rsi->triedLoadOnce = true;
+                    rsi->pathExists = false;
+                    continue;
+                }
+                u64 diskFiletime = FileModifiedTime( rsi->diskPath.string().c_str() );
                 bool fileTimeWasUpdated = false;
-                u64 cachedFiletime = getAndUpdateCachedFiletime( rsi->path.string(), diskFiletime, fileTimeWasUpdated );
+                u64 cachedFiletime = getAndUpdateCachedFiletime( rsi->assetPath.string(), diskFiletime, fileTimeWasUpdated );
                 if ( fileTimeWasUpdated && !fileTimesWereUpdated ) fileTimesWereUpdated = true;
                 bool reimport = ( diskFiletime != cachedFiletime || cachedFiletime == -1 );
-                if ( reimport || !rsi->loadedOnce )
+                if ( reimport || !rsi->triedLoadOnce )
                 {
-                    ResourceToLoad rtl = { rsi->resource, rsi->path, reimport };
+                    ResourceToLoad rtl = { rsi->resource, rsi->diskPath, reimport };
                     rsi->resource->load_RT( rtl );
-                    rsi->loadedOnce = true;
+                    rsi->triedLoadOnce = true;
                 }
             }
             resourcesCopy.clear();

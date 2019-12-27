@@ -40,6 +40,11 @@ namespace fv
             }
             else m_HasSerializeErrors = true;
         }
+        else
+        {
+            m_Stack.push( &m_Document );
+            m_Active = m_Stack.top();
+        }
     }
 
     TextSerializer::~TextSerializer()
@@ -64,7 +69,7 @@ namespace fv
             try
             {
             #if FV_NLOHMANJSON
-                file /*<< setw(4) */<< m_Document << endl;
+                file << setw(4) /* need this to prettify the json */ << m_Document << endl;
             #else
                 #error no implementation
             #endif
