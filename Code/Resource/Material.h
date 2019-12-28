@@ -70,4 +70,6 @@ namespace fv
 
         MaterialData data;
     };
+
+    using Mat = M<Material>;
 }

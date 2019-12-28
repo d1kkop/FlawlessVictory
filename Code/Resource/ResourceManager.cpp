@@ -104,7 +104,7 @@ namespace fv
         auto rsi = make_shared<LoadedResourceInfo>();
         rsi->diskPath  = Directories::assets() / path;
         rsi->assetPath = path;
-        rsi->resource = resource;
+        rsi->resource  = resource;
         resource->m_Filename = path;
         Lock lk(m_ResourcesMutex);
         m_Resources[path] = rsi; // Store while having lock.

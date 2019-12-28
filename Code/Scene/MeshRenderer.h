@@ -11,7 +11,7 @@ namespace fv
         FV_TYPE_FLAGS(MeshRenderer, FV_DRAW)
 
     public:
-        FV_MO FV_DLL void setMesh(const M<Mesh> mesh);
+        FV_MO FV_DLL void setMesh(const M<Mesh>& mesh);
         FV_MO FV_DLL M<Mesh>& mesh();
 
     protected:

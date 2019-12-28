@@ -8,7 +8,7 @@ namespace fv
 {
     FV_TYPE_IMPL(MeshRenderer)
 
-    void MeshRenderer::setMesh(const M<Mesh> mesh)
+    void MeshRenderer::setMesh(const M<Mesh>& mesh)
     {
         m_Mesh = mesh;
     }

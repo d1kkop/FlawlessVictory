@@ -24,4 +24,6 @@ namespace fv
         RTexture2D m_Graphic{};
         enum class ImageFormat m_Format {};
     };
+
+    using Tex2D = M<Texture2D>;
 }

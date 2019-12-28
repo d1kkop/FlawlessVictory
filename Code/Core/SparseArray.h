@@ -17,7 +17,6 @@ namespace fv
         const Vector<ObjectArray>& allElements() const { return m_ObjectArrays; }
 
     private:
-        void growObjects();
         u32 m_ObjectBufferSize;
         Vector<ObjectArray> m_ObjectArrays;
         Set<T*> m_FreeObjects;

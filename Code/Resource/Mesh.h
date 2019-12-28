@@ -25,4 +25,6 @@ namespace fv
 
         friend class MeshRenderer;
     };
+
+    //using Mesh = M<Mesh>;
 }

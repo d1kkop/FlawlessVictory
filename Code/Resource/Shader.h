@@ -17,4 +17,6 @@ namespace fv
 
         RShader m_Graphic{};
     };
+
+    using Shdr = M<Shader>;
 }

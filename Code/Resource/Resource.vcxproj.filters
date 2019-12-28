@@ -51,13 +51,13 @@
     <ClCompile Include="ModelImporter.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Resources</Filter>
-    </ClCompile>
     <ClCompile Include="Assets.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
     <ClCompile Include="Material.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
       <Filter>Resources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,11 +98,11 @@
     <ClInclude Include="Material.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="Assets.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Resources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
