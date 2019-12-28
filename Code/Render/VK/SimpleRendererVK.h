@@ -5,11 +5,13 @@
 
 namespace fv
 {
-    class RenderManagerVK : public RenderManager
+    class VKInstance;
+
+    class SimpleRendererVK : public RenderManager
     {
     public:
-        RenderManagerVK();
-        ~RenderManagerVK() override;
+        SimpleRendererVK();
+        ~SimpleRendererVK() override;
         FV_BG bool initGraphics() override;
         void closeGraphics() override;
         void render() override;
@@ -21,6 +23,11 @@ namespace fv
             VkDebugUtilsMessageTypeFlagsEXT messageType,
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
             void* pUserData);
+
+        bool createInstance();
+        bool createDevice();
+
+        M<VKInstance> m_Instance;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

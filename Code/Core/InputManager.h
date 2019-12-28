@@ -8,38 +8,23 @@ namespace fv
     class InputManager
     {
     public:
-        FV_MO FV_DLL bool update();
+        FV_MO FV_DLL virtual bool update() = 0;
 
         // Keyboard
-        FV_MO FV_DLL bool keyPressed(const char* key);
-        FV_MO FV_DLL bool keyDown(const char* key);
-        FV_MO FV_DLL bool keyUp(const char* key);
+        FV_MO FV_DLL virtual bool keyPressed( Keyboard key ) = 0;
+        FV_MO FV_DLL virtual bool keyDown( Keyboard key ) = 0;
+        FV_MO FV_DLL virtual bool keyUp( Keyboard key ) = 0;
 
         // Mouse
-        FV_MO FV_DLL bool mousePressed(MouseKey key);
-        FV_MO FV_DLL bool mouseDown(MouseKey key);
-        FV_MO FV_DLL bool mouseUp(MouseKey key);
-        FV_MO FV_DLL i32 mouseX();
-        FV_MO FV_DLL i32 mouseY();
-        FV_MO FV_DLL i32 mouseScroll();
-        FV_MO FV_DLL i32 mouseDx();
-        FV_MO FV_DLL i32 mouseDy();
-        FV_MO FV_DLL i32 mouseDeltaScroll();
-
-    private:
-        u32 keyNameToScan( const char* key );
-        u32 mouseKeyToScan( MouseKey mkey );
-
-        byte m_PrevKeyStates[512]{};
-        byte m_CurKeyStates[512]{};
-        byte m_PrevMouseKeysState{};
-        byte m_CurMouseKeysState{};
-        i32 m_CurMouseX{};
-        i32 m_CurMouseY{};
-        i32 m_CurMouseScroll{};
-        i32 m_DeltaMouseX{};
-        i32 m_DeltaMouzeY{};
-        i32 m_DeltaMouseScroll{};
+        FV_MO FV_DLL virtual bool mousePressed( Mouse key ) = 0;
+        FV_MO FV_DLL virtual bool mouseDown( Mouse key ) = 0;
+        FV_MO FV_DLL virtual bool mouseUp( Mouse key ) = 0;
+        FV_MO FV_DLL virtual i32 mouseX() = 0;
+        FV_MO FV_DLL virtual i32 mouseY() = 0;
+        FV_MO FV_DLL virtual i32 mouseScroll() = 0;
+        FV_MO FV_DLL virtual i32 mouseDx() = 0;
+        FV_MO FV_DLL virtual i32 mouseDy() = 0;
+        FV_MO FV_DLL virtual i32 mouseDeltaScroll() = 0;
     };
 
     FV_DLL InputManager* inputManager();

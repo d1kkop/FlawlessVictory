@@ -4,29 +4,126 @@
 
 namespace fv
 {
-    enum MouseKey
+    enum class Mouse
     {
         Left, Right, Middle, X1, X2
     };
 
-    struct FV_DLL Input
+    enum class Keyboard
     {
-        static bool keyDown(const char* key);
-        static bool keyPressed(const char* key);
-        static bool keyUp(const char* key);
-
-        static bool mouseDown(MouseKey key);
-        static bool mousePressed(MouseKey key);
-        static bool mouseUp(MouseKey key);
-
-        // Mouse position with respect to window corner.
-        static i32 mouseX();
-        static i32 mouseY();
-        static i32 mouseScroll(); // Mouse scroll value.
-
-        // Mouse change since last frame.
-        static i32 mouseDx();
-        static i32 mouseDy();
-        static i32 mouseDeltaScroll();
+        Return,
+        Escape,
+        Backspace,
+        Tab,
+        Space,
+        Exclaim,
+        QuoteDbl,
+        Hash,
+        Percent,
+        Dollar,
+        Ampersand,
+        Quote,
+        LeftParenthesis,
+        RightParenthesis,
+        Asterisk,
+        Plus,
+        Comma,
+        Minus,
+        Period,
+        Slash,
+        Key_0,
+        Key_1,
+        Key_2,
+        Key_3,
+        Key_4,
+        Key_5,
+        Key_6,
+        Key_7,
+        Key_8,
+        Key_9,
+        Colon,
+        SemiColon,
+        Less,
+        Equal,
+        Greater,
+        QuestionMark,
+        At,
+        LeftBracket,
+        BackSlash,
+        RightBracket,
+        Caret,
+        Underscore,
+        BackQuote,
+        Key_a,
+        Key_b,
+        Key_c,
+        Key_d,
+        Key_e,
+        Key_f,
+        Key_g,
+        Key_h,
+        Key_i,
+        Key_j,
+        Key_k,
+        Key_l,
+        Key_m,
+        Key_n,
+        Key_o,
+        Key_p,
+        Key_q,
+        Key_r,
+        Key_s,
+        Key_t,
+        Key_u,
+        Key_v,
+        Key_w,
+        Key_x,
+        Key_y,
+        Key_z,
+        Capslock,
+        F1,
+        F2,
+        F3,
+        F4,
+        F5,
+        F6,
+        F7,
+        F8,
+        F9,
+        F10,
+        F11,
+        F12,
+        PrintScreen,
+        ScrollLock,
+        Pause,
+        Insert,
+        Home,
+        PageUp,
+        Delete,
+        End,
+        PageDown,
+        Right,
+        Left,
+        Down,
+        Up
     };
+
+    
+    FV_DLL bool KeyDown(Keyboard key);
+    FV_DLL bool KeyPressed(Keyboard key);
+    FV_DLL bool KeyUp(Keyboard key);
+
+    FV_DLL bool MouseDown(Mouse key);
+    FV_DLL bool MousePressed(Mouse key);
+    FV_DLL bool MouseUp(Mouse key);
+
+    // Mouse position with respect to window corner.
+    FV_DLL i32 MouseX();
+    FV_DLL i32 MouseY();
+    FV_DLL i32 MouseScroll(); // Mouse scroll value.
+
+    // Mouse change since last frame.
+    FV_DLL i32 MouseDx();
+    FV_DLL i32 MouseDy();
+    FV_DLL i32 MouseDeltaScroll();
 }

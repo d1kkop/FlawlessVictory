@@ -81,7 +81,8 @@
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="VK\IncVulkan.h" />
-    <ClInclude Include="VK\RenderManagerVK.h" />
+    <ClInclude Include="VK\SimpleRendererVK.h" />
+    <ClInclude Include="VK\VKInstance.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -92,7 +93,8 @@
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="VK\IncVulkan.cpp" />
-    <ClCompile Include="VK\RenderManagerVK.cpp" />
+    <ClCompile Include="VK\SimpleRendererVK.cpp" />
+    <ClCompile Include="VK\VKInstance.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

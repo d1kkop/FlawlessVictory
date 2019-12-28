@@ -5,6 +5,7 @@
 #include "../Core/Functions.h"
 #include "../Core/GameObject.h"
 #include "../Core/TransformManager.h"
+#include "../Core/DestructionManager.h"
 #include "../Render/RenderManager.h"
 #include "../Resource/ResourceManager.h"
 #include "../Resource/ShaderCompiler.h"
@@ -16,6 +17,26 @@ using namespace fv;
 
 #define FV_LOAD_TEST_MODULE 0
 
+// Ensure that all managers are initialized from a single thread to avoid multiple initializations.
+void startup()
+{
+    // Order should not matter. Is copied from shutdown see below.
+    resourceManager();
+    jobManager();
+    patchManager();
+    componentManager();
+    gameObjectManager();
+    shaderCompiler();
+    textureImporter();
+    modelImporter();
+    renderManager();
+    inputManager();
+    systemManager();
+    typeManager();
+    transformManager();
+    destructionManager();
+    deleteLogManager();
+}
 
 void shutdown()
 {
@@ -36,6 +57,8 @@ void shutdown()
     deleteSystemManager();
     deleteTypeManager();
     deleteTransformManager();
+    // Do destruction manager after all other managers but before log manager, so that any outstanding destructables have their refcount now set to 1.
+    deleteDestructionManager();
     // At last log manager when there is no logging required anymore.
     deleteLogManager();
 }
@@ -43,6 +66,8 @@ void shutdown()
 
 int main(int argc, char** argv)
 {
+    startup();
+
     LOG("--- New Session ---");
     LOG("--- %s ---", LocalTime().c_str());
     LOG("-------------------");
@@ -50,7 +75,7 @@ int main(int argc, char** argv)
     if ( argc < 2 )
     {
         LOGC("No module name specified.");
-        deleteLogManager();
+        shutdown();
         return 0;
     }
 

@@ -27,9 +27,9 @@ namespace fv
         resourceManager()->initialize();
 
         // Initialize graphics.
-      //  if ( !renderManager()->initGraphics() )
+        if ( !renderManager()->initGraphics() )
         {
-     //       return false;
+            return false;
         }
 
         StopBeginFase();
@@ -71,6 +71,9 @@ namespace fv
 
             if (!inputManager()->update())
                 break;
+
+            if ( KeyPressed(Keyboard::Escape) )
+                m_Done = true;
 
            PrepareList(componentManager()->updateComponents(), m_ListUpdatables, [](const ComponentArray& a, const ComponentArray& b)
            {

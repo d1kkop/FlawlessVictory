@@ -1,0 +1,94 @@
+#include "SimpleRendererVK.h"
+#if FV_VULKAN
+#include "../../Core/Functions.h"
+#include "../../Core/LogManager.h"
+#include "../../Core/OSLayer.h"
+#include "../../Core/Thread.h"
+#include "VKInstance.h"
+
+namespace fv
+{
+    SimpleRendererVK::SimpleRendererVK()
+    = default;
+
+    SimpleRendererVK::~SimpleRendererVK()
+    {
+        closeGraphics();
+    }
+
+    FV_BG bool SimpleRendererVK::initGraphics()
+    {
+        FV_CHECK_BG();
+
+        if (!createInstance()) return false;
+
+        
+
+        LOG( "VK Initialized succesful." );
+        return true;
+    }
+
+    void SimpleRendererVK::closeGraphics()
+    {
+    }
+
+    void SimpleRendererVK::render()
+    {
+    }
+
+    bool SimpleRendererVK::createInstance()
+    {
+        Vector<const char*> requiredExtensions;
+        Vector<const char*> requiredLayers;
+
+    #if FV_DEBUG
+        requiredExtensions ={ "VK_EXT_debug_report", "VK_EXT_debug_utils" };
+        requiredLayers ={ "VK_LAYER_LUNARG_standard_validation" };
+    #endif
+
+        m_Instance = VKInstance::create( "SimpleVKRenderer", requiredExtensions, requiredLayers );
+        if ( m_Instance )
+        {
+        #if FV_DEBUG
+            m_Instance->createDebugCallback( false, false, SimpleRendererVK::debugCallback );
+        #endif
+            return true;
+        }
+        return false;
+    }
+
+    bool SimpleRendererVK::createDevice()
+    {
+        Vector<const char*> requiredExtensions;
+        Vector<const char*> requiredLayers;
+
+    #if FV_DEBUG
+        requiredLayers ={ "VK_LAYER_LUNARG_standard_validation" };
+    #endif
+        m_RequiredPhysicalExtensions ={ };
+
+        return true;
+    }
+
+    VKAPI_ATTR VkBool32 VKAPI_CALL SimpleRendererVK::debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                                    VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                                    void* pUserData )
+    {
+        switch ( messageSeverity )
+        {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            LOG( "VK Validation layer %s.", pCallbackData->pMessage );
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            break;
+            LOGW( "VK Validation layer %s.", pCallbackData->pMessage );
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            LOGC( "VK Validation layer %s.", pCallbackData->pMessage );
+            break;
+        }
+        return VK_FALSE;
+    }
+}
+#endif

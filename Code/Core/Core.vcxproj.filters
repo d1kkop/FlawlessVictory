@@ -22,6 +22,9 @@
     <Filter Include="Inc">
       <UniqueIdentifier>{2e593a6c-b7f9-4ec4-a04e-b20ecc3d89ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Input\SDL">
+      <UniqueIdentifier>{5faf5450-19b1-4fed-8976-8f5021662e9d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TypeManager.cpp">
@@ -86,6 +89,12 @@
     </ClCompile>
     <ClCompile Include="TransformManager.cpp">
       <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="DestructionManager.cpp">
+      <Filter>Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="InputManagerSDL.cpp">
+      <Filter>Input\SDL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -186,6 +195,12 @@
     </ClInclude>
     <ClInclude Include="Object.h">
       <Filter>BaseObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="DestructionManager.h">
+      <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="InputManagerSDL.h">
+      <Filter>Input\SDL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

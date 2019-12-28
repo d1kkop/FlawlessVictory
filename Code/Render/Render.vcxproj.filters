@@ -16,24 +16,30 @@
     <ClInclude Include="RenderComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="VK\RenderManagerVK.h">
-      <Filter>VK</Filter>
-    </ClInclude>
     <ClInclude Include="VK\IncVulkan.h">
       <Filter>VK</Filter>
     </ClInclude>
     <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="VK\VKInstance.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\SimpleRendererVK.h">
+      <Filter>VK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="VK\RenderManagerVK.cpp">
-      <Filter>VK</Filter>
-    </ClCompile>
     <ClCompile Include="VK\IncVulkan.cpp">
       <Filter>VK</Filter>
     </ClCompile>
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="VK\SimpleRendererVK.cpp">
+      <Filter>VK</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\VKInstance.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

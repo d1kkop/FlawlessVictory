@@ -83,11 +83,13 @@
   <ItemGroup>
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentManager.cpp" />
+    <ClCompile Include="DestructionManager.cpp" />
     <ClCompile Include="Directories.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="InputManagerSDL.cpp" />
     <ClCompile Include="JobManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="Mat3.cpp" />
@@ -110,6 +112,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="ComponentManager.h" />
+    <ClInclude Include="DestructionManager.h" />
     <ClInclude Include="Directories.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="GameObject.h" />
@@ -117,6 +120,7 @@
     <ClInclude Include="IncWindows.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="InputManagerSDL.h" />
     <ClInclude Include="JobManager.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Mat3.h" />

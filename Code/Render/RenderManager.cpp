@@ -1,4 +1,4 @@
-#include "VK/RenderManagerVK.h"
+#include "VK/SimpleRendererVK.h"
 #include "../Core/Functions.h"
 #include "../Core/ComponentManager.h"
 
@@ -45,8 +45,8 @@ namespace fv
     RenderManager* renderManager() 
     { 
     #if FV_VULKAN
-        auto rvk = (RenderManagerVK*)g_RenderManager;
-        g_RenderManager = CreateOnce<RenderManagerVK>( rvk );
+        auto rvk = (SimpleRendererVK*)g_RenderManager;
+        g_RenderManager = CreateOnce<SimpleRendererVK>( rvk );
     #else
     #pragma error ("No implementation")
     #endif

@@ -4,62 +4,62 @@
 
 namespace fv
 {
-    bool Input::keyDown(const char* key)
+    bool KeyDown(Keyboard key)
     {
         return inputManager()->keyDown( key );
     }
 
-    bool Input::keyPressed(const char* key)
+    bool KeyPressed(Keyboard key)
     {
         return inputManager()->keyPressed( key );
     }
 
-    bool Input::keyUp(const char* key)
+    bool KeyUp(Keyboard key)
     {
         return inputManager()->keyUp( key );
     }
 
-    bool Input::mouseDown(MouseKey key)
+    bool MouseDown(Mouse key)
     {
         return inputManager()->mouseDown( key );
     }
 
-    bool Input::mousePressed(MouseKey key)
+    bool MousePressed(Mouse key)
     {
         return inputManager()->mousePressed( key );
     }
 
-    bool Input::mouseUp(MouseKey key)
+    bool MouseUp(Mouse key)
     {
         return inputManager()->mouseUp( key );
     }
 
-    i32 Input::mouseX()
+    i32 MouseX()
     {
         return inputManager()->mouseX();
     }
 
-    i32 Input::mouseY()
+    i32 MouseY()
     {
         return inputManager()->mouseY();
     }
 
-    i32 Input::mouseScroll()
+    i32 MouseScroll()
     {
         return inputManager()->mouseScroll();
     }
 
-    i32 Input::mouseDx()
+    i32 MouseDx()
     {
         return inputManager()->mouseDx();
     }
 
-    i32 Input::mouseDy()
+    i32 MouseDy()
     {
         return inputManager()->mouseDy();
     }
 
-    i32 Input::mouseDeltaScroll()
+    i32 MouseDeltaScroll()
     {
         return inputManager()->mouseDeltaScroll();
     }
