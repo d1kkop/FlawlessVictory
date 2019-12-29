@@ -14,9 +14,9 @@ namespace fv
         return inputManager()->keyPressed( key );
     }
 
-    bool KeyUp(Keyboard key)
+    bool KeyReleased(Keyboard key)
     {
-        return inputManager()->keyUp( key );
+        return inputManager()->keyReleased( key );
     }
 
     bool MouseDown(Mouse key)
@@ -29,34 +29,34 @@ namespace fv
         return inputManager()->mousePressed( key );
     }
 
-    bool MouseUp(Mouse key)
+    bool MouseReleased(Mouse key)
     {
-        return inputManager()->mouseUp( key );
+        return inputManager()->mouseReleased( key );
     }
 
-    i32 MouseX()
+    float MouseX()
     {
         return inputManager()->mouseX();
     }
 
-    i32 MouseY()
+    float MouseY()
     {
         return inputManager()->mouseY();
+    }
+
+    float MouseDx()
+    {
+        return inputManager()->mouseDx();
+    }
+
+    float MouseDy()
+    {
+        return inputManager()->mouseDy();
     }
 
     i32 MouseScroll()
     {
         return inputManager()->mouseScroll();
-    }
-
-    i32 MouseDx()
-    {
-        return inputManager()->mouseDx();
-    }
-
-    i32 MouseDy()
-    {
-        return inputManager()->mouseDy();
     }
 
     i32 MouseDeltaScroll()

@@ -22,8 +22,9 @@
 
 // Platform enables/disables
 #if _WIN32
-    #define FV_SDL 1
+    #define FV_SDL 0
     #define FV_STB 0
+    #define FV_GLFW 1
     #define FV_FREEIMAGE 1
     #define FV_VULKAN  1
     #define FV_GLSL2SPIRVLIB 0

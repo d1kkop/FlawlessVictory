@@ -26,6 +26,9 @@ namespace fv
 
         bool createInstance();
         bool createDevice();
+        bool createWindow();
+
+        void destroyWindow();
 
         M<VKInstance> m_Instance;
 

@@ -27,7 +27,7 @@ namespace fv
         args += " -o " + output.string(); // Output file
         args += " -t"; // Multithreaded compilation
         OSHandle hProgram = OSStartProgram( (Directories::bin() / Path("glslangValidator.exe")).string().c_str(), args.c_str() );
-        if ( hProgram.process )
+        if ( !hProgram.invalid() )
         {
             OSWaitOnProgram( hProgram );
         }

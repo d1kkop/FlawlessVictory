@@ -32,21 +32,26 @@ namespace fv
             return false;
         }
 
-        StopBeginFase();
-
-        // Load user provided module.
-        OSHandle h = OSLoadLibrary(params.moduleName.c_str());
-        if ( !h.library )
+        if ( !inputManager()->initialize( renderManager()->getWindowHandle() ) )
         {
             return false;
         }
 
-        h = OSFindFunction(h, "entry");
-        if ( h.function )
+        StopBeginFase();
+
+        // Load user provided module.
+        OSHandle h = OSLoadLibrary(params.moduleName.c_str());
+        if ( h.invalid() )
+        {
+            return false;
+        }
+
+        void* function = OSFindFunction(h, "entry");
+        if ( function )
         {
             // Execute optional entry point of loaded module.
             using entryFunc = void (*)(i32, char**);
-            entryFunc entry = (entryFunc)h.function;
+            entryFunc entry = (entryFunc)function;
             entry( params.argc, params.argv );
         }
         else
@@ -133,7 +138,6 @@ namespace fv
             TimeUpdate();
         }
 
-        // renderManager()->finishFrame();
     }
 
     SystemManager* g_SystemManager {};

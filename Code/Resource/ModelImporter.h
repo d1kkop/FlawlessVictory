@@ -5,7 +5,9 @@
     #include <assimp/scene.h>
     #include <assimp/postprocess.h>
     #include <assimp/Importer.hpp>
+    #if _MSC_VER
     #pragma comment(lib, "../3rdParty/Assimp/lib/x64/assimp-vc140-mt.lib")
+    #endif
 #endif
 
 namespace fv

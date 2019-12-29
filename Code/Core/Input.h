@@ -16,19 +16,6 @@ namespace fv
         Backspace,
         Tab,
         Space,
-        Exclaim,
-        QuoteDbl,
-        Hash,
-        Percent,
-        Dollar,
-        Ampersand,
-        Quote,
-        LeftParenthesis,
-        RightParenthesis,
-        Asterisk,
-        Plus,
-        Comma,
-        Minus,
         Period,
         Slash,
         Key_0,
@@ -41,18 +28,11 @@ namespace fv
         Key_7,
         Key_8,
         Key_9,
-        Colon,
         SemiColon,
-        Less,
         Equal,
-        Greater,
-        QuestionMark,
-        At,
         LeftBracket,
         BackSlash,
         RightBracket,
-        Caret,
-        Underscore,
         BackQuote,
         Key_a,
         Key_b,
@@ -111,19 +91,19 @@ namespace fv
     
     FV_DLL bool KeyDown(Keyboard key);
     FV_DLL bool KeyPressed(Keyboard key);
-    FV_DLL bool KeyUp(Keyboard key);
+    FV_DLL bool KeyReleased(Keyboard key);
 
     FV_DLL bool MouseDown(Mouse key);
     FV_DLL bool MousePressed(Mouse key);
-    FV_DLL bool MouseUp(Mouse key);
+    FV_DLL bool MouseReleased(Mouse key);
 
     // Mouse position with respect to window corner.
-    FV_DLL i32 MouseX();
-    FV_DLL i32 MouseY();
+    FV_DLL float MouseX();
+    FV_DLL float MouseY();
     FV_DLL i32 MouseScroll(); // Mouse scroll value.
 
     // Mouse change since last frame.
-    FV_DLL i32 MouseDx();
-    FV_DLL i32 MouseDy();
+    FV_DLL float MouseDx();
+    FV_DLL float MouseDy();
     FV_DLL i32 MouseDeltaScroll();
 }

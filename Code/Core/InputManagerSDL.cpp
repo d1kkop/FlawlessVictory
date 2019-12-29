@@ -1,12 +1,13 @@
 #include "PCH.h"
-#include "InputManagerSDL.h"
 #if FV_SDL
+#include "InputManagerSDL.h"
 #include "IncSDL.h"
 #include "Thread.h"
+#include "Functions.h"
 
 namespace fv
 {
-    u32 SDL_MouseKeyToScan( Mouse mkey )
+    u32 MouseKeyToScan( Mouse mkey )
     {
         switch ( mkey )
         {
@@ -19,7 +20,7 @@ namespace fv
         return -1;
     }
 
-    u32 SDL_KeyboardKeyToScan( Keyboard key )
+    SDL_Keycode KeyboardKeyToSDLKey( Keyboard key )
     {
         switch ( key )
         {
@@ -119,16 +120,24 @@ namespace fv
         case Keyboard::Down:                return SDLK_DOWN;
         case Keyboard::Up:                  return SDLK_UP;
         }
-
         return -1;
+    }
+
+    u32 KeyboardKeyToScan(Keyboard key)
+    {
+        SDL_Keycode code = KeyboardKeyToSDLKey( key );
+        if ( code == -1 ) return -1;
+        return SDL_GetScancodeFromKey( code );
     }
 
     FV_MO bool InputManagerSDL::update()
     {
         FV_CHECK_MO();
 
+        // TODO 12/29/2019 SDL input appears broken, I do not receive any input in windows platform.
+
         //SDL_Event event;
-        //while ( SDL_PollEvent(&event) )
+        //while ( SDL_PollEvent( &event ) )
         //{
         //    if ( event.type == SDL_QUIT )
         //        return false;
@@ -140,16 +149,20 @@ namespace fv
             memcpy( m_PrevKeyStates, m_CurKeyStates, sizeof(m_CurKeyStates) );
             int numKeys = 0;
             const byte* sdlKeys = SDL_GetKeyboardState(&numKeys);
-            assert( numKeys <= 512 ); // Size of state array
-            memcpy( m_CurKeyStates, sdlKeys, numKeys*sizeof(byte) );
+            constexpr u32 arrSize = sizeof( m_CurKeyStates )/sizeof( m_CurKeyStates[0] );
+            assert( numKeys <= arrSize ); // Size of state array
+            memcpy( m_CurKeyStates, sdlKeys, Min<u32>(numKeys, arrSize)*sizeof(byte) );
         }
 
         // Mouse
         {
-            i32 prevMouseX = m_CurMouseX;
-            i32 prevMouseY = m_CurMouseY;
+            float prevMouseX = m_CurMouseX;
+            float prevMouseY = m_CurMouseY;
             m_PrevMouseKeysState = m_CurMouseKeysState;
-            m_CurMouseKeysState  = SDL_GetMouseState( (int*)&m_CurMouseX, (int*)&m_CurMouseY );
+            int cx, cy;
+            m_CurMouseKeysState  = SDL_GetMouseState( &cx, &cy );
+            m_CurMouseX = (float)cx;
+            m_CurMouseY = (float)cy;
         }
 
         return true;
@@ -158,7 +171,7 @@ namespace fv
     FV_MO bool InputManagerSDL::keyPressed(Keyboard key)
     {
         FV_CHECK_MO();
-        u32 scan = SDL_KeyboardKeyToScan( key );
+        u32 scan = KeyboardKeyToSDLKey( key );
         if ( scan != -1 )
         {
             return (!m_PrevKeyStates[scan] && m_CurKeyStates[scan]);
@@ -169,7 +182,7 @@ namespace fv
     FV_MO bool InputManagerSDL::keyDown(Keyboard key)
     {
         FV_CHECK_MO();
-        u32 scan = SDL_KeyboardKeyToScan(key);
+        u32 scan = KeyboardKeyToScan(key);
         if ( scan != -1 )
         {
             return (m_CurKeyStates[scan]);
@@ -177,13 +190,13 @@ namespace fv
         return false;
     }
 
-    FV_MO bool InputManagerSDL::keyUp(Keyboard key)
+    FV_MO bool InputManagerSDL::keyReleased(Keyboard key)
     {
         FV_CHECK_MO();
-        u32 scan = SDL_KeyboardKeyToScan(key);
+        u32 scan = KeyboardKeyToScan(key);
         if ( scan != -1 )
         {
-            return (!m_CurKeyStates[scan]);
+            return (m_PrevKeyStates[scan] && !m_CurKeyStates[scan]);
         }
         return false;
     }
@@ -191,7 +204,7 @@ namespace fv
     FV_MO bool InputManagerSDL::mousePressed(Mouse key)
     {
         FV_CHECK_MO();
-        u32 scan = SDL_MouseKeyToScan( key );
+        u32 scan = MouseKeyToScan( key );
         if ( scan != -1 )
         {
             return ((m_PrevMouseKeysState & scan)==0 && (m_CurMouseKeysState & scan)!=0);
@@ -202,7 +215,7 @@ namespace fv
     FV_MO bool InputManagerSDL::mouseDown(Mouse key)
     {
         FV_CHECK_MO();
-        u32 scan = SDL_MouseKeyToScan(key);
+        u32 scan = MouseKeyToScan(key);
         if ( scan != -1 )
         {
             return ((m_CurMouseKeysState & scan)!=0);
@@ -210,45 +223,45 @@ namespace fv
         return false;
     }
 
-    FV_MO bool InputManagerSDL::mouseUp(Mouse key)
+    FV_MO bool InputManagerSDL::mouseReleased(Mouse key)
     {
         FV_CHECK_MO();
-        u32 scan = SDL_MouseKeyToScan(key);
+        u32 scan = MouseKeyToScan(key);
         if ( scan != -1 )
         {
-            return ((m_CurMouseKeysState & scan)==0);
+            return ((m_PrevMouseKeysState & scan)!=0 && (m_CurMouseKeysState & scan)==0);
         }
         return false;
     }
 
-    FV_MO i32 InputManagerSDL::mouseX()
+    FV_MO float InputManagerSDL::mouseX()
     {
         FV_CHECK_MO();
         return m_CurMouseX;
     }
 
-    FV_MO i32 InputManagerSDL::mouseY()
+    FV_MO float InputManagerSDL::mouseY()
     {
         FV_CHECK_MO();
         return m_CurMouseY;
+    }
+
+    FV_MO float InputManagerSDL::mouseDx()
+    {
+        FV_CHECK_MO();
+        return m_DeltaMouseX;
+    }
+
+    FV_MO float InputManagerSDL::mouseDy()
+    {
+        FV_CHECK_MO();
+        return m_DeltaMouseY;
     }
 
     FV_MO i32 InputManagerSDL::mouseScroll()
     {
         FV_CHECK_MO();
         return m_CurMouseScroll;
-    }
-
-    FV_MO i32 InputManagerSDL::mouseDx()
-    {
-        FV_CHECK_MO();
-        return m_DeltaMouseX;
-    }
-
-    FV_MO i32 InputManagerSDL::mouseDy()
-    {
-        FV_CHECK_MO();
-        return m_DeltaMouzeY;
     }
 
     FV_MO i32 InputManagerSDL::mouseDeltaScroll()

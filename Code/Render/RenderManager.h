@@ -1,6 +1,7 @@
 #pragma once
 #include "../Core/Common.h"
 #include "../Core/Reflection.h"
+#include "../Core/OSLayer.h"
 
 namespace fv
 {
@@ -126,6 +127,11 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
         virtual void render() = 0;
+
+        const OSHandle& getWindowHandle() const { return m_Window; }
+
+    protected:
+        OSHandle m_Window {};
     };
 
 

@@ -21,7 +21,7 @@ namespace fv
         FV_CHECK_BG();
 
         if (!createInstance()) return false;
-
+        if (!createWindow()) return false;
         
 
         LOG( "VK Initialized succesful." );
@@ -30,6 +30,7 @@ namespace fv
 
     void SimpleRendererVK::closeGraphics()
     {
+        destroyWindow();
     }
 
     void SimpleRendererVK::render()
@@ -68,6 +69,21 @@ namespace fv
         m_RequiredPhysicalExtensions ={ };
 
         return true;
+    }
+
+    bool SimpleRendererVK::createWindow()
+    {
+        m_Window = OSCreateWindow( "VKWindow", 0, 0, 1600, 900, false );
+        return m_Window.invalid() == false;
+    }
+
+    void SimpleRendererVK::destroyWindow()
+    {
+        if ( !m_Window.invalid() )
+        {
+            OSDestroyWindow( m_Window );
+            m_Window.setZero();
+        }
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL SimpleRendererVK::debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

@@ -96,6 +96,9 @@
     <ClCompile Include="InputManagerSDL.cpp">
       <Filter>Input\SDL</Filter>
     </ClCompile>
+    <ClCompile Include="InputManagerGLFW.cpp">
+      <Filter>Input\SDL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core.h" />
@@ -201,6 +204,12 @@
     </ClInclude>
     <ClInclude Include="InputManagerSDL.h">
       <Filter>Input\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="InputManagerGLFW.h">
+      <Filter>Input\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="IncGLFW.h">
+      <Filter>Inc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

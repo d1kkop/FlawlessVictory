@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "InputManager.h"
 #include "InputManagerSDL.h"
+#include "InputManagerGLFW.h"
 #include "Functions.h"
 
 namespace fv
@@ -12,8 +13,12 @@ namespace fv
         auto inputMan = (InputManagerSDL*)g_InputManager;
         g_InputManager = CreateOnce<InputManagerSDL>( inputMan );
         return g_InputManager;
+    #elif FV_GLFW
+        auto inputMan = (InputManagerGLFW*)g_InputManager;
+        g_InputManager = CreateOnce<InputManagerGLFW>( inputMan );
+        return g_InputManager;
     #else
-    #error no implementation
+        #error no implementation
     #endif
         assert(false);
         return nullptr;

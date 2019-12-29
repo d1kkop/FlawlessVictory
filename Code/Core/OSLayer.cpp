@@ -4,7 +4,7 @@
 #include "LogManager.h"
 #include "IncWindows.h"
 #include "IncSDL.h"
-
+#include "IncGLFW.h"
 
 namespace fv
 {
@@ -16,6 +16,15 @@ namespace fv
             LOGC( "Cannot initialize SDL error %d.", SDL_GetError());
             return false;
         }
+    #elif FV_GLFW
+        if (!glfwInit())
+        {
+            const char* err;
+            glfwGetError(&err);
+            LOGC( "Cannot initialize glfw error %s.", err );
+        }
+    #else
+        #error no impl
     #endif
         return true;
     }
@@ -24,6 +33,10 @@ namespace fv
     {
     #if FV_SDL
         SDL_Quit();
+    #elif FV_GLFW
+        glfwTerminate();
+    #else
+    #error no impl
     #endif
     }
 
@@ -37,7 +50,7 @@ namespace fv
             return {};
         }
         OSHandle h;
-        h.library = hModule;
+        h.set(hModule);
         return h;
     #else
     #error no implementation
@@ -82,26 +95,39 @@ namespace fv
     #endif
     }
 
-    void* OSCreateWindow(const char* name, u32 posX, u32 posY, u32 width, u32 height, bool fullscreen)
+    OSHandle OSCreateWindow(const char* name, u32 posX, u32 posY, u32 width, u32 height, bool fullscreen)
     {
+        OSHandle h;
     #if FV_SDL
         u32 flags = 0;
         flags |= fullscreen? SDL_WINDOW_FULLSCREEN : 0;
   //      flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
         flags |= SDL_WINDOW_VULKAN;
   //      flags |= SDL_WINDOW_OPENGL;
-        return SDL_CreateWindow( name, posX, posY, width, height, flags );
+        SDL_Window win = SDL_CreateWindow( name, posX, posY, width, height, flags );
+        if ( win ) h.set( win );
+    #elif FV_GLFW
+        GLFWwindow* win = glfwCreateWindow( width, height, name, fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL );
+        if ( win ) h.set( win );
+    #else
+    #error no impl
     #endif
-        return nullptr;
+        return h;
     }
 
-    void OSDestroyWindow(void* pWindow)
+    void OSDestroyWindow(OSHandle handle)
     {
+        if ( handle.invalid() ) return;
     #if FV_SDL
-        SDL_DestroyWindow( (SDL_Window*) pWindow );
+        auto ptr = handle.get<SDL_Window*>();
+        if ( ptr) SDL_DestroyWindow( ptr );
+    #elif FV_GLFW
+        auto ptr = handle.get<GLFWwindow*>();
+        if ( ptr ) glfwDestroyWindow( ptr );
+    #else
+    #error no impl
     #endif
     }
-
 
     OSHandle OSStartProgram(const char* path, const char* arguments)
     {
@@ -111,12 +137,10 @@ namespace fv
         PROCESS_INFORMATION processInfo;
         if ( !CreateProcessA(path, (char*)arguments, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &info, &processInfo) )
         {
-            processInfo.hProcess = nullptr;
-            processInfo.hThread = nullptr;
+            return {};
         }
         OSHandle h;
-        h.process = processInfo.hProcess;
-        h.thread = processInfo.hThread;
+        h.set(processInfo);
         return h;
     #else
     #error no implementation
@@ -126,27 +150,22 @@ namespace fv
 
     void OSWaitOnProgram(OSHandle handle)
     {
-        if (!handle.process) return;
     #if FV_INCLUDE_WINHDR
-        HANDLE hProcess = (HANDLE)handle.process;
-        HANDLE hThread = (HANDLE)handle.thread;
-        WaitForSingleObject( hProcess, INFINITE );
-        CloseHandle( hProcess );
-        CloseHandle( hThread );
+        static_assert(sizeof( PROCESS_INFORMATION ) <= sizeof( OSHandle ), "OSHandle too small");
+        PROCESS_INFORMATION pInfo = handle.get<PROCESS_INFORMATION>();
+        WaitForSingleObject( pInfo.hProcess, INFINITE );
+        CloseHandle( pInfo.hProcess );
+        CloseHandle( pInfo.hThread );
     #else
     #error no implementation
     #endif
     }
 
-    OSHandle OSFindFunction(OSHandle libHandle, const char* name)
+    void* OSFindFunction(OSHandle handle, const char* name)
     {
-        if ( !libHandle.library ) return { };
     #if FV_INCLUDE_WINHDR
-        void* proc = GetProcAddress( (HMODULE) libHandle.library, name );
-        if ( !proc ) return { };
-        OSHandle h;
-        h.function = proc;
-        return h;
+        HMODULE library = handle.get<HMODULE>();
+        return GetProcAddress( library, name );
     #else
     #error no implementation
     #endif
