@@ -9,7 +9,7 @@ namespace fv
     class InputManager
     {
     public:
-        FV_MO FV_DLL virtual bool initialize(OSHandle window) = 0;
+        FV_MO FV_DLL virtual bool initialize( OSHandle window ) = 0;
         FV_MO FV_DLL virtual bool update() = 0;
 
         // Keyboard

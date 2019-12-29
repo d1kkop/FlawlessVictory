@@ -122,6 +122,7 @@ namespace fv
         glfwSetCursorPosCallback( window, glfwOnMousePos );
         glfwSetCursorEnterCallback( window, glfwOnCursorEnter );
         glfwSetWindowFocusCallback( window, glfwOnFocus );
+        glfwSetWindowCloseCallback( window, glfwOnClose );
         return true;
     }
 
