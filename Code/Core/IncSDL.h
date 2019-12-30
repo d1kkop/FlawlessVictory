@@ -1,4 +1,6 @@
 #pragma once
+#include "Platform.h"
+
 #if FV_SDL
     #include "../3rdParty/SDL/include/SDL.h"
     #undef main

@@ -1,5 +1,6 @@
 #include "DeviceVK.h"
 #include "InstanceVK.h"
+#include "SurfaceVK.h"
 #include "../../Core/LogManager.h"
 #include "../../Core/Common.h"
 #include "../../Core/IncGLFW.h"
@@ -24,15 +25,15 @@ namespace fv
                                   bool wantComputeQueue,
                                   bool wantTransferQueue,
                                   bool wantSparseQueue,
-                                  bool wantPresentSupport )
+                                  const M<SurfaceVK>& surface )
     {
         // --- Enumerate devices ---
 
         uint32_t numPhysicalDevice;
         List<VkPhysicalDevice> devices;
-        VK_CALL( vkEnumeratePhysicalDevices( instance->inst(), &numPhysicalDevice, NULL ) );
+        VK_CALL( vkEnumeratePhysicalDevices( instance->vk(), &numPhysicalDevice, NULL ) );
         devices.resize( numPhysicalDevice );
-        VK_CALL( vkEnumeratePhysicalDevices( instance->inst(), &numPhysicalDevice, devices.data() ) );
+        VK_CALL( vkEnumeratePhysicalDevices( instance->vk(), &numPhysicalDevice, devices.data() ) );
 
         VkPhysicalDevice chosenPhysical{};
         VkPhysicalDeviceFeatures features;
@@ -93,15 +94,15 @@ namespace fv
 
             // Present support
         #if FV_INCLUDE_WINHDR
-            if ( instance->surface() )
+            if ( surface->vk() )
             {
                 VkBool32 presentSupported = false;
-                vkGetPhysicalDeviceSurfaceSupportKHR( chosenPhysical, i, instance->surface(), &presentSupported );
+                vkGetPhysicalDeviceSurfaceSupportKHR( chosenPhysical, i, surface->vk(), &presentSupported );
                 if ( presentSupported ) presentFam = i;
             }
         #elif FV_GLFW
             // Always returning NULL..
-            if ( glfwGetPhysicalDevicePresentationSupport( instance->inst(), chosenPhysical, i ) )
+            if ( glfwGetPhysicalDevicePresentationSupport( instance->vk(), chosenPhysical, i ) )
             {
                 presentFam = i;
             }
@@ -131,7 +132,7 @@ namespace fv
             LOGW( "VK Cannot find spare queue family." );
             return {};
         }
-        if ( presentFam == -1 && wantPresentSupport )
+        if ( presentFam == -1 && surface )
         {
             LOGW( "VK Cannot find present queue family." );
             return {};
@@ -192,7 +193,7 @@ namespace fv
         if ( computeFam != -1 && wantComputeQueue )     vkGetDeviceQueue( logical, computeFam, 0, &device->m_ComputeQueue );
         if ( transferFam != -1 && wantTransferQueue )   vkGetDeviceQueue( logical, transferFam, 0, &device->m_TransferQueue );
         if ( sparseFam != -1 && wantSparseQueue )       vkGetDeviceQueue( logical, sparseFam, 0, &device->m_SparseQueue );
-        if ( presentFam != -1 && wantPresentSupport )   vkGetDeviceQueue( logical, presentFam, 0, &device->m_PresentQueue );
+        if ( presentFam != -1 && surface )              vkGetDeviceQueue( logical, presentFam, 0, &device->m_PresentQueue );
         
         return device;
     }

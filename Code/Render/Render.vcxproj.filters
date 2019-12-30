@@ -29,6 +29,9 @@
     <ClInclude Include="VK\DeviceVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="VK\SurfaceVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
@@ -45,6 +48,9 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\DeviceVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\SurfaceVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>

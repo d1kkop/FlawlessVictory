@@ -7,6 +7,7 @@
 #include "../../Core/IncGLFW.h"
 #include "InstanceVK.h"
 #include "DeviceVK.h"
+#include "SurfaceVK.h"
 
 namespace fv
 {
@@ -24,6 +25,7 @@ namespace fv
 
         if (!createWindow()) return false;
         if (!createInstance()) return false;
+        if (!createSurface()) return false;
         if (!createDevice()) return false;
 
         LOG( "VK Initialized succesful." );
@@ -49,15 +51,29 @@ namespace fv
         requiredLayers ={ "VK_LAYER_LUNARG_standard_validation" };
     #endif
 
+    #if FV_GLFW
+        // Need these extensions for surface.
+        const char** ext;
+        uint32_t count;
+        ext = glfwGetRequiredInstanceExtensions(&count);
+        for ( uint32_t t = 0; t < count; t++) requiredExtensions.emplace_back( ext[t] );
+    #endif
+
         m_Instance = InstanceVK::create( "SimpleVKRenderer", requiredExtensions, requiredLayers );
         if ( m_Instance )
         {
         #if FV_DEBUG
             m_Instance->createDebugCallback( false, false, SimpleRendererVK::debugCallback );
         #endif
-            return m_Instance->createWindowSurface( m_Window );
+            return true;
         }
         return false;
+    }
+
+    bool SimpleRendererVK::createSurface()
+    {
+        m_Surface = SurfaceVK::create( m_Instance, m_Window );
+        return m_Surface != nullptr;
     }
 
     bool SimpleRendererVK::createDevice()
@@ -70,7 +86,7 @@ namespace fv
     #endif
         requiredExtensions ={ };
 
-        m_Device = DeviceVK::create( m_Instance, requiredExtensions, requiredLayers, true, true, true, 2, true, true, true, true );
+        m_Device = DeviceVK::create( m_Instance, requiredExtensions, requiredLayers, true, true, true, 2, true, true, true, m_Surface );
 
         return true;
     }

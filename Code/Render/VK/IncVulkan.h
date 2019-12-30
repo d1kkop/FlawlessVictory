@@ -6,7 +6,10 @@
 
 #if FV_DEBUG
 #define VK_CALL( exp ) \
-    if ( !exp ) { LOGW( "VK a vulkan call failed." ); return {}; }
+    { \
+        auto res = exp; \
+        if ( res != VK_SUCCESS ) { LOGW( "VK A vulkan call failed with error %d.", res ); return {}; } \
+    }
 #else
-#define VK_CALL( exp ) exp
+#define VK_CALL( exp )
 #endif

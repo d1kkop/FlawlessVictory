@@ -7,6 +7,7 @@ namespace fv
 {
     class InstanceVK;
     class DeviceVK;
+    class SurfaceVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -26,13 +27,15 @@ namespace fv
             void* pUserData);
 
         bool createInstance();
+        bool createSurface();
         bool createDevice();
         bool createWindow();
 
         void destroyWindow();
 
         M<InstanceVK> m_Instance;
-        M<DeviceVK> m_Device;
+        M<DeviceVK>   m_Device;
+        M<SurfaceVK>  m_Surface;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

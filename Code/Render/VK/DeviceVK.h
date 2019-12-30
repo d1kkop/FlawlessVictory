@@ -21,7 +21,7 @@ namespace fv
                                    bool wantComputeQueue,
                                    bool wantTransferQueue,
                                    bool wantSparseQueue,
-                                   bool wantPresentSupport );
+                                   const M<class SurfaceVK>& surface );
 
         VkPhysicalDevice physical() const { return m_Physical; }
         VkDevice logical() const { return m_Logical; }
