@@ -12,7 +12,7 @@
     }
 #define VK_CALL_VOID( exp ) \
     { \
-        auto res = exp; \
+        VkResult res = exp; \
         if ( res != VK_SUCCESS ) { LOGC( "VK A vulkan call failed with error %d.", res ); return; } \
     }
 #else

@@ -80,8 +80,12 @@
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="VK\CommandBuffersVK.h" />
+    <ClInclude Include="VK\CommandPoolVK.h" />
     <ClInclude Include="VK\DeviceVK.h" />
+    <ClInclude Include="VK\FenceVK.h" />
     <ClInclude Include="VK\IncVulkan.h" />
+    <ClInclude Include="VK\SemaphoreVK.h" />
     <ClInclude Include="VK\SimpleRendererVK.h" />
     <ClInclude Include="VK\InstanceVK.h" />
     <ClInclude Include="VK\SurfaceVK.h" />
@@ -95,8 +99,12 @@
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="VK\CommandBuffersVK.cpp" />
+    <ClCompile Include="VK\CommandPoolVK.cpp" />
     <ClCompile Include="VK\DeviceVK.cpp" />
+    <ClCompile Include="VK\FenceVK.cpp" />
     <ClCompile Include="VK\IncVulkan.cpp" />
+    <ClCompile Include="VK\SemaphoreVK.cpp" />
     <ClCompile Include="VK\SimpleRendererVK.cpp" />
     <ClCompile Include="VK\InstanceVK.cpp" />
     <ClCompile Include="VK\SurfaceVK.cpp" />

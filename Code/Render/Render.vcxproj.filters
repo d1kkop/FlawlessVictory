@@ -35,6 +35,18 @@
     <ClInclude Include="VK\SwapChainVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="VK\CommandPoolVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\CommandBuffersVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\FenceVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\SemaphoreVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
@@ -57,6 +69,18 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\SwapChainVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\CommandPoolVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\CommandBuffersVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\FenceVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\SemaphoreVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>
