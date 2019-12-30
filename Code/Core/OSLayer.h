@@ -15,7 +15,7 @@ namespace fv
         }
 
         template <typename T>
-        T get()
+        T get() const
         {
             static_assert( sizeof( m_Data ) >= sizeof( T ), "OSHandle too small.");
             T d;

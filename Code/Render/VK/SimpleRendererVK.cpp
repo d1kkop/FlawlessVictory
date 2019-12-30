@@ -4,7 +4,9 @@
 #include "../../Core/LogManager.h"
 #include "../../Core/OSLayer.h"
 #include "../../Core/Thread.h"
-#include "VKInstance.h"
+#include "../../Core/IncGLFW.h"
+#include "InstanceVK.h"
+#include "DeviceVK.h"
 
 namespace fv
 {
@@ -20,9 +22,9 @@ namespace fv
     {
         FV_CHECK_BG();
 
-        if (!createInstance()) return false;
         if (!createWindow()) return false;
-        
+        if (!createInstance()) return false;
+        if (!createDevice()) return false;
 
         LOG( "VK Initialized succesful." );
         return true;
@@ -47,13 +49,13 @@ namespace fv
         requiredLayers ={ "VK_LAYER_LUNARG_standard_validation" };
     #endif
 
-        m_Instance = VKInstance::create( "SimpleVKRenderer", requiredExtensions, requiredLayers );
+        m_Instance = InstanceVK::create( "SimpleVKRenderer", requiredExtensions, requiredLayers );
         if ( m_Instance )
         {
         #if FV_DEBUG
             m_Instance->createDebugCallback( false, false, SimpleRendererVK::debugCallback );
         #endif
-            return true;
+            return m_Instance->createWindowSurface( m_Window );
         }
         return false;
     }
@@ -66,7 +68,9 @@ namespace fv
     #if FV_DEBUG
         requiredLayers ={ "VK_LAYER_LUNARG_standard_validation" };
     #endif
-        m_RequiredPhysicalExtensions ={ };
+        requiredExtensions ={ };
+
+        m_Device = DeviceVK::create( m_Instance, requiredExtensions, requiredLayers, true, true, true, 2, true, true, true, true );
 
         return true;
     }

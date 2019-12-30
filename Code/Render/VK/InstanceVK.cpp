@@ -1,10 +1,12 @@
-#include "VKInstance.h"
+#include "InstanceVK.h"
 #include "../../Core/LogManager.h"
 #include "../../Core/Common.h"
+#include "../../Core/OSLayer.h"
+#include "../../Core/IncGLFW.h"
 
 namespace fv
 {
-    VKInstance::~VKInstance()
+    InstanceVK::~InstanceVK()
     {
         if ( m_HasDebugAttached )
         {
@@ -14,9 +16,19 @@ namespace fv
                 destroyDebugUtilsMesgenger( m_Instance, m_DbgUtilMessenger, nullptr );
             }
         }
+    #if FV_GLFW
+        if ( m_Surface )
+        {
+            vkDestroySurfaceKHR( m_Instance, m_Surface, NULL );
+        }
+    #endif
+        if ( m_Instance )
+        {
+            vkDestroyInstance( m_Instance, NULL );
+        }
     }
 
-    M<VKInstance> VKInstance::create( const String& appName,
+    M<InstanceVK> InstanceVK::create( const String& appName,
                                       const Vector<const char*>& requiredExtensions,
                                       const Vector<const char*>& requiredLayers )
     {
@@ -43,12 +55,12 @@ namespace fv
             return {};
         }
 
-        M<VKInstance> inst = std::make_shared<VKInstance>();
+        M<InstanceVK> inst = std::make_shared<InstanceVK>();
         inst->m_Instance = instance;
         return inst;
     }
 
-    bool VKInstance::createDebugCallback( bool includeVerbose, bool includeInfo, PFN_vkDebugUtilsMessengerCallbackEXT cb )
+    bool InstanceVK::createDebugCallback( bool includeVerbose, bool includeInfo, PFN_vkDebugUtilsMessengerCallbackEXT cb )
     {
         assert( m_Instance && !m_HasDebugAttached );
         if ( m_HasDebugAttached) return true;
@@ -74,6 +86,36 @@ namespace fv
         }
         m_HasDebugAttached = true;
         return true;
+    }
+
+    bool InstanceVK::createWindowSurface( const OSHandle& window )
+    {
+        if ( window.invalid() )
+        {
+            LOGW( "VK Invalid window handle." );
+            return false;
+        }
+    #if (FV_INCLUDE_WINHDR || FV_GLFW)
+        GLFWwindow* glfwWindow = window.get<GLFWwindow*>();
+        if ( !glfwWindow )
+        {
+            LOGW( "VK Invalid window handle" );
+            return false;
+        }
+    #endif
+    #if (FV_INCLUDE_WINHDR && FV_GLFW)
+        VkWin32SurfaceCreateInfoKHR createInfo ={};
+        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        createInfo.hwnd  = glfwGetWin32Window( glfwWindow );
+        createInfo.hinstance = GetModuleHandle( nullptr );
+        VK_CALL( vkCreateWin32SurfaceKHR( m_Instance, &createInfo, nullptr, &m_Surface ) );
+    #elif FV_GLFW
+        // TODO: always fails..
+        VK_CALL( glfwCreateWindowSurface( m_Instance, glfwWindow, NULL, &m_Surface ) );
+    #else
+    #error no impl
+    #endif
+        return false;
     }
 
 }

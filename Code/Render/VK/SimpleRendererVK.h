@@ -5,7 +5,8 @@
 
 namespace fv
 {
-    class VKInstance;
+    class InstanceVK;
+    class DeviceVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -30,7 +31,8 @@ namespace fv
 
         void destroyWindow();
 
-        M<VKInstance> m_Instance;
+        M<InstanceVK> m_Instance;
+        M<DeviceVK> m_Device;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

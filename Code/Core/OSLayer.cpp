@@ -107,6 +107,7 @@ namespace fv
         SDL_Window win = SDL_CreateWindow( name, posX, posY, width, height, flags );
         if ( win ) h.set( win );
     #elif FV_GLFW
+        glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API ); // Do not create OpenGL context.
         GLFWwindow* win = glfwCreateWindow( width, height, name, fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL );
         if ( win ) h.set( win );
     #else

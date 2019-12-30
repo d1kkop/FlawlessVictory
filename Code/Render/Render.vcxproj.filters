@@ -20,11 +20,14 @@
       <Filter>VK</Filter>
     </ClInclude>
     <ClInclude Include="RenderManager.h" />
-    <ClInclude Include="VK\VKInstance.h">
-      <Filter>VK\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="VK\SimpleRendererVK.h">
       <Filter>VK</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\InstanceVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\DeviceVK.h">
+      <Filter>VK\Classes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -38,7 +41,10 @@
     <ClCompile Include="VK\SimpleRendererVK.cpp">
       <Filter>VK</Filter>
     </ClCompile>
-    <ClCompile Include="VK\VKInstance.cpp">
+    <ClCompile Include="VK\InstanceVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\DeviceVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>
