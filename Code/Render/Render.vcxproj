@@ -85,6 +85,7 @@
     <ClInclude Include="VK\SimpleRendererVK.h" />
     <ClInclude Include="VK\InstanceVK.h" />
     <ClInclude Include="VK\SurfaceVK.h" />
+    <ClInclude Include="VK\SwapChainVK.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -99,6 +100,7 @@
     <ClCompile Include="VK\SimpleRendererVK.cpp" />
     <ClCompile Include="VK\InstanceVK.cpp" />
     <ClCompile Include="VK\SurfaceVK.cpp" />
+    <ClCompile Include="VK\SwapChainVK.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,9 +7,15 @@
 #if FV_DEBUG
 #define VK_CALL( exp ) \
     { \
+        VkResult res = exp; \
+        if ( res != VK_SUCCESS ) { LOGC( "VK A vulkan call failed with error %d.", res ); return {}; } \
+    }
+#define VK_CALL_VOID( exp ) \
+    { \
         auto res = exp; \
-        if ( res != VK_SUCCESS ) { LOGW( "VK A vulkan call failed with error %d.", res ); return {}; } \
+        if ( res != VK_SUCCESS ) { LOGC( "VK A vulkan call failed with error %d.", res ); return; } \
     }
 #else
 #define VK_CALL( exp )
+#define VK_CALL_VOID( exp )
 #endif

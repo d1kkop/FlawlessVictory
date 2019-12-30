@@ -35,6 +35,12 @@ namespace fv
         VkQueue sparseQueue()   const { return m_SparseQueue; }
         VkQueue presentQueue()  const { return m_PresentQueue; }
 
+        u32 graphicsQueueFamily() const { return m_GraphicsQueueFam; }
+        u32 computeQueueFamily()  const { return m_ComputeQueueFam; }
+        u32 transferQueueFamily() const { return m_TransferQueueFam; }
+        u32 sparseQueueFamily()   const { return m_SparseQueueFam; }
+        u32 presentQueueFamily()  const { return m_PresentQueueFam; }
+
     private:
         VkPhysicalDevice m_Physical {};
         VkDevice m_Logical {};
@@ -46,5 +52,10 @@ namespace fv
         VkQueue m_TransferQueue {};
         VkQueue m_SparseQueue {};
         VkQueue m_PresentQueue {};
+        u32 m_GraphicsQueueFam = -1;
+        u32 m_ComputeQueueFam  = -1;
+        u32 m_TransferQueueFam = -1;
+        u32 m_SparseQueueFam   = -1;
+        u32 m_PresentQueueFam  = -1;
     };
 }

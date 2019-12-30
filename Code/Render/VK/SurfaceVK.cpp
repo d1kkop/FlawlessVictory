@@ -21,20 +21,20 @@ namespace fv
     {
         if ( window.invalid() )
         {
-            LOGW( "VK Invalid window handle. Cannot create surface." );
-            return false;
+            LOGC( "VK Invalid window handle. Cannot create surface." );
+            return {};
         }
     #if (FV_GLFW)
         GLFWwindow* glfwWindow = window.get<GLFWwindow*>();
         VkSurfaceKHR surface {};
         if ( !glfwWindow )
         {
-            LOGW( "VK Invalid window handle" );
-            return false;
+            LOGC( "VK Invalid window handle" );
+            return {};
         }
         if ( glfwVulkanSupported() == GLFW_FALSE )
         {
-            LOGW( "VK No Vulkan support available for glfw surface." );
+            LOGC( "VK No Vulkan support available for glfw surface." );
             return false;
         }
         VK_CALL( glfwCreateWindowSurface( instance->vk(), glfwWindow, NULL, &surface ) );
@@ -48,6 +48,6 @@ namespace fv
     #else
     #error no impl
     #endif
-        return false;
+        return {};
     }
 }

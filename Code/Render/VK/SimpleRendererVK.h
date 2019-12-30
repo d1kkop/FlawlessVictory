@@ -8,6 +8,7 @@ namespace fv
     class InstanceVK;
     class DeviceVK;
     class SurfaceVK;
+    class SwapChainVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -26,16 +27,18 @@ namespace fv
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
             void* pUserData);
 
+        bool createWindow();
         bool createInstance();
         bool createSurface();
         bool createDevice();
-        bool createWindow();
+        bool createSwapChain();
 
         void destroyWindow();
 
-        M<InstanceVK> m_Instance;
-        M<DeviceVK>   m_Device;
-        M<SurfaceVK>  m_Surface;
+        M<InstanceVK>  m_Instance;
+        M<DeviceVK>    m_Device;
+        M<SurfaceVK>   m_Surface;
+        M<SwapChainVK> m_SwapChain;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

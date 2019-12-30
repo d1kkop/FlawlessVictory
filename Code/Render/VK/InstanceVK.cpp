@@ -43,7 +43,7 @@ namespace fv
         VkInstance instance;
         if ( vkCreateInstance( &createInfo, nullptr, &instance ) != VK_SUCCESS )
         {
-            LOGW( "VK Create instance failed." );
+            LOGC( "VK Create instance failed." );
             return {};
         }
 

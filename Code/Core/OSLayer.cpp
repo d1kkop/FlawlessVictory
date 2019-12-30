@@ -116,7 +116,21 @@ namespace fv
         return h;
     }
 
-    void OSDestroyWindow(OSHandle handle)
+    bool OSGetWindowSurfaceSize( OSHandle handle, u32& width, u32& height )
+    {
+        if ( handle.invalid() ) return false;
+    #if FV_GLFW
+        GLFWwindow* window = handle.get<GLFWwindow*>();
+        if (!window ) return false;
+        int w, h;
+        glfwGetFramebufferSize( window, &w, &h );
+        width = w;
+        height = h;
+    #endif
+        return true;
+    }
+
+    void OSDestroyWindow( OSHandle handle )
     {
         if ( handle.invalid() ) return;
     #if FV_SDL

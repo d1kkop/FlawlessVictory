@@ -8,6 +8,7 @@
 #include "InstanceVK.h"
 #include "DeviceVK.h"
 #include "SurfaceVK.h"
+#include "SwapChainVK.h"
 
 namespace fv
 {
@@ -27,6 +28,7 @@ namespace fv
         if (!createInstance()) return false;
         if (!createSurface()) return false;
         if (!createDevice()) return false;
+        if (!createSwapChain()) return false;
 
         LOG( "VK Initialized succesful." );
         return true;
@@ -67,6 +69,7 @@ namespace fv
         #endif
             return true;
         }
+
         return false;
     }
 
@@ -88,7 +91,23 @@ namespace fv
 
         m_Device = DeviceVK::create( m_Instance, requiredExtensions, requiredLayers, true, true, true, 2, true, true, true, m_Surface );
 
-        return true;
+        return m_Device != nullptr;
+    }
+
+    bool SimpleRendererVK::createSwapChain()
+    {
+        u32 width;
+        u32 height;
+        if ( !OSGetWindowSurfaceSize( m_Window, width, height ))
+        {
+            LOGC( "VK Failed to obtain window surface size." );
+            return false;
+        }
+        Set<u32> graphicsAndPresentQueueFamIndices;
+        graphicsAndPresentQueueFamIndices.insert( m_Device->graphicsQueueFamily() );
+        graphicsAndPresentQueueFamIndices.insert( m_Device->computeQueueFamily() );
+        m_SwapChain = SwapChainVK::create( m_Device, m_Surface, width, height, 2, 1, graphicsAndPresentQueueFamIndices );
+        return m_SwapChain != nullptr;
     }
 
     bool SimpleRendererVK::createWindow()

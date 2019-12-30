@@ -41,6 +41,7 @@ namespace fv
     FV_DLL OSHandle OSLoadLibrary(const char* path);
     FV_DLL void OSSetThreadName(const char* name);
     FV_DLL OSHandle OSCreateWindow(const char* name, u32 posX, u32 posY, u32 width, u32 height, bool fullscreen);
+    FV_DLL bool OSGetWindowSurfaceSize(OSHandle handle, u32& width, u32& height);
     FV_DLL void OSDestroyWindow(OSHandle handle);
     FV_DLL OSHandle OSStartProgram(const char* path, const char* arguments);
     FV_DLL void OSWaitOnProgram(OSHandle handle);

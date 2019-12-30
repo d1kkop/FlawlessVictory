@@ -64,7 +64,7 @@ namespace fv
 
         if ( !chosenPhysical )
         {
-            LOGW( "VK Failed to find appropriate physical device." );
+            LOGC( "VK Failed to find appropriate physical device." );
             return {};
         }
 
@@ -86,55 +86,51 @@ namespace fv
             VkQueueFamilyProperties& queueFam = queueFamilies[i];
             if ( queueFam.queueCount > 0 )
             {
-                if ( (queueFam.queueFlags & VK_QUEUE_GRAPHICS_BIT) ) graphicsFam = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_COMPUTE_BIT) )  computeFam  = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_TRANSFER_BIT) ) transferFam = i;
-                if ( (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) sparseFam = i;
+                if ( graphicsFam==-1 && (queueFam.queueFlags & VK_QUEUE_GRAPHICS_BIT) ) graphicsFam = i;
+                if ( computeFam==-1 && (queueFam.queueFlags & VK_QUEUE_COMPUTE_BIT) )  computeFam  = i;
+                if ( transferFam==-1 && (queueFam.queueFlags & VK_QUEUE_TRANSFER_BIT) ) transferFam = i;
+                if ( sparseFam==-1 && (queueFam.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) ) sparseFam = i;
             }
 
             // Present support
-        #if FV_INCLUDE_WINHDR
-            if ( surface->vk() )
+            if ( surface->vk() && presentFam==-1 )
             {
                 VkBool32 presentSupported = false;
-                vkGetPhysicalDeviceSurfaceSupportKHR( chosenPhysical, i, surface->vk(), &presentSupported );
+                VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( chosenPhysical, i, surface->vk(), &presentSupported ) );
                 if ( presentSupported ) presentFam = i;
             }
-        #elif FV_GLFW
-            // Always returning NULL..
-            if ( glfwGetPhysicalDevicePresentationSupport( instance->vk(), chosenPhysical, i ) )
-            {
-                presentFam = i;
-            }
-        #else
-        #error no impl
-        #endif
+            /*#if FV_GLFW
+                if ( glfwGetPhysicalDevicePresentationSupport( instance->vk(), chosenPhysical, i ) )
+                {
+                    presentFam = i;
+                }
+            #endif*/
         }
 
         // Some error checking
         if ( graphicsFam == -1 && numGraphicQueues != 0 )
         {
-            LOGW( "VK Cannot find graphic queue family." );
+            LOGC( "VK Cannot find graphic queue family." );
             return {};
         }
         if ( computeFam == -1 && wantComputeQueue )
         {
-            LOGW( "VK Cannot find compute queue family." );
+            LOGC( "VK Cannot find compute queue family." );
             return {};
         }
         if ( transferFam == -1 && wantTransferQueue )
         {
-            LOGW( "VK Cannot find transfer queue family." );
+            LOGC( "VK Cannot find transfer queue family." );
             return {};
         }
         if ( sparseFam == -1 && wantSparseQueue )
         {
-            LOGW( "VK Cannot find spare queue family." );
+            LOGC( "VK Cannot find spare queue family." );
             return {};
         }
         if ( presentFam == -1 && surface )
         {
-            LOGW( "VK Cannot find present queue family." );
+            LOGC( "VK Cannot find present queue family." );
             return {};
         }
 
@@ -194,6 +190,11 @@ namespace fv
         if ( transferFam != -1 && wantTransferQueue )   vkGetDeviceQueue( logical, transferFam, 0, &device->m_TransferQueue );
         if ( sparseFam != -1 && wantSparseQueue )       vkGetDeviceQueue( logical, sparseFam, 0, &device->m_SparseQueue );
         if ( presentFam != -1 && surface )              vkGetDeviceQueue( logical, presentFam, 0, &device->m_PresentQueue );
+
+        device->m_GraphicsQueueFam = graphicsFam;
+        device->m_ComputeQueueFam = computeFam;
+        device->m_TransferQueueFam = transferFam;
+        device->m_SparseQueueFam = sparseFam;
         
         return device;
     }
