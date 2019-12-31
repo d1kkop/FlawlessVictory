@@ -84,7 +84,11 @@
     <ClInclude Include="VK\CommandPoolVK.h" />
     <ClInclude Include="VK\DeviceVK.h" />
     <ClInclude Include="VK\FenceVK.h" />
+    <ClInclude Include="VK\FrameBufferVK.h" />
+    <ClInclude Include="VK\HelperVK.h" />
+    <ClInclude Include="VK\ImageViewVK.h" />
     <ClInclude Include="VK\IncVulkan.h" />
+    <ClInclude Include="VK\RenderPassVK.h" />
     <ClInclude Include="VK\SemaphoreVK.h" />
     <ClInclude Include="VK\SimpleRendererVK.h" />
     <ClInclude Include="VK\InstanceVK.h" />
@@ -103,7 +107,11 @@
     <ClCompile Include="VK\CommandPoolVK.cpp" />
     <ClCompile Include="VK\DeviceVK.cpp" />
     <ClCompile Include="VK\FenceVK.cpp" />
+    <ClCompile Include="VK\FrameBufferVK.cpp" />
+    <ClCompile Include="VK\HelperVK.cpp" />
+    <ClCompile Include="VK\ImageViewVK.cpp" />
     <ClCompile Include="VK\IncVulkan.cpp" />
+    <ClCompile Include="VK\RenderPassVK.cpp" />
     <ClCompile Include="VK\SemaphoreVK.cpp" />
     <ClCompile Include="VK\SimpleRendererVK.cpp" />
     <ClCompile Include="VK\InstanceVK.cpp" />
