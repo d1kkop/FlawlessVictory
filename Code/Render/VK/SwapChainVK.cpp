@@ -23,7 +23,7 @@ namespace fv
     M<SwapChainVK> SwapChainVK::create( const M<DeviceVK>& device,
                                         const M<SurfaceVK>& surface,
                                         u32 width, u32 height, u32 numImages, u32 numLayers,
-                                        const Set<u32>& queueFamIndicesToAccess )
+                                        const List<u32>& queueIndices )
     {
         VkSurfaceFormatKHR chosenFormat;
         VkPresentModeKHR chosenPresentMode;
@@ -54,13 +54,11 @@ namespace fv
         createInfo.imageArrayLayers = imageArrayLayerCount; // In case of 3d stereo rendering must be 2
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        if ( queueFamIndicesToAccess.size() > 1 )
+        if ( queueIndices.size() > 1 )
         {
-            List<u32> indicesAsList;
-            for ( auto& idx : queueFamIndicesToAccess ) indicesAsList.push_back( idx );
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = (u32)indicesAsList.size();
-            createInfo.pQueueFamilyIndices = (uint32_t*)indicesAsList.data();
+            createInfo.queueFamilyIndexCount = (u32)queueIndices.size();
+            createInfo.pQueueFamilyIndices   = (uint32_t*)queueIndices.data();
         }
         else
         {

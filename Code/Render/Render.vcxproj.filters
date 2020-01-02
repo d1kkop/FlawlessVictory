@@ -65,6 +65,12 @@
     <ClInclude Include="VK\ImageVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="VK\ShaderVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\PipelineVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
@@ -117,6 +123,12 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\ImageVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\ShaderVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\PipelineVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>

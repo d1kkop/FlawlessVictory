@@ -9,6 +9,7 @@
 #include "DeviceVK.h"
 #include "SurfaceVK.h"
 #include "SwapChainVK.h"
+#include "AllocatorVK.h"
 
 namespace fv
 {
@@ -29,6 +30,7 @@ namespace fv
         if (!createSurface()) return false;
         if (!createDevice()) return false;
         if (!createSwapChain()) return false;
+        if (!createAllocator()) return false;
 
         LOG( "VK Initialized succesful." );
         return true;
@@ -83,11 +85,11 @@ namespace fv
     {
         Vector<const char*> requiredExtensions;
         Vector<const char*> requiredLayers;
-
+        
     #if FV_DEBUG
         requiredLayers ={ "VK_LAYER_LUNARG_standard_validation" };
     #endif
-        requiredExtensions ={ };
+        requiredExtensions ={ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
         m_Device = DeviceVK::create( m_Instance, requiredExtensions, requiredLayers, true, true, true, 2, true, true, true, m_Surface );
 
@@ -103,11 +105,15 @@ namespace fv
             LOGC( "VK Failed to obtain window surface size." );
             return false;
         }
-        Set<u32> graphicsAndPresentQueueFamIndices;
-        graphicsAndPresentQueueFamIndices.insert( m_Device->graphicsQueueFamily() );
-        graphicsAndPresentQueueFamIndices.insert( m_Device->computeQueueFamily() );
-        m_SwapChain = SwapChainVK::create( m_Device, m_Surface, width, height, 2, 1, graphicsAndPresentQueueFamIndices );
+        auto queueIndices = m_Device->composeQueueFamIndices( true, false, false, true, false );
+        m_SwapChain = SwapChainVK::create( m_Device, m_Surface, width, height, 2, 1, queueIndices );
         return m_SwapChain != nullptr;
+    }
+
+    bool SimpleRendererVK::createAllocator()
+    {
+        m_Allocator = AllocatorVK::create( m_Device );
+        return m_Allocator != nullptr;
     }
 
     bool SimpleRendererVK::createWindow()

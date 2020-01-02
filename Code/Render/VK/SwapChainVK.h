@@ -17,7 +17,7 @@ namespace fv
         static M<SwapChainVK> create( const M<DeviceVK>& device,
                                       const M<SurfaceVK>& surface,
                                       u32 width, u32 height, u32 numImages, u32 numLayers,
-                                      const Set<u32>& queueFamIndicesToAccess );
+                                      const List<u32>& queueFamIndicesToAccess );
 
         static void querySwapChainInfo( VkPhysicalDevice device, VkSurfaceKHR surface,
                                         Vector<VkSurfaceFormatKHR>& formats,

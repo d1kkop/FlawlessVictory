@@ -199,4 +199,17 @@ namespace fv
         return device;
     }
 
+    List<u32> DeviceVK::composeQueueFamIndices( bool graphic, bool compute, bool transfer, bool present, bool sparse )
+    {
+        Set<u32> indices;
+        if ( graphic ) indices.insert( m_GraphicsQueueFam );
+        if ( compute ) indices.insert( m_ComputeQueueFam );
+        if ( transfer ) indices.insert(m_TransferQueueFam );
+        if ( present ) indices.insert(m_PresentQueueFam );
+        if ( sparse ) indices.insert(m_SparseQueueFam);
+        List<u32> lIndices;
+        for (auto& i : indices) lIndices.emplace_back(i);
+        return std::move(lIndices);
+    }
+
 }

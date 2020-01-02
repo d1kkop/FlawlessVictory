@@ -90,8 +90,13 @@
     <ClInclude Include="VK\ImageViewVK.h" />
     <ClInclude Include="VK\ImageVK.h" />
     <ClInclude Include="VK\IncVulkan.h" />
+    <ClInclude Include="VK\PipelineVK.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="VK\RenderPassVK.h" />
     <ClInclude Include="VK\SemaphoreVK.h" />
+    <ClInclude Include="VK\ShaderVK.h" />
     <ClInclude Include="VK\SimpleRendererVK.h" />
     <ClInclude Include="VK\InstanceVK.h" />
     <ClInclude Include="VK\SurfaceVK.h" />
@@ -115,8 +120,13 @@
     <ClCompile Include="VK\ImageViewVK.cpp" />
     <ClCompile Include="VK\ImageVK.cpp" />
     <ClCompile Include="VK\IncVulkan.cpp" />
+    <ClCompile Include="VK\PipelineVK.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="VK\RenderPassVK.cpp" />
     <ClCompile Include="VK\SemaphoreVK.cpp" />
+    <ClCompile Include="VK\ShaderVK.cpp" />
     <ClCompile Include="VK\SimpleRendererVK.cpp" />
     <ClCompile Include="VK\InstanceVK.cpp" />
     <ClCompile Include="VK\SurfaceVK.cpp" />

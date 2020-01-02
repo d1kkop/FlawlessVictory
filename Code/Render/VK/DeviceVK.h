@@ -41,6 +41,8 @@ namespace fv
         u32 sparseQueueFamily()   const { return m_SparseQueueFam; }
         u32 presentQueueFamily()  const { return m_PresentQueueFam; }
 
+        List<u32> composeQueueFamIndices( bool graphic = true, bool compute = false, bool transfer = false, bool present = false, bool sparse = false );
+
     private:
         VkPhysicalDevice m_Physical {};
         VkDevice m_Logical {};

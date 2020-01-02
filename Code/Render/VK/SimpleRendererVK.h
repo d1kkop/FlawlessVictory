@@ -9,6 +9,7 @@ namespace fv
     class DeviceVK;
     class SurfaceVK;
     class SwapChainVK;
+    class AllocatorVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -32,6 +33,7 @@ namespace fv
         bool createSurface();
         bool createDevice();
         bool createSwapChain();
+        bool createAllocator();
 
         void destroyWindow();
 
@@ -39,6 +41,7 @@ namespace fv
         M<DeviceVK>    m_Device;
         M<SurfaceVK>   m_Surface;
         M<SwapChainVK> m_SwapChain;
+        M<AllocatorVK> m_Allocator;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;
