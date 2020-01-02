@@ -31,8 +31,6 @@ namespace fv
                                        AttachmentLoadOp stencilLoadOp = AttachmentLoadOp::DontCare, AttachmentSaveOp stencilSaveOp = AttachmentSaveOp::DontCare );
         /* TODO add other create functions for more sophisticated render pass set ups. */
 
-        //void beginCmd( VkCommandBu
-
         VkRenderPass vk() const { return m_RenderPass; }
         const M<DeviceVK>& device() const { return m_Device; }
 

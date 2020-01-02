@@ -59,6 +59,12 @@
     <ClInclude Include="VK\HelperVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="VK\AllocatorVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\ImageVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
@@ -105,6 +111,12 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\HelperVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\AllocatorVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\ImageVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>

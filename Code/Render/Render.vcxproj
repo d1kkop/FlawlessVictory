@@ -80,6 +80,7 @@
     <ClInclude Include="..\Render.h" />
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="VK\AllocatorVK.h" />
     <ClInclude Include="VK\CommandBuffersVK.h" />
     <ClInclude Include="VK\CommandPoolVK.h" />
     <ClInclude Include="VK\DeviceVK.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="VK\FrameBufferVK.h" />
     <ClInclude Include="VK\HelperVK.h" />
     <ClInclude Include="VK\ImageViewVK.h" />
+    <ClInclude Include="VK\ImageVK.h" />
     <ClInclude Include="VK\IncVulkan.h" />
     <ClInclude Include="VK\RenderPassVK.h" />
     <ClInclude Include="VK\SemaphoreVK.h" />
@@ -103,6 +105,7 @@
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="VK\AllocatorVK.cpp" />
     <ClCompile Include="VK\CommandBuffersVK.cpp" />
     <ClCompile Include="VK\CommandPoolVK.cpp" />
     <ClCompile Include="VK\DeviceVK.cpp" />
@@ -110,6 +113,7 @@
     <ClCompile Include="VK\FrameBufferVK.cpp" />
     <ClCompile Include="VK\HelperVK.cpp" />
     <ClCompile Include="VK\ImageViewVK.cpp" />
+    <ClCompile Include="VK\ImageVK.cpp" />
     <ClCompile Include="VK\IncVulkan.cpp" />
     <ClCompile Include="VK\RenderPassVK.cpp" />
     <ClCompile Include="VK\SemaphoreVK.cpp" />
