@@ -35,7 +35,9 @@ namespace fv
         const M<DeviceVK>& device() const { return m_Device; }
         const M<SurfaceVK>& surface() const { return m_Surface; }
         VkSurfaceFormatKHR format() const { return m_Format; }
-        VkExtent2D extent() const { return m_Extent; }
+        const VkExtent2D& extent() const { return m_Extent; }
+        u32 numImages() const { return (u32)m_Images.size(); }
+        VkImage image(u32 idx) const { return m_Images[idx]; }
 
     private:
         VkSwapchainKHR m_SwapChain;

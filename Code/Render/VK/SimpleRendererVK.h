@@ -10,6 +10,11 @@ namespace fv
     class SurfaceVK;
     class SwapChainVK;
     class AllocatorVK;
+    class RenderPassVK;
+    class PipelineLayoutVK;
+    class PipelineVK;
+    class ShaderVK;
+    class FrameBufferVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -34,6 +39,11 @@ namespace fv
         bool createDevice();
         bool createSwapChain();
         bool createAllocator();
+        bool createShaders();
+        bool createSimplePass();
+        bool createPipelineLayout();
+        bool createPipeline();
+        bool createFramebuffer();
 
         void destroyWindow();
 
@@ -42,6 +52,14 @@ namespace fv
         M<SurfaceVK>   m_Surface;
         M<SwapChainVK> m_SwapChain;
         M<AllocatorVK> m_Allocator;
+
+        // Simple rendering
+        M<ShaderVK> m_VertexShaderSimple;
+        M<ShaderVK> m_FragmentShaderSimple;
+        M<RenderPassVK> m_SimplePlass;
+        M<PipelineLayoutVK> m_EmptyPipelineLayout;
+        M<PipelineVK> m_SimplePipeline;
+        List<M<FrameBufferVK>> m_FrameBuffers;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

@@ -1,5 +1,9 @@
 #include "PipelineVK.h"
+#include "DeviceVK.h"
 #include "RenderPassVK.h"
+#include "PipelineLayoutVK.h"
+#include "ShaderVK.h"
+#include "HelperVK.h"
 #include "../../Core/LogManager.h"
 #include "../../Core/Common.h"
 
@@ -9,28 +13,26 @@ namespace fv
     {
         if ( m_Pipeline )
         {
-            vkDestroyPipeline( m_Device->logical(), m_Pipeline, NULL );
+            vkDestroyPipeline( m_RenderPass->device()->logical(), m_Pipeline, NULL );
         }
     }
 
-    M<PipelineVK> PipelineVK::create( const M<DeviceVK>& device,
-                                      const M<RenderPassVK>& renderPass,
-                                      PrimitiveType primType,
-                                      const M<Shader>& vertexShader,
-                                      const M<Shader>& fragmentShader,
-                                      const M<Shader>& geometryShader,
-                                      const M<Shader>& tesselationControlShader,
-                                      const M<Shader>& tesselationEvaluationShader,
-                                      const Vector<VkVertexInputBindingDescription>& vertexBindings,
-                                      const Vector<VkVertexInputAttributeDescription>& vertexAttribs,
+    M<PipelineVK> PipelineVK::create( const M<RenderPassVK>& renderPass,
+                                      const M<PipelineLayoutVK>& pipelineLayout,
+                                      PrimitiveTypeVK primType,
+                                      const M<ShaderVK>& vertexShader,
+                                      const M<ShaderVK>& fragmentShader,
+                                      const M<ShaderVK>& geometryShader,
+                                      const M<ShaderVK>& tesselationControlShader,
+                                      const M<ShaderVK>& tesselationEvaluationShader,
+                                      const class VertexDescriptorSetVK& vertexDescriptorSet,
                                       const VkViewport& vp,
-                                      u32 vertexSize,
-                                      bool depthTest = true,
-                                      bool depthWrite = true,
-                                      bool stencilTest = false,
-                                      VkCullModeFlagBits cullmode,
-                                      VkPolygonMode polyMode,
-                                      VkFrontFace frontFace,
+                                      bool depthTest,
+                                      bool depthWrite,
+                                      bool stencilTest,
+                                      CullModeVK cullmode,
+                                      PolygonModeVK polyMode,
+                                      FrontFaceVK frontFace,
                                       float lineWidth,
                                       u32 numSamples )
     {
@@ -68,17 +70,12 @@ namespace fv
             shaderCreateInfos.emplace_back( shaderCreateInfo );
         }
 
-        VkVertexInputBindingDescription bindingDescription ={};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = vertexSize;
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
         VkPipelineVertexInputStateCreateInfo vertexInputInfo ={};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = (u32)vertexBindings.size();
-        vertexInputInfo.pVertexBindingDescriptions = vertexBindings.data();
-        vertexInputInfo.vertexAttributeDescriptionCount = (u32)vertexAttribs.size();
-        vertexInputInfo.pVertexAttributeDescriptions = vertexAttribs.data();
+        vertexInputInfo.vertexBindingDescriptionCount = vertexDescriptorSet.numInputBindings();
+        vertexInputInfo.pVertexBindingDescriptions = vertexDescriptorSet.inputBindings().data();
+        vertexInputInfo.vertexAttributeDescriptionCount = vertexDescriptorSet.numInputAttribs();
+        vertexInputInfo.pVertexAttributeDescriptions = vertexDescriptorSet.inputAttribs().data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly ={};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -100,10 +97,10 @@ namespace fv
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = polyMode;
+        rasterizer.polygonMode = (VkPolygonMode) polyMode;
         rasterizer.lineWidth = lineWidth;
-        rasterizer.cullMode  = cullmode;
-        rasterizer.frontFace = frontFace;
+        rasterizer.cullMode  = (VkCullModeFlags) cullmode;
+        rasterizer.frontFace = (VkFrontFace) frontFace;
         rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineDepthStencilStateCreateInfo depthStencil ={};
@@ -115,8 +112,8 @@ namespace fv
         depthStencil.minDepthBounds = 0.0f; // Optional
         depthStencil.maxDepthBounds = 1.0f; // Optional
         depthStencil.stencilTestEnable = stencilTest;
-        depthStencil.front ={}; // Optional
-        depthStencil.back ={}; // Optional
+        depthStencil.front = {}; // Optional
+        depthStencil.back = {}; // Optional
 
         VkPipelineMultisampleStateCreateInfo multisampling ={};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -138,47 +135,33 @@ namespace fv
         colorBlending.blendConstants[2] = 0.0f;
         colorBlending.blendConstants[3] = 0.0f;
 
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo ={};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-        VkPipelineLayout pipelineLayout;
-        if ( vkCreatePipelineLayout( device, &pipelineLayoutInfo, nullptr, &pipelineLayout ) != VK_SUCCESS )
-        {
-            LOGC( "VK Failed to create base pipeline layout" );
-            return false;
-        }
-
         VkGraphicsPipelineCreateInfo pipelineInfo ={};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = numShaderStages;
-        pipelineInfo.pStages = shaderStages; // vertex and fragment (minimum)
+        pipelineInfo.stageCount = (u32)shaderCreateInfos.size();
+        pipelineInfo.pStages = shaderCreateInfos.data(); // vertex and fragment (minimum)
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
         pipelineInfo.pViewportState = &viewportState;
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.layout = pipelineLayout->vk();
         pipelineInfo.renderPass = renderPass->vk();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
 
         VkPipeline pipeline;
-        if ( vkCreateGraphicsPipelines( device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline ) != VK_SUCCESS )
+        if ( vkCreateGraphicsPipelines( renderPass->device()->logical(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline ) != VK_SUCCESS )
         {
             LOGC( "VK Failed to create graphics pipeline." );
-            vkDestroyPipelineLayout( device, pipelineLayout, nullptr );
-            pipelineLayout = nullptr;
             return false;
         }
 
         M<PipelineVK> pipelineVK = std::make_shared<PipelineVK>();
         pipelineVK->m_Pipeline = pipeline;
-        pipelineVK->m_PiplineLayout = pipelineLayout;
-        pipelineVK->m_Device = device;
+        pipelineVK->m_RenderPass = renderPass;
+        pipelineVK->m_PipelineLayout = pipelineLayout;
         return pipelineVK;
     }
 

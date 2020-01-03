@@ -100,8 +100,8 @@ namespace fv
                                           Vector<VkPresentModeKHR>& presentModes )
     {
         assert( device && surface );
-        uint32_t formatCount;
-        uint32_t presentModeCount;
+        uint32_t formatCount = 0;
+        uint32_t presentModeCount = 0;
         VK_CALL_VOID( vkGetPhysicalDeviceSurfaceCapabilitiesKHR( device, surface, &capabilities ) );
         VK_CALL_VOID( vkGetPhysicalDeviceSurfaceFormatsKHR( device, surface, &formatCount, nullptr ) );
         if ( formatCount > 0 )

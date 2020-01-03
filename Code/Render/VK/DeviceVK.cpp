@@ -29,7 +29,7 @@ namespace fv
     {
         // --- Enumerate devices ---
 
-        uint32_t numPhysicalDevice;
+        uint32_t numPhysicalDevice = 0;
         List<VkPhysicalDevice> devices;
         VK_CALL( vkEnumeratePhysicalDevices( instance->vk(), &numPhysicalDevice, NULL ) );
         devices.resize( numPhysicalDevice );
@@ -195,6 +195,7 @@ namespace fv
         device->m_ComputeQueueFam = computeFam;
         device->m_TransferQueueFam = transferFam;
         device->m_SparseQueueFam = sparseFam;
+        device->m_PresentQueueFam = presentFam;
         
         return device;
     }

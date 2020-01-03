@@ -1,5 +1,6 @@
 #include "ImageViewVK.h"
 #include "DeviceVK.h"
+#include "ImageVK.h"
 #include "../../Core/LogManager.h"
 #include "../../Core/Common.h"
 
@@ -51,5 +52,20 @@ namespace fv
         return imageViewVK;
     }
 
+
+    M<ImageViewVK> ImageViewVK::create( const M<DeviceVK>& device, 
+                                        const M<ImageVK> image, 
+                                        VkFormat format, 
+                                        ViewTypeVK viewType,
+                                        AspectTypeVK aspectType,
+                                        u32 baseArrayLayer, 
+                                        u32 layerCount,
+                                        u32 mipmapBaseLevel, 
+                                        u32 levelCount )
+    {
+        M<ImageViewVK> imgView = create( device, image->vk(), format, viewType, aspectType, baseArrayLayer, layerCount, mipmapBaseLevel, levelCount );
+        imgView->m_Image = image;
+        return imgView;
+    }
 
 }

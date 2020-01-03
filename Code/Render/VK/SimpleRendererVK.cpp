@@ -5,11 +5,19 @@
 #include "../../Core/OSLayer.h"
 #include "../../Core/Thread.h"
 #include "../../Core/IncGLFW.h"
+#include "../../Core/Directories.h"
 #include "InstanceVK.h"
 #include "DeviceVK.h"
 #include "SurfaceVK.h"
 #include "SwapChainVK.h"
 #include "AllocatorVK.h"
+#include "ShaderVK.h"
+#include "RenderPassVK.h"
+#include "PipelineLayoutVK.h"
+#include "PipelineVK.h"
+#include "FrameBufferVK.h"
+#include "ImageViewVK.h"
+#include "HelperVK.h"
 
 namespace fv
 {
@@ -31,6 +39,11 @@ namespace fv
         if (!createDevice()) return false;
         if (!createSwapChain()) return false;
         if (!createAllocator()) return false;
+        if (!createShaders()) return false;
+        if (!createSimplePass()) return false;
+        if (!createPipelineLayout()) return false;
+        if (!createPipeline()) return false;
+        if (!createFramebuffer()) return false;
 
         LOG( "VK Initialized succesful." );
         return true;
@@ -114,6 +127,76 @@ namespace fv
     {
         m_Allocator = AllocatorVK::create( m_Device );
         return m_Allocator != nullptr;
+    }
+
+    bool SimpleRendererVK::createShaders()
+    {
+        Vector<char> code;
+        if (!LoadBinaryFile((Directories::standard() / "standard.frag.spv").string().c_str(), code))
+        {
+            LOGC( "VK Failed to load standard.frag.spv, shader initialization failed." );
+            return false;
+        }
+        m_FragmentShaderSimple = ShaderVK::create( m_Device, code );
+        if ( !LoadBinaryFile( (Directories::standard() / "standard.vert.spv").string().c_str(), code ))
+        {
+            LOGC( "VK Failed to load standard.vert.spv, shader initialization failed." );
+            return false;
+        }
+        m_VertexShaderSimple = ShaderVK::create( m_Device, code );
+        if ( !(m_FragmentShaderSimple && m_VertexShaderSimple) )
+        {
+            LOGC( "VK Failed to load standard frag and vert shader." );
+            return false;
+        }
+        return true;
+    }
+
+    bool SimpleRendererVK::createSimplePass()
+    {
+        m_SimplePlass = RenderPassVK::create( m_Device, m_SwapChain->format().format, 1, AttachmentLoadOp::Clear, AttachmentSaveOp::Save, AttachmentLoadOp::DontCare, AttachmentSaveOp::DontCare );
+        return m_SimplePlass != NULL;
+    }
+
+    bool SimpleRendererVK::createPipelineLayout()
+    {
+        m_EmptyPipelineLayout = PipelineLayoutVK::create( m_Device );
+        return m_EmptyPipelineLayout != nullptr;
+    }
+
+    bool SimpleRendererVK::createPipeline()
+    {
+        VertexDescriptorSetVK vset;
+        vset.addBinding( 0, sizeof(float)*6 );
+        vset.addAttrib( 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 );
+        vset.addAttrib( 0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float)*3 );
+
+        VkViewport vp = HelperVK::makeSimpleViewport( m_SwapChain );
+
+        m_SimplePipeline = PipelineVK::create( m_SimplePlass,
+                                               m_EmptyPipelineLayout,
+                                               PrimitiveTypeVK::TriangleList,
+                                               m_VertexShaderSimple, m_FragmentShaderSimple, NULL, NULL, NULL,
+                                               vset, 
+                                               vp,
+                                               false, false, false,
+                                               CullModeVK::Back, PolygonModeVK::Fill, FrontFaceVK::CCW, 
+                                               1, 1 );
+                                               
+       return m_SimplePipeline != nullptr;                                       
+    }
+
+    bool SimpleRendererVK::createFramebuffer()
+    {
+        for ( u32 i=0; i < m_SwapChain->numImages(); i++ )
+        {
+            M<ImageViewVK> imgView = ImageViewVK::create( m_Device, m_SwapChain->image( i ), m_SwapChain->format().format, ViewTypeVK::Type2D, AspectTypeVK::Color, 0, 1, 0, 1 );
+            M<FrameBufferVK> frameBuffer = FrameBufferVK::create( m_SimplePlass, { imgView }, m_SwapChain->extent(), 1 );
+            if ( frameBuffer == NULL ) 
+                return false;
+            m_FrameBuffers.emplace_back( frameBuffer );
+        }
+        return true;
     }
 
     bool SimpleRendererVK::createWindow()

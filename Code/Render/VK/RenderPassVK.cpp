@@ -25,6 +25,8 @@ namespace fv
         colorAttachment.storeOp = (VkAttachmentStoreOp) saveOp;
         colorAttachment.stencilLoadOp  = (VkAttachmentLoadOp) stencilLoadOp;
         colorAttachment.stencilStoreOp = (VkAttachmentStoreOp) stencilSaveOp;
+        colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference colorAttachmentRef ={};
         colorAttachmentRef.attachment = 0;
@@ -42,7 +44,7 @@ namespace fv
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
 
-        VkRenderPass renderPass;
+        VkRenderPass renderPass {};
         VK_CALL( vkCreateRenderPass( device->logical(), &renderPassInfo, NULL, &renderPass ) );
 
         auto renderPassVk = std::make_shared<RenderPassVK>();

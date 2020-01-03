@@ -71,6 +71,9 @@
     <ClInclude Include="VK\PipelineVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="VK\PipelineLayoutVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
@@ -129,6 +132,9 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\PipelineVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\PipelineLayoutVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>
