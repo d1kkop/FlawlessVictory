@@ -27,6 +27,7 @@ namespace fv
         void resetEntireBufferState();
 
         void begin( CommandBufferUsage usage, u32 bufferIdx=0 );
+        VkCommandBuffer vk( u32 bufferIdx=0 ) const { return m_CommandBuffers[bufferIdx]; }
         void end( u32 bufferIdx=0 );
 
         const M<CommandPoolVK>& commandPool() const { return m_CommandPool; }

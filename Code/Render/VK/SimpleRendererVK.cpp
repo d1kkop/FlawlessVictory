@@ -17,6 +17,9 @@
 #include "PipelineVK.h"
 #include "FrameBufferVK.h"
 #include "ImageViewVK.h"
+#include "CommandPoolVK.h"
+#include "CommandBuffersVK.h"
+#include "SemaphoreVK.h"
 #include "HelperVK.h"
 
 namespace fv
@@ -39,11 +42,14 @@ namespace fv
         if (!createDevice()) return false;
         if (!createSwapChain()) return false;
         if (!createAllocator()) return false;
+        if (!createCommandPool()) return false;
         if (!createShaders()) return false;
         if (!createSimplePass()) return false;
         if (!createPipelineLayout()) return false;
         if (!createPipeline()) return false;
-        if (!createFramebuffer()) return false;
+        if (!createFramebuffers()) return false;
+        if (!createCommandBuffers()) return false;
+        if (!createSemaphores()) return false;
 
         LOG( "VK Initialized succesful." );
         return true;
@@ -52,10 +58,6 @@ namespace fv
     void SimpleRendererVK::closeGraphics()
     {
         destroyWindow();
-    }
-
-    void SimpleRendererVK::render()
-    {
     }
 
     bool SimpleRendererVK::createInstance()
@@ -129,6 +131,12 @@ namespace fv
         return m_Allocator != nullptr;
     }
 
+    bool SimpleRendererVK::createCommandPool()
+    {
+        m_CommandPool = CommandPoolVK::create( m_Device, m_Device->graphicsQueueFamily() );
+        return m_CommandPool != nullptr;
+    }
+
     bool SimpleRendererVK::createShaders()
     {
         Vector<char> code;
@@ -186,7 +194,7 @@ namespace fv
        return m_SimplePipeline != nullptr;                                       
     }
 
-    bool SimpleRendererVK::createFramebuffer()
+    bool SimpleRendererVK::createFramebuffers()
     {
         for ( u32 i=0; i < m_SwapChain->numImages(); i++ )
         {
@@ -199,11 +207,44 @@ namespace fv
         return true;
     }
 
+    bool SimpleRendererVK::createCommandBuffers()
+    {
+        m_CommandBuffers = CommandBuffersVK::allocate( m_CommandPool, 3 );
+        return m_CommandBuffers != nullptr;
+    }
+
+    bool SimpleRendererVK::createSemaphores()
+    {
+        for ( u32 i = 0; i < m_SwapChain->numImages(); i++ )
+        {
+            M<SemaphoreVK> semaphore = SemaphoreVK::create( m_Device );
+            if ( semaphore == NULL )
+                return false;
+            m_FrameImageAvailableSemaphore.emplace_back( semaphore );
+        }
+        return true;
+    }
+
     bool SimpleRendererVK::createWindow()
     {
         m_Window = OSCreateWindow( "VKWindow", 0, 0, 1600, 900, false );
         return m_Window.invalid() == false;
     }
+
+    void SimpleRendererVK::render()
+    {
+        u32 imageIdx;
+        VkResult imgAcquireResult = m_SwapChain->acquireNextImage( imageIdx, m_FrameImageAvailableSemaphore[m_FrameObjectIdx], NULL );
+        if ( imgAcquireResult != VK_SUCCESS )
+        {
+            return;
+        }
+
+        //CmdVK::queuePresent( m_SwapChain, 
+
+        m_FrameObjectIdx = (m_FrameObjectIdx + 1) % m_SwapChain->numImages();
+    }
+
 
     void SimpleRendererVK::destroyWindow()
     {

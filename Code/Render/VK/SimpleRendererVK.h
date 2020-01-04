@@ -15,6 +15,9 @@ namespace fv
     class PipelineVK;
     class ShaderVK;
     class FrameBufferVK;
+    class CommandBuffersVK;
+    class CommandPoolVK;
+    class SemaphoreVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -23,8 +26,6 @@ namespace fv
         ~SimpleRendererVK() override;
         FV_BG bool initGraphics() override;
         void closeGraphics() override;
-        void render() override;
-
 
         // Debug callback
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -39,11 +40,16 @@ namespace fv
         bool createDevice();
         bool createSwapChain();
         bool createAllocator();
+        bool createCommandPool();
         bool createShaders();
         bool createSimplePass();
         bool createPipelineLayout();
         bool createPipeline();
-        bool createFramebuffer();
+        bool createFramebuffers();
+        bool createCommandBuffers();
+        bool createSemaphores();
+
+        void render() override;
 
         void destroyWindow();
 
@@ -52,6 +58,7 @@ namespace fv
         M<SurfaceVK>   m_Surface;
         M<SwapChainVK> m_SwapChain;
         M<AllocatorVK> m_Allocator;
+        M<CommandPoolVK> m_CommandPool;
 
         // Simple rendering
         M<ShaderVK> m_VertexShaderSimple;
@@ -59,7 +66,10 @@ namespace fv
         M<RenderPassVK> m_SimplePlass;
         M<PipelineLayoutVK> m_EmptyPipelineLayout;
         M<PipelineVK> m_SimplePipeline;
+        M<CommandBuffersVK> m_CommandBuffers;
         List<M<FrameBufferVK>> m_FrameBuffers;
+        List<M<SemaphoreVK>> m_FrameImageAvailableSemaphore;
+        u32 m_FrameObjectIdx = 0;
 
         // TODO remove
         Vector<const char*> m_RequiredInstanceExtensions;

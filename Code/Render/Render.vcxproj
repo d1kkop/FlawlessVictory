@@ -81,6 +81,7 @@
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="VK\AllocatorVK.h" />
+    <ClInclude Include="VK\CmdVK.h" />
     <ClInclude Include="VK\CommandBuffersVK.h" />
     <ClInclude Include="VK\CommandPoolVK.h" />
     <ClInclude Include="VK\DeviceVK.h" />
@@ -112,6 +113,7 @@
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="VK\AllocatorVK.cpp" />
+    <ClCompile Include="VK\CmdVK.cpp" />
     <ClCompile Include="VK\CommandBuffersVK.cpp" />
     <ClCompile Include="VK\CommandPoolVK.cpp" />
     <ClCompile Include="VK\DeviceVK.cpp" />

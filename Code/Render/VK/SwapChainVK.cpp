@@ -1,6 +1,8 @@
 #include "SwapChainVK.h"
 #include "DeviceVK.h"
 #include "SurfaceVK.h"
+#include "FenceVK.h"
+#include "SemaphoreVK.h"
 #include "../../Core/LogManager.h"
 #include "../../Core/Common.h"
 #include "../../Core/Functions.h"
@@ -174,6 +176,11 @@ namespace fv
             return false;
         }
         return true;
+    }
+
+    VkResult SwapChainVK::acquireNextImage( u32& idxOut, const M<SemaphoreVK>& semaphore, const M<FenceVK>& fence )
+    {
+         return vkAcquireNextImageKHR( m_Device->logical(), m_SwapChain, -1, semaphore ? semaphore->vk() : NULL, fence ? fence->vk() : NULL, (uint32_t*) &idxOut );
     }
 
 }

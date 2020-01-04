@@ -6,6 +6,8 @@ namespace fv
 {
     class DeviceVK;
     class SurfaceVK;
+    class FenceVK;
+    class SemaphoreVK;
 
     class SwapChainVK
     {
@@ -30,6 +32,8 @@ namespace fv
                                       const VkSurfaceCapabilitiesKHR& capabilities,
                                       const Vector<VkPresentModeKHR>& presentModes,
                                       VkSurfaceFormatKHR& format, VkPresentModeKHR& mode, VkExtent2D& extent );
+
+        VkResult acquireNextImage( u32& idxOut, const M<SemaphoreVK>& semaphore, const M<FenceVK>& fence );
 
         VkSwapchainKHR vk() const { return m_SwapChain; }
         const M<DeviceVK>& device() const { return m_Device; }

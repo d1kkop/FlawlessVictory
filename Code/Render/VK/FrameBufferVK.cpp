@@ -38,6 +38,7 @@ namespace fv
         frameBufferVk->m_FrameBuffer = frameBuffer;
         frameBufferVk->m_RenderPass  = renderPass;
         frameBufferVk->m_ImageViews  = imgAttachments;
+        frameBufferVk->m_Extent = extent;
         return frameBufferVk;
     }
 

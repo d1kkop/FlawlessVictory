@@ -22,9 +22,11 @@ namespace fv
         const M<RenderPassVK>& renderPass() const { return m_RenderPass; }
         const List<M<ImageViewVK>>& imageViews() const { return m_ImageViews; }
         const M<ImageViewVK>& imageView( u32 idx ) const { return m_ImageViews[idx]; }
+        const VkExtent2D& extent() const { return m_Extent; }
 
     private:
         VkFramebuffer m_FrameBuffer {};
+        VkExtent2D m_Extent {};
         M<RenderPassVK> m_RenderPass;
         List<M<ImageViewVK>> m_ImageViews;
     };

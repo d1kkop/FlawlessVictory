@@ -132,7 +132,7 @@ namespace fv
 
 
             Mat4 view = Mat4::identity();
-        //    renderManager()->drawFrame( view );
+            renderManager()->render();
 
             // Update timings
             TimeUpdate();
