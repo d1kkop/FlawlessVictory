@@ -1,3 +1,4 @@
+//#include "../../Core/PCH.h"
 #include "SimpleRendererVK.h"
 #if FV_VULKAN
 #include "../../Core/Functions.h"
@@ -12,6 +13,7 @@
 #include "SwapChainVK.h"
 #include "AllocatorVK.h"
 #include "ShaderVK.h"
+#include "FenceVK.h"
 #include "RenderPassVK.h"
 #include "PipelineLayoutVK.h"
 #include "PipelineVK.h"
@@ -20,6 +22,7 @@
 #include "CommandPoolVK.h"
 #include "CommandBuffersVK.h"
 #include "SemaphoreVK.h"
+#include "BufferVK.h"
 #include "HelperVK.h"
 #include "CmdVK.h"
 
@@ -49,8 +52,10 @@ namespace fv
         if (!createPipelineLayout()) return false;
         if (!createPipeline()) return false;
         if (!createFramebuffers()) return false;
+        if (!createFrameSyncObjects()) return false;
+
+        if (!createTriangleVertexBuffer()) return false;
         if (!createTriangleCommanBuffer()) return false;
-        if (!createSemaphores()) return false;
 
         LOG( "VK Initialized succesful." );
         return true;
@@ -182,8 +187,8 @@ namespace fv
     bool SimpleRendererVK::createPipeline()
     {
         VertexDescriptorSetVK vset;
-  //      vset.addBinding( 0, sizeof(float)*6 );
-  //      vset.addAttrib( 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 );
+        vset.addBinding( 0, sizeof(float)*6 );
+        vset.addAttrib( 0, 0, VK_FORMAT_R32G32_SFLOAT, 0 );
   //     vset.addAttrib( 0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float)*3 );
 
         VkViewport vp = HelperVK::makeSimpleViewport( m_SwapChain );
@@ -195,7 +200,7 @@ namespace fv
                                                vset, 
                                                vp,
                                                false, false, false,
-                                               CullModeVK::Back, PolygonModeVK::Fill, FrontFaceVK::CCW, 
+                                               CullModeVK::None, PolygonModeVK::Fill, FrontFaceVK::CCW, 
                                                1, 1 );
                                                
        return m_SimplePipeline != nullptr;                                       
@@ -223,6 +228,7 @@ namespace fv
             m_TriangleCommandBuffer->begin( CommandBufferUsage::CanResubmit, i );
             CmdVK::beginRenderPass( m_TriangleCommandBuffer->vk( i ), m_SimplePlass, m_FrameBuffers[i], { 1, 0, 0, 1 } );
             CmdVK::bindPipeline( m_TriangleCommandBuffer->vk( i ), m_SimplePipeline );
+            CmdVK::bindVertices( m_TriangleCommandBuffer->vk( i ), m_TriangleVertexBuffer );
             CmdVK::draw( m_TriangleCommandBuffer->vk( i ), 3, 1, 0, 0 );
             CmdVK::endRenderPass( m_TriangleCommandBuffer->vk( i ) );
             m_TriangleCommandBuffer->end( i );
@@ -231,7 +237,7 @@ namespace fv
         return m_TriangleCommandBuffer != nullptr;
     }
 
-    bool SimpleRendererVK::createSemaphores()
+    bool SimpleRendererVK::createFrameSyncObjects()
     {
         for ( u32 i = 0; i < m_SwapChain->numImages(); i++ )
         {
@@ -242,8 +248,31 @@ namespace fv
             semaphore = SemaphoreVK::create( m_Device );
             if ( semaphore == NULL ) return false;
             m_FrameTriangleDoneSemaphore.emplace_back( semaphore );
+            // submit fence
+            M<FenceVK> fence = FenceVK::create( m_Device, true );
+            if ( fence == NULL ) return false;
+            m_SubmitFences.emplace_back( fence );
         }
         return true;
+    }
+
+    bool SimpleRendererVK::createTriangleVertexBuffer()
+    {
+        void* pMemory;
+        u32 queueIndices [] = { m_Device->graphicsQueueFamily() };
+        m_TriangleVertexBuffer = BufferVK::create( m_Allocator, sizeof(float)*2*3, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, &pMemory, 
+                                                   queueIndices, 1 );
+
+        Vec2 positions[3] =
+        {
+            { 0.0, -0.5 },
+            { 0.5, 0.5 },
+            { -0.5, 0.5 }
+        };
+
+        memcpy( pMemory, positions, sizeof(positions) );
+
+        return m_TriangleVertexBuffer != nullptr;
     }
 
     bool SimpleRendererVK::createWindow()
@@ -254,6 +283,8 @@ namespace fv
 
     void SimpleRendererVK::render()
     {
+        m_SubmitFences[m_FrameObjectIdx]->wait();
+
         u32 imageIdx;
         VkResult imgAcquireResult = m_SwapChain->acquireNextImage( imageIdx, m_FrameImageAvailableSemaphore[m_FrameObjectIdx], NULL );
         if ( imgAcquireResult != VK_SUCCESS )
@@ -261,9 +292,13 @@ namespace fv
             return;
         }
 
+        m_SubmitFences[m_FrameObjectIdx]->reset();
+
         CmdVK::queueSubmit( m_Device->graphicsQueue(), m_TriangleCommandBuffer, 
                             m_FrameImageAvailableSemaphore[m_FrameObjectIdx], 
-                            m_FrameTriangleDoneSemaphore[m_FrameObjectIdx] );
+                            m_FrameTriangleDoneSemaphore[m_FrameObjectIdx], 
+                            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                            m_SubmitFences[ m_FrameObjectIdx ] );
 
         CmdVK::queuePresent( m_SwapChain, imageIdx, m_FrameTriangleDoneSemaphore[m_FrameObjectIdx] );
 

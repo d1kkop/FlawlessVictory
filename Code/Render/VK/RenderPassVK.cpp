@@ -51,7 +51,7 @@ namespace fv
         renderPassInfo.pAttachments = &colorAttachment;
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 0; //TODO
+        renderPassInfo.dependencyCount = 1; //TODO
         renderPassInfo.pDependencies = &dependency;
 
         VkRenderPass renderPass {};

@@ -5,36 +5,6 @@
 
 namespace fv
 {
-    enum class ImageUsageFlagBitsVK
-    {
-        TransferSrc = 0x1,
-        TransferDst = 0x2,
-        Sampled = 0x4,
-        Storage = 0x8,
-        ColorAttachment = 0x10,
-        DepthStencilAttachment = 0x20,
-        TransientAttachment = 0x40
-    };
-
-    enum class ImageUsageVK
-    {
-        Unknown,
-        GPU,
-        CPU,
-        CPUToGPU,
-        GPUToCPU,
-        CPUCopy,
-
-        VMA_MEMORY_USAGE_CPU_COPY
-    };
-
-    enum class ImageTypeVK
-    {
-        Type1D,
-        Type2D,
-        Type3D
-    };
-
     class AllocatorVK;
 
     class ImageVK
@@ -44,13 +14,14 @@ namespace fv
         ~ImageVK();
 
         static M<ImageVK> create( const M<AllocatorVK>& allocator, u32 width, u32 height, u32 depth, VkFormat format,
-                                  ImageUsageFlagBitsVK usageBit, ImageUsageVK usage = ImageUsageVK::GPU,
-                                  ImageTypeVK imageType = ImageTypeVK::Type2D,
+                                  VkImageUsageFlags imageUsage, VmaMemoryUsage memUsage = VMA_MEMORY_USAGE_GPU_ONLY,
+                                  VkImageType imgageType = VK_IMAGE_TYPE_2D,
                                   void** createMapped = NULL,
-                                  bool imageTilingLinear = false,
+                                  bool layoutLinearForBufferAccess = false, /* If true, pixels can be indexed linearly (y*width+x), otherwise layout_optimal is picked. */
                                   u32 mipLevels = 100, u32 layers = 1, u32 samples = 1,
                                   const u32* queueIndices = NULL, u32 numQueues = 0 );
 
+        // If memory was created mapped, you do not have to call this.
         bool map( void** pData );
         void unmap();
         void flush();

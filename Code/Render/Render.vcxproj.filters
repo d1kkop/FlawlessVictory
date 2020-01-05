@@ -78,6 +78,9 @@
       <Filter>VK\Classes</Filter>
     </ClInclude>
     <ClInclude Include="DeviceResource.h" />
+    <ClInclude Include="VK\BufferVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderComponent.cpp">
@@ -145,5 +148,8 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="DeviceResource.cpp" />
+    <ClCompile Include="VK\BufferVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

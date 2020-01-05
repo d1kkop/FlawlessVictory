@@ -72,7 +72,7 @@ namespace fv
     shaderc_shader_kind ShaderCompilerGLSL2SpirVLib::shaderKindFromExtension(const String& ext, bool& valid)
     {
         valid = true;
-        if ( ext == ".frag" )      return shaderc_glsl_default_fragment_shader;
+        if ( ext == ".frag" )           return shaderc_glsl_default_fragment_shader;
         else if ( ext == ".vert" )      return shaderc_glsl_default_vertex_shader;
         else if ( ext == ".comp" )      return shaderc_glsl_default_compute_shader;
         else if ( ext == ".geom" )      return shaderc_glsl_default_geometry_shader;

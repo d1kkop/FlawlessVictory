@@ -1,5 +1,7 @@
 #include "CmdVK.h"
 #include "DeviceVK.h"
+#include "BufferVK.h"
+#include "FenceVK.h"
 #include "RenderPassVK.h"
 #include "FrameBufferVK.h"
 #include "PipelineVK.h"
@@ -43,6 +45,13 @@ namespace fv
         vkCmdBindPipeline( cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk() );
     }
 
+    void CmdVK::bindVertices( VkCommandBuffer cmdBuffer, const M<BufferVK>& vertexBuffer )
+    {
+        VkBuffer buffers [] = { vertexBuffer->vk() };
+        VkDeviceSize offsets [] = { 0 };
+        vkCmdBindVertexBuffers( cmdBuffer, 0, 1, buffers, offsets );
+    }
+
     void CmdVK::draw( VkCommandBuffer cmdBuffer, u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance )
     {
         vkCmdDraw( cmdBuffer, vertexCount, instanceCount, firstVertex, firstInstance );
@@ -52,7 +61,8 @@ namespace fv
                                  const M<CommandBuffersVK>& commandBuffer,
                                  const M<SemaphoreVK>& waitSemaphores, 
                                  const M<SemaphoreVK>& signalSemaphores, 
-                                 VkPipelineStageFlags waitDstStageMask )
+                                 VkPipelineStageFlags waitDstStageMask,
+                                 const M<FenceVK>& fenceToSignal )
 
     {
         VkSubmitInfo submitInfo ={};
@@ -64,7 +74,7 @@ namespace fv
         submitInfo.pCommandBuffers    = commandBuffer->getAll();
         submitInfo.signalSemaphoreCount = signalSemaphores->num();
         submitInfo.pSignalSemaphores    = signalSemaphores->getAll();
-        return vkQueueSubmit( queue, 1, &submitInfo, VK_NULL_HANDLE );
+        return vkQueueSubmit( queue, 1, &submitInfo, fenceToSignal ? fenceToSignal->vk() : VK_NULL_HANDLE );
     }
 
     VkResult CmdVK::queuePresent( const M<SwapChainVK>& swapChain, u32 imageIndex, const M<SemaphoreVK>& waitSemaphores )

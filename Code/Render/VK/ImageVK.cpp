@@ -14,16 +14,19 @@ namespace fv
     }
 
     M<ImageVK> ImageVK::create( const M<AllocatorVK>& allocator, u32 width, u32 height, u32 depth, VkFormat format,
-                                ImageUsageFlagBitsVK usageBit, ImageUsageVK usage,
-                                ImageTypeVK imageType,
+                                VkImageUsageFlags usage,
+                                VmaMemoryUsage memUsage,
+                                VkImageType imageType,
                                 void** createMapped,
                                 bool imageTilingLinear,
                                 u32 mipLevels, u32 layers, u32 samples,
                                 const u32* queueIndices, u32 numQueues)
     {
+        if ( createMapped ) *createMapped = NULL;
+
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = (VkImageType) imageType;
+        imageInfo.imageType = imageType;
         imageInfo.extent.width  = width;
         imageInfo.extent.height = height;
         imageInfo.extent.depth  = depth;
@@ -32,14 +35,14 @@ namespace fv
         imageInfo.format = format;
         imageInfo.tiling = imageTilingLinear ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = (VkImageUsageFlags)usageBit;
+        imageInfo.usage = usage;
         imageInfo.samples = (VkSampleCountFlagBits) samples;
         imageInfo.pQueueFamilyIndices = (const uint32_t*)queueIndices;
         imageInfo.queueFamilyIndexCount = numQueues;
         imageInfo.sharingMode = numQueues > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo allocInfo = {};
-        allocInfo.usage = (VmaMemoryUsage) usage;
+        allocInfo.usage = memUsage;
         allocInfo.flags = (createMapped) ? VMA_ALLOCATION_CREATE_MAPPED_BIT : 0;
 
         VkImage image;

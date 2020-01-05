@@ -20,7 +20,7 @@ namespace fv
         {
             VkSemaphore semaphore;
             VkSemaphoreCreateInfo createInfo {};
-            createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
             createInfo.flags = 0;
             if ( VK_SUCCESS != vkCreateSemaphore( device->logical(), &createInfo, NULL, &semaphore ) )
             {
