@@ -23,8 +23,7 @@ namespace fv
         void submit(); // Same as PatchManager()->submiPatch( this );
 
         PatchType patchType;
-        DeviceResource graphic;
-        RTexture2D texture2D;
+        M<DeviceResource> graphic;
         M<Resource> resource;
         union
         {

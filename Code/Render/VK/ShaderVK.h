@@ -1,16 +1,17 @@
 #pragma once
 #include "IncVulkan.h"
+#include "../DeviceResource.h"
 #include "../../Core/Common.h"
 
 namespace fv
 {
     class DeviceVK;
 
-    class ShaderVK
+    class ShaderVK : public DeviceResource
     {
     public:
         ShaderVK() = default;
-        ~ShaderVK();
+        ~ShaderVK() override;
 
     public:
         static M<ShaderVK> create( const M<DeviceVK>& device, const char* data, u32 size );

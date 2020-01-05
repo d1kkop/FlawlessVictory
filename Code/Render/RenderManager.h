@@ -2,6 +2,7 @@
 #include "../Core/Common.h"
 #include "../Core/Reflection.h"
 #include "../Core/OSLayer.h"
+#include "DeviceResource.h"
 
 namespace fv
 {
@@ -23,17 +24,11 @@ namespace fv
     };
 
     // Using this instead of many small heap allocations that are slow to access (cache miss) compared to stack memory.
-    struct DeviceResource
-    {
-        u32 device = (u32)-1;
-        void* resources[4]{};
-    };
 
     using RSubmesh = void*;
-    using RShader = DeviceResource;
     using RTexture2D = void*;
-    using RMaterial = DeviceResource;
-    using RRenderPass = DeviceResource;
+    using RMaterial = void*;
+    using RRenderPass = void*;
 
     enum class BufferFormat
     {
@@ -112,13 +107,6 @@ namespace fv
         u32 computeNumComponents() const;
     };
 
-    struct MaterialData
-    {
-        RShader vertShader;
-        RShader fragShader;
-        RShader geomShader;
-    };
-
 
     class RenderManager
     {
@@ -127,6 +115,8 @@ namespace fv
         virtual bool initGraphics() = 0;
         virtual void closeGraphics() = 0;
         virtual void render() = 0;
+
+        virtual M<DeviceResource> createShader( const char* code, u32 size ) = 0;
 
         const OSHandle& getWindowHandle() const { return m_Window; }
 

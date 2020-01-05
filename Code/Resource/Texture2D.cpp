@@ -46,7 +46,7 @@ namespace fv
         patch->width    = width;
         patch->height   = height;
         patch->imgFormat = format;
-        patch->texture2D = graphic;
+    //    patch->texture2D = graphic;
         patch->resource  = rtl.resource;
         patch->submit();
     }

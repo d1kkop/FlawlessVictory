@@ -13,18 +13,22 @@ namespace fv
         ~FenceVK();
 
     public:
-        static M<FenceVK> create( const M<DeviceVK>& device, bool startSignaled=false );
-        VkFence vk() const { return m_Fence; }
+        static M<FenceVK> create( const M<DeviceVK>& device, bool startSignaled=false, u32 num=1 );
+        VkFence vk() const { return m_Fences[0]; }
         const M<DeviceVK>& device() const { return m_Device; }
 
-        void reset();
-        void wait();
+        void reset( u32 idx=0 );
+        void resetAll();
+        void wait( u32 idx=0 );
+        void waitAll();
 
-        static void waitForMultiple( const List<M<FenceVK>>& fences );
+        u32 num() const { return (u32)m_Fences.size(); }
+        const VkFence* getAll() const { return m_Fences.data(); }
+
         static void waitForMultiple( VkDevice device, const List<VkFence>& fences );
 
     private:
-        VkFence m_Fence {};
+        List<VkFence> m_Fences;
         M<DeviceVK> m_Device;
     };
 }

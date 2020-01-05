@@ -21,6 +21,7 @@
 #include "CommandBuffersVK.h"
 #include "SemaphoreVK.h"
 #include "HelperVK.h"
+#include "CmdVK.h"
 
 namespace fv
 {
@@ -48,7 +49,7 @@ namespace fv
         if (!createPipelineLayout()) return false;
         if (!createPipeline()) return false;
         if (!createFramebuffers()) return false;
-        if (!createCommandBuffers()) return false;
+        if (!createTriangleCommanBuffer()) return false;
         if (!createSemaphores()) return false;
 
         LOG( "VK Initialized succesful." );
@@ -58,6 +59,12 @@ namespace fv
     void SimpleRendererVK::closeGraphics()
     {
         destroyWindow();
+    }
+
+    M<DeviceResource> SimpleRendererVK::createShader( const char* code, u32 size )
+    {
+        M<ShaderVK> shader = ShaderVK::create( m_Device, code, size );
+        return {};
     }
 
     bool SimpleRendererVK::createInstance()
@@ -175,9 +182,9 @@ namespace fv
     bool SimpleRendererVK::createPipeline()
     {
         VertexDescriptorSetVK vset;
-        vset.addBinding( 0, sizeof(float)*6 );
-        vset.addAttrib( 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 );
-        vset.addAttrib( 0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float)*3 );
+  //      vset.addBinding( 0, sizeof(float)*6 );
+  //      vset.addAttrib( 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 );
+  //     vset.addAttrib( 0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float)*3 );
 
         VkViewport vp = HelperVK::makeSimpleViewport( m_SwapChain );
 
@@ -207,10 +214,21 @@ namespace fv
         return true;
     }
 
-    bool SimpleRendererVK::createCommandBuffers()
+    bool SimpleRendererVK::createTriangleCommanBuffer()
     {
-        m_CommandBuffers = CommandBuffersVK::allocate( m_CommandPool, 3 );
-        return m_CommandBuffers != nullptr;
+        m_TriangleCommandBuffer = CommandBuffersVK::allocate( m_CommandPool, 1 );
+
+        for ( u32 i=0; i <1; i++ )
+        {
+            m_TriangleCommandBuffer->begin( CommandBufferUsage::CanResubmit, i );
+            CmdVK::beginRenderPass( m_TriangleCommandBuffer->vk( i ), m_SimplePlass, m_FrameBuffers[i], { 1, 0, 0, 1 } );
+            CmdVK::bindPipeline( m_TriangleCommandBuffer->vk( i ), m_SimplePipeline );
+            CmdVK::draw( m_TriangleCommandBuffer->vk( i ), 3, 1, 0, 0 );
+            CmdVK::endRenderPass( m_TriangleCommandBuffer->vk( i ) );
+            m_TriangleCommandBuffer->end( i );
+        }
+
+        return m_TriangleCommandBuffer != nullptr;
     }
 
     bool SimpleRendererVK::createSemaphores()
@@ -218,9 +236,12 @@ namespace fv
         for ( u32 i = 0; i < m_SwapChain->numImages(); i++ )
         {
             M<SemaphoreVK> semaphore = SemaphoreVK::create( m_Device );
-            if ( semaphore == NULL )
-                return false;
+            if ( semaphore == NULL ) return false;
             m_FrameImageAvailableSemaphore.emplace_back( semaphore );
+            // -- triangle
+            semaphore = SemaphoreVK::create( m_Device );
+            if ( semaphore == NULL ) return false;
+            m_FrameTriangleDoneSemaphore.emplace_back( semaphore );
         }
         return true;
     }
@@ -240,9 +261,13 @@ namespace fv
             return;
         }
 
-        //CmdVK::queuePresent( m_SwapChain, 
+        CmdVK::queueSubmit( m_Device->graphicsQueue(), m_TriangleCommandBuffer, 
+                            m_FrameImageAvailableSemaphore[m_FrameObjectIdx], 
+                            m_FrameTriangleDoneSemaphore[m_FrameObjectIdx] );
 
-        m_FrameObjectIdx = (m_FrameObjectIdx + 1) % m_SwapChain->numImages();
+        CmdVK::queuePresent( m_SwapChain, imageIdx, m_FrameTriangleDoneSemaphore[m_FrameObjectIdx] );
+
+     //   m_FrameObjectIdx = (m_FrameObjectIdx + 1) % m_SwapChain->numImages();
     }
 
 

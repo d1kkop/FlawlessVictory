@@ -9,6 +9,7 @@ namespace fv
     class PipelineVK;
     class SemaphoreVK;
     class SwapChainVK;
+    class CommandBuffersVK;
 
     class CmdVK
     {
@@ -20,6 +21,11 @@ namespace fv
         static void bindPipeline( VkCommandBuffer cmdBuffer, const M<PipelineVK>& pipeline );
         static void draw( VkCommandBuffer cmdBuffer, u32 vertexCount, u32 instanceCount = 1, u32 firstVertex = 0, u32 firstInstance = 0 );
 
-        static VkResult queuePresent( const M<SwapChainVK>& swapChain, u32 imageIndex, const List<M<SemaphoreVK>>& waitSemaphores );
+        static VkResult queueSubmit( VkQueue queue, 
+                                     const M<CommandBuffersVK>& commandBuffer, 
+                                     const M<SemaphoreVK>& waitSemaphores, 
+                                     const M<SemaphoreVK>& signalSemaphores,
+                                     VkPipelineStageFlags dstWaitFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT );
+        static VkResult queuePresent( const M<SwapChainVK>& swapChain, u32 imageIndex, const M<SemaphoreVK>& waitSemaphores );
     };
 }

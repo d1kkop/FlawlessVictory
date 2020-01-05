@@ -18,6 +18,7 @@ namespace fv
     class CommandBuffersVK;
     class CommandPoolVK;
     class SemaphoreVK;
+    class DeviceResoure;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -26,6 +27,8 @@ namespace fv
         ~SimpleRendererVK() override;
         FV_BG bool initGraphics() override;
         void closeGraphics() override;
+
+        M<DeviceResource> createShader( const char* code, u32 size ) override;
 
         // Debug callback
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -46,7 +49,7 @@ namespace fv
         bool createPipelineLayout();
         bool createPipeline();
         bool createFramebuffers();
-        bool createCommandBuffers();
+        bool createTriangleCommanBuffer();
         bool createSemaphores();
 
         void render() override;
@@ -66,9 +69,10 @@ namespace fv
         M<RenderPassVK> m_SimplePlass;
         M<PipelineLayoutVK> m_EmptyPipelineLayout;
         M<PipelineVK> m_SimplePipeline;
-        M<CommandBuffersVK> m_CommandBuffers;
+        M<CommandBuffersVK> m_TriangleCommandBuffer;
         List<M<FrameBufferVK>> m_FrameBuffers;
         List<M<SemaphoreVK>> m_FrameImageAvailableSemaphore;
+        List<M<SemaphoreVK>> m_FrameTriangleDoneSemaphore;
         u32 m_FrameObjectIdx = 0;
 
         // TODO remove

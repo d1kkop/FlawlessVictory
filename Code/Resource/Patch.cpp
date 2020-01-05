@@ -32,31 +32,30 @@ namespace fv
     void Patch::applyTexture2DLoad()
     {
         FV_CHECK_MO();
-        M<Texture2D> tex = std::static_pointer_cast<Texture2D>( resource );
+        M<Texture2D> tex = spc<Texture2D>( resource );
         assert(tex);
-        tex->applyPatch( width, height, imgFormat, texture2D );
-        texture2D = {}; // Ownership transferred.
+     //   tex->applyPatch( width, height, imgFormat, texture2D );
+        //texture2D = {}; // Ownership transferred.
     }
 
     FV_MO void Patch::applyShaderCode()
     {
         FV_CHECK_MO();
-        M<Shader> shader = std::static_pointer_cast<Shader>(resource);
+        M<Shader> shader = spc<Shader>(resource);
         assert(shader);
-        shader->applyPatch( graphic );
-        graphic = {}; // Ownership transferred.
+        shader->setDeviceShader( graphic );
     }
 
     FV_MO void Patch::applyMeshData()
     {
         FV_CHECK_MO();
-        M<Mesh> mesh = std::static_pointer_cast<Mesh>(resource);
-        assert(mesh);
-        mesh->applyPatch( submeshes, hostMeshes, materials );
-        // Should all have been moved
-        submeshes.clear();
-        hostMeshes.clear();
-        materials.clear();
+        //M<Mesh> mesh = spc<Mesh>(resource);
+        //assert(mesh);
+        //mesh->applyPatch( submeshes, hostMeshes, materials );
+        //// Should all have been moved
+        //submeshes.clear();
+        //hostMeshes.clear();
+        //materials.clear();
     }
 
 }

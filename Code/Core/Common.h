@@ -53,9 +53,9 @@ namespace fv
     template <class T, class F>
     inline T scc (const F&& f) { return static_cast<T>(const_cast<T>(f)); }
 	template <class T, class F>
-    inline M<T> spc( const F&& f ) { return std::static_pointer_cast<T>(f); }
+    inline M<T> spc( F&& f ) { return std::static_pointer_cast<T>(f); }
     template <class T, class F>
-    inline M<T> dpc( const F&& f ) { return std::dynamic_pointer_cast<T>(f); }
+    inline M<T> dpc( F&& f ) { return std::dynamic_pointer_cast<T>(f); }
     template <class T, class F>
-    inline M<T> rpc( const F&& f ) { return std::reinterpret_pointer_cast<T>(f); }
+    inline M<T> rpc( F&& f ) { return std::reinterpret_pointer_cast<T>(f); }
 }

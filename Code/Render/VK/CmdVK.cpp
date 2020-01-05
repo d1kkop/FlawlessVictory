@@ -5,6 +5,7 @@
 #include "PipelineVK.h"
 #include "SemaphoreVK.h"
 #include "SwapChainVK.h"
+#include "CommandBuffersVK.h"
 #include "HelperVK.h"
 
 namespace fv
@@ -47,17 +48,33 @@ namespace fv
         vkCmdDraw( cmdBuffer, vertexCount, instanceCount, firstVertex, firstInstance );
     }
 
-    VkResult CmdVK::queuePresent( const M<SwapChainVK>& swapChain, u32 imageIndex, const List<M<SemaphoreVK>>& waitSemaphores )
+    VkResult CmdVK::queueSubmit( VkQueue queue,
+                                 const M<CommandBuffersVK>& commandBuffer,
+                                 const M<SemaphoreVK>& waitSemaphores, 
+                                 const M<SemaphoreVK>& signalSemaphores, 
+                                 VkPipelineStageFlags waitDstStageMask )
+
+    {
+        VkSubmitInfo submitInfo ={};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.waitSemaphoreCount = waitSemaphores->num();
+        submitInfo.pWaitSemaphores    = waitSemaphores->getAll();
+        submitInfo.pWaitDstStageMask  = &waitDstStageMask;
+        submitInfo.commandBufferCount = commandBuffer->num();
+        submitInfo.pCommandBuffers    = commandBuffer->getAll();
+        submitInfo.signalSemaphoreCount = signalSemaphores->num();
+        submitInfo.pSignalSemaphores    = signalSemaphores->getAll();
+        return vkQueueSubmit( queue, 1, &submitInfo, VK_NULL_HANDLE );
+    }
+
+    VkResult CmdVK::queuePresent( const M<SwapChainVK>& swapChain, u32 imageIndex, const M<SemaphoreVK>& waitSemaphores )
     {
         VkQueue presentQueue = swapChain->device()->presentQueue();
-        static thread_local List<VkSemaphore> semaphores;
-        semaphores.clear();
-        HelperVK::toVkList ( waitSemaphores, semaphores );
         VkPresentInfoKHR presentInfo ={};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = (u32)semaphores.size();
-        presentInfo.pWaitSemaphores = semaphores.data();
-        presentInfo.swapchainCount = 1;
+        presentInfo.waitSemaphoreCount = waitSemaphores->num();
+        presentInfo.pWaitSemaphores = waitSemaphores->getAll();
+        presentInfo.swapchainCount  = 1;
         VkSwapchainKHR swapChains [] = { swapChain->vk() };
         presentInfo.pSwapchains = swapChains;
         presentInfo.pImageIndices = (uint32_t*) &imageIndex;

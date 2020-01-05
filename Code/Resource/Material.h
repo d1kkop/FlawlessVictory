@@ -67,8 +67,6 @@ namespace fv
         M<Shader> m_VertShader;
         M<Shader> m_FragShader;
         M<Shader> m_GeomShader;
-
-        MaterialData data;
     };
 
     using Mat = M<Material>;

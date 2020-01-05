@@ -7,45 +7,53 @@ namespace fv
 {
     FenceVK::~FenceVK()
     {
-        if ( m_Fence )
+        for ( auto f : m_Fences )
         {
-            vkDestroyFence( m_Device->logical(), m_Fence, NULL );
+            vkDestroyFence( m_Device->logical(), f, NULL );
         }
     }
 
-    M<FenceVK> FenceVK::create( const M<DeviceVK>& device, bool startSignaled )
+    M<FenceVK> FenceVK::create( const M<DeviceVK>& device, bool startSignaled, u32 num )
     {
-        VkFence fence;
-        VkFenceCreateInfo createInfo {};
-        createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        createInfo.flags = startSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
-        VK_CALL( vkCreateFence( device->logical(), &createInfo, NULL, &fence ) );
+        List<VkFence> fences;
+        for ( u32 i=0; i <num; i++ )
+        {
+            VkFence fence;
+            VkFenceCreateInfo createInfo {};
+            createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            createInfo.flags = startSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
+            if ( VK_SUCCESS != vkCreateFence( device->logical(), &createInfo, NULL, &fence ) )
+            {
+                for ( auto f : fences ) vkDestroyFence( device->logical(), f, NULL );
+                LOGC( "VK Failed to create requeste fances." );
+                return {};
+            }
+            fences.emplace_back( fence );
+        }
         auto fenceVk = std::make_shared<FenceVK>();
-        fenceVk->m_Fence = fence;
+        fenceVk->m_Fences = std::move(fences);
         fenceVk->m_Device = device;
         return fenceVk;
     }
 
-    void FenceVK::reset()
+    void FenceVK::reset( u32 idx )
     {
-        VK_CALL_VOID( vkResetFences( m_Device->logical(), 1, &m_Fence ) );
+        VK_CALL_VOID( vkResetFences( m_Device->logical(), 1, &m_Fences[idx] ) );
     }
 
-    void FenceVK::wait()
+    void FenceVK::resetAll()
     {
-        VK_CALL_VOID( vkWaitForFences( m_Device->logical(), 1, &m_Fence, VK_TRUE, (u64)-1 ) );
+        VK_CALL_VOID( vkResetFences( m_Device->logical(), (u32)m_Fences.size(), m_Fences.data() ) );
     }
 
-    void FenceVK::waitForMultiple( const List<M<FenceVK>>& fences )
+    void FenceVK::wait( u32 idx )
     {
-        static thread_local List<VkFence> fencesList;
-        fencesList.clear();
-        if ( fences.size() == 0 )
-            return;
-        fencesList.resize( fences.size() );
-        for ( u32 i=0; i < fences.size(); i++ )
-            fencesList[i] = fences[i]->vk();
-        waitForMultiple( fences[0]->device()->logical(), fencesList );
+        VK_CALL_VOID( vkWaitForFences( m_Device->logical(), 1, &m_Fences[idx], VK_TRUE, (u64)-1 ) );
+    }
+
+    void FenceVK::waitAll()
+    {
+        waitForMultiple( m_Device->logical(), m_Fences );
     }
 
     void FenceVK::waitForMultiple( VkDevice device, const List<VkFence>& fences )

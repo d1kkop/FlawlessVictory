@@ -14,14 +14,12 @@ namespace fv
 
     Shader::~Shader()
     {
-      //  renderManager()->deleteShader(m_Graphic);
     }
 
-    void Shader::applyPatch(const RShader& graphic)
+    void Shader::setDeviceShader(const M<DeviceResource>& deviceShader)
     {
         FV_CHECK_MO();
-        // renderManager()->deleteShader(m_Graphic);
-        m_Graphic = graphic;
+        m_DeviceShader = deviceShader;
     }
 
     void Shader::load_RT(const ResourceToLoad& rtl)
@@ -43,18 +41,12 @@ namespace fv
 
         if ( !code.empty() )
         {
-            RShader graphic ;//= renderManager()->createShader( 0, code.data(), (u32)code.size() );
-            if ( graphic.device != -1 )
-            {
-                Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
-                p->graphic  = graphic;
-                p->resource = rtl.resource;
-                p->submit();
-            }
-            else
-            {
-                LOGW("Failed to update shader for %s.", rtl.loadPath.string().c_str());
-            }
+            M<DeviceResource> graphic = renderManager()->createShader( code.data(), (u32)code.size() );
+            Patch* p = patchManager()->createPatch(PatchType::ShaderCode);
+            p->graphic  = graphic;
+            p->resource = rtl.resource;
+            p->submit();
+            
         }
     }
 }
