@@ -16,7 +16,6 @@ namespace fv
     M<RenderPassVK> RenderPassVK::create( const M<DeviceVK>& device, VkFormat attachmentFormat, u32 numSamplesPerPixelPowerOf2,
                                           AttachmentLoadOp loadOp, AttachmentSaveOp saveOp,
                                           AttachmentLoadOp stencilLoadOp, AttachmentSaveOp stencilSaveOp )
-
     {
         VkAttachmentDescription colorAttachment ={};
         colorAttachment.format  = attachmentFormat;
@@ -26,7 +25,7 @@ namespace fv
         colorAttachment.stencilLoadOp  = (VkAttachmentLoadOp) stencilLoadOp;
         colorAttachment.stencilStoreOp = (VkAttachmentStoreOp) stencilSaveOp;
         colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
         VkAttachmentReference colorAttachmentRef ={};
         colorAttachmentRef.attachment = 0;
@@ -51,7 +50,7 @@ namespace fv
         renderPassInfo.pAttachments = &colorAttachment;
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1; //TODO
+        renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
         VkRenderPass renderPass {};

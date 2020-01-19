@@ -38,9 +38,6 @@
     <ClInclude Include="VK\CommandPoolVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="VK\CommandBuffersVK.h">
-      <Filter>VK\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="VK\FenceVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
@@ -74,11 +71,17 @@
     <ClInclude Include="VK\PipelineLayoutVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="VK\CmdVK.h">
-      <Filter>VK\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="DeviceResource.h" />
     <ClInclude Include="VK\BufferVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\ArrayVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\CommandBufferVK.h">
+      <Filter>VK\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="VK\QueueVK.h">
       <Filter>VK\Classes</Filter>
     </ClInclude>
   </ItemGroup>
@@ -106,9 +109,6 @@
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\CommandPoolVK.cpp">
-      <Filter>VK\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="VK\CommandBuffersVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
     <ClCompile Include="VK\FenceVK.cpp">
@@ -144,11 +144,14 @@
     <ClCompile Include="VK\PipelineLayoutVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
-    <ClCompile Include="VK\CmdVK.cpp">
-      <Filter>VK\Classes</Filter>
-    </ClCompile>
     <ClCompile Include="DeviceResource.cpp" />
     <ClCompile Include="VK\BufferVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\CommandBufferVK.cpp">
+      <Filter>VK\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="VK\QueueVK.cpp">
       <Filter>VK\Classes</Filter>
     </ClCompile>
   </ItemGroup>

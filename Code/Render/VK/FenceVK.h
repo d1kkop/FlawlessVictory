@@ -9,26 +9,23 @@ namespace fv
     class FenceVK
     {
     public:
+        using VkType = VkFence;
+
+    public:
         FenceVK() = default;
         ~FenceVK();
 
     public:
-        static M<FenceVK> create( const M<DeviceVK>& device, bool startSignaled=false, u32 num=1 );
-        VkFence vk() const { return m_Fences[0]; }
+        static M<FenceVK> create( const M<DeviceVK>& device, bool startSignaled=false );
         const M<DeviceVK>& device() const { return m_Device; }
 
-        void reset( u32 idx=0 );
-        void resetAll();
-        void wait( u32 idx=0 );
-        void waitAll();
-
-        u32 num() const { return (u32)m_Fences.size(); }
-        const VkFence* getAll() const { return m_Fences.data(); }
-
-        static void waitForMultiple( VkDevice device, const List<VkFence>& fences );
+        VkFence vk() const { return m_Fence; }
+        const VkFence* vkp() const { return &m_Fence; }
+        void reset();
+        void wait();
 
     private:
-        List<VkFence> m_Fences;
+        VkFence m_Fence;
         M<DeviceVK> m_Device;
     };
 }

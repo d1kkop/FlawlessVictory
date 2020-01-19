@@ -2,6 +2,7 @@
 #include "../RenderManager.h"
 #if FV_VULKAN
 #include "IncVulkan.h"
+#include "ArrayVK.h"
 
 namespace fv
 {
@@ -16,11 +17,12 @@ namespace fv
     class ShaderVK;
     class FenceVK;
     class FrameBufferVK;
-    class CommandBuffersVK;
+    class CommandBufferVK;
     class CommandPoolVK;
     class SemaphoreVK;
     class BufferVK;
     class DeviceResoure;
+    class QueueVK;
 
     class SimpleRendererVK : public RenderManager
     {
@@ -65,28 +67,26 @@ namespace fv
         M<SwapChainVK> m_SwapChain;
         M<AllocatorVK> m_Allocator;
         M<CommandPoolVK> m_CommandPool;
+        M<QueueVK> m_GraphicsQueue;
+        M<QueueVK> m_PresentQueue;
+        M<QueueVK> m_TransferQueue;
 
-        // For rendering a triangle
         M<ShaderVK> m_VertexShaderSimple;
         M<ShaderVK> m_FragmentShaderSimple;
         M<RenderPassVK> m_SimplePlass;
         M<PipelineLayoutVK> m_EmptyPipelineLayout;
         M<PipelineVK> m_SimplePipeline;
-        M<CommandBuffersVK> m_TriangleCommandBuffer;
-        M<BufferVK> m_TriangleVertexBuffer;
-        List<M<FrameBufferVK>> m_FrameBuffers;
 
-        // Frame objects
+        // Arrays
+        List<M<FrameBufferVK>> m_FrameBuffers;
         List<M<SemaphoreVK>> m_FrameImageAvailableSemaphore;
         List<M<SemaphoreVK>> m_FrameTriangleDoneSemaphore;
         List<M<FenceVK>> m_SubmitFences;
         u32 m_FrameObjectIdx = 0;
 
-        // TODO remove
-        Vector<const char*> m_RequiredInstanceExtensions;
-        Vector<const char*> m_RequiredInstanceLayers;
-        Vector<const char*> m_RequiredPhysicalExtensions;
-        Vector<const char*> m_RequiredPhysicalLayers;
+        // Triangle specific
+        M<BufferVK> m_TriangleVertexBuffer;
+        List<M<CommandBufferVK>> m_TriangleCommandBuffer;
     };
 }
 #endif

@@ -183,19 +183,39 @@ namespace fv
             {
                 VkQueue graphicQueue;
                 vkGetDeviceQueue( logical, graphicsFam, i, &graphicQueue );
-                device->m_GraphicsQueue.emplace_back( graphicQueue );
+                device->m_GraphicsQueue.emplace_back( QueueVK::create( graphicQueue, device ) );
             }
         }
-        if ( computeFam != -1 && wantComputeQueue )     vkGetDeviceQueue( logical, computeFam, 0, &device->m_ComputeQueue );
-        if ( transferFam != -1 && wantTransferQueue )   vkGetDeviceQueue( logical, transferFam, 0, &device->m_TransferQueue );
-        if ( sparseFam != -1 && wantSparseQueue )       vkGetDeviceQueue( logical, sparseFam, 0, &device->m_SparseQueue );
-        if ( presentFam != -1 && surface )              vkGetDeviceQueue( logical, presentFam, 0, &device->m_PresentQueue );
+        if ( computeFam != -1 && wantComputeQueue )
+        {
+            VkQueue computeQueue;
+            vkGetDeviceQueue( logical, computeFam, 0, &computeQueue );
+            device->m_ComputeQueue = QueueVK::create( computeQueue, device );
+        }
+        if ( transferFam != -1 && wantTransferQueue )
+        {
+            VkQueue transferQueue;
+            vkGetDeviceQueue( logical, transferFam, 0, &transferQueue );
+            device->m_TransferQueue = QueueVK::create( transferQueue, device );
+        }
+        if ( sparseFam != -1 && wantSparseQueue )
+        {
+            VkQueue sparseQueue;
+            vkGetDeviceQueue( logical, sparseFam, 0, &sparseQueue );
+            device->m_SparseQueue = QueueVK::create( sparseQueue, device );
+        }
+        if ( presentFam != -1 && surface )
+        {
+            VkQueue presentQueue;
+            vkGetDeviceQueue( logical, presentFam, 0, &presentQueue );
+            device->m_PresentQueue = QueueVK::create( presentQueue, device );
+        }
 
         device->m_GraphicsQueueFam = graphicsFam;
-        device->m_ComputeQueueFam = computeFam;
+        device->m_ComputeQueueFam  = computeFam;
         device->m_TransferQueueFam = transferFam;
-        device->m_SparseQueueFam = sparseFam;
-        device->m_PresentQueueFam = presentFam;
+        device->m_SparseQueueFam   = sparseFam;
+        device->m_PresentQueueFam  = presentFam;
         
         return device;
     }

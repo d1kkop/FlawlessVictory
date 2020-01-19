@@ -20,11 +20,11 @@
 #include "FrameBufferVK.h"
 #include "ImageViewVK.h"
 #include "CommandPoolVK.h"
-#include "CommandBuffersVK.h"
+#include "CommandBufferVK.h"
 #include "SemaphoreVK.h"
 #include "BufferVK.h"
 #include "HelperVK.h"
-#include "CmdVK.h"
+#include "QueueVK.h"
 
 namespace fv
 {
@@ -63,6 +63,10 @@ namespace fv
 
     void SimpleRendererVK::closeGraphics()
     {
+        if ( m_Device )
+        {
+            vkDeviceWaitIdle( m_Device->logical() );
+        }
         destroyWindow();
     }
 
@@ -119,8 +123,14 @@ namespace fv
         requiredExtensions ={ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
         m_Device = DeviceVK::create( m_Instance, requiredExtensions, requiredLayers, true, true, true, 2, true, true, true, m_Surface );
-
-        return m_Device != nullptr;
+        if ( m_Device != nullptr )
+        {
+            m_GraphicsQueue = m_Device->graphicsQueue();
+            m_PresentQueue  = m_Device->presentQueue();
+            m_TransferQueue = m_Device->transferQueue();
+            return m_GraphicsQueue && m_PresentQueue && m_TransferQueue;
+        }
+        return false;
     }
 
     bool SimpleRendererVK::createSwapChain()
@@ -221,20 +231,22 @@ namespace fv
 
     bool SimpleRendererVK::createTriangleCommanBuffer()
     {
-        m_TriangleCommandBuffer = CommandBuffersVK::allocate( m_CommandPool, 1 );
-
-        for ( u32 i=0; i <1; i++ )
+        m_TriangleCommandBuffer.resize( m_FrameBuffers.size() );
+        for ( u32 i=0; i <m_FrameBuffers.size(); i++ )
         {
-            m_TriangleCommandBuffer->begin( CommandBufferUsage::CanResubmit, i );
-            CmdVK::beginRenderPass( m_TriangleCommandBuffer->vk( i ), m_SimplePlass, m_FrameBuffers[i], { 1, 0, 0, 1 } );
-            CmdVK::bindPipeline( m_TriangleCommandBuffer->vk( i ), m_SimplePipeline );
-            CmdVK::bindVertices( m_TriangleCommandBuffer->vk( i ), m_TriangleVertexBuffer );
-            CmdVK::draw( m_TriangleCommandBuffer->vk( i ), 3, 1, 0, 0 );
-            CmdVK::endRenderPass( m_TriangleCommandBuffer->vk( i ) );
-            m_TriangleCommandBuffer->end( i );
+            m_TriangleCommandBuffer[i] = CommandBufferVK::allocate( m_CommandPool );
+            auto b = m_TriangleCommandBuffer[i];
+            if ( b == nullptr )
+                return false;
+            b->beginRecord( CommandBufferUsage::CanResubmit );
+            b->beginRenderPass( m_SimplePlass, m_FrameBuffers[i] );
+            b->bindPipeline( m_SimplePipeline );
+            b->bindVertices( m_TriangleVertexBuffer );
+            b->draw( 3, 1, 0, 0 );
+            b->endRenderPass();
+            b->endRecord();
         }
-
-        return m_TriangleCommandBuffer != nullptr;
+        return true;
     }
 
     bool SimpleRendererVK::createFrameSyncObjects()
@@ -283,8 +295,6 @@ namespace fv
 
     void SimpleRendererVK::render()
     {
-        m_SubmitFences[m_FrameObjectIdx]->wait();
-
         u32 imageIdx;
         VkResult imgAcquireResult = m_SwapChain->acquireNextImage( imageIdx, m_FrameImageAvailableSemaphore[m_FrameObjectIdx], NULL );
         if ( imgAcquireResult != VK_SUCCESS )
@@ -292,17 +302,18 @@ namespace fv
             return;
         }
 
+        m_SubmitFences[m_FrameObjectIdx]->wait();
         m_SubmitFences[m_FrameObjectIdx]->reset();
 
-        CmdVK::queueSubmit( m_Device->graphicsQueue(), m_TriangleCommandBuffer, 
-                            m_FrameImageAvailableSemaphore[m_FrameObjectIdx], 
-                            m_FrameTriangleDoneSemaphore[m_FrameObjectIdx], 
-                            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                            m_SubmitFences[ m_FrameObjectIdx ] );
+        m_GraphicsQueue->submit( m_TriangleCommandBuffer[m_FrameObjectIdx], 
+                                 m_FrameImageAvailableSemaphore[m_FrameObjectIdx], 
+                                 m_FrameTriangleDoneSemaphore[m_FrameObjectIdx],
+                                 VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                                 m_SubmitFences[m_FrameObjectIdx] );
 
-        CmdVK::queuePresent( m_SwapChain, imageIdx, m_FrameTriangleDoneSemaphore[m_FrameObjectIdx] );
+        m_PresentQueue->present( m_SwapChain, imageIdx, m_FrameTriangleDoneSemaphore[m_FrameObjectIdx]  );
 
-     //   m_FrameObjectIdx = (m_FrameObjectIdx + 1) % m_SwapChain->numImages();
+        m_FrameObjectIdx = (m_FrameObjectIdx + 1) % m_SwapChain->numImages();
     }
 
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "IncVulkan.h"
+#include "QueueVK.h"
 #include "../../Core/Common.h"
 
 namespace fv
@@ -29,11 +30,11 @@ namespace fv
         const VkPhysicalDeviceProperties& properties() const { return m_Properties; }
         const VkPhysicalDeviceMemoryProperties& memProperties() const { return m_MemProperties; }
 
-        VkQueue graphicsQueue( u32 which=0 ) { return m_GraphicsQueue[which]; }
-        VkQueue computeQueue()  const { return m_ComputeQueue; }
-        VkQueue transferQueue() const { return m_TransferQueue; }
-        VkQueue sparseQueue()   const { return m_SparseQueue; }
-        VkQueue presentQueue()  const { return m_PresentQueue; }
+        const M<QueueVK>& graphicsQueue( u32 which=0 ) const { return m_GraphicsQueue[which]; }
+        const M<QueueVK>& computeQueue()  const { return m_ComputeQueue; }
+        const M<QueueVK>& transferQueue() const { return m_TransferQueue; }
+        const M<QueueVK>& sparseQueue()   const { return m_SparseQueue; }
+        const M<QueueVK>& presentQueue()  const { return m_PresentQueue; }
 
         u32 graphicsQueueFamily() const { return m_GraphicsQueueFam; }
         u32 computeQueueFamily()  const { return m_ComputeQueueFam; }
@@ -49,11 +50,11 @@ namespace fv
         VkPhysicalDeviceFeatures m_Features {};
         VkPhysicalDeviceProperties m_Properties {};
         VkPhysicalDeviceMemoryProperties m_MemProperties {};
-        List<VkQueue> m_GraphicsQueue;
-        VkQueue m_ComputeQueue {};
-        VkQueue m_TransferQueue {};
-        VkQueue m_SparseQueue {};
-        VkQueue m_PresentQueue {};
+        List<M<QueueVK>> m_GraphicsQueue;
+        M<QueueVK> m_ComputeQueue {};
+        M<QueueVK> m_TransferQueue {};
+        M<QueueVK> m_SparseQueue {};
+        M<QueueVK> m_PresentQueue {};
         u32 m_GraphicsQueueFam = -1;
         u32 m_ComputeQueueFam  = -1;
         u32 m_TransferQueueFam = -1;

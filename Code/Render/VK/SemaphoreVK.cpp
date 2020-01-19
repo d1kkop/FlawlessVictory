@@ -7,34 +7,25 @@ namespace fv
 {
     SemaphoreVK::~SemaphoreVK()
     {
-        for (u32 i = 0; i < m_Semaphores.size() ; i++)
+        if ( m_Semaphore )
         {
-        	vkDestroySemaphore( m_Device->logical(), m_Semaphores[i], NULL );
+        	vkDestroySemaphore( m_Device->logical(), m_Semaphore, NULL );
         }
     }
 
-    M<SemaphoreVK> SemaphoreVK::create( const M<DeviceVK>& device, u32 num )
+    M<SemaphoreVK> SemaphoreVK::create( const M<DeviceVK>& device )
     {
-        List<VkSemaphore> semaphores;
-        for ( u32 i=0; i <num; i++ )
+        VkSemaphore semaphore;
+        VkSemaphoreCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        createInfo.flags = 0;
+        if ( VK_SUCCESS != vkCreateSemaphore( device->logical(), &createInfo, NULL, &semaphore ) )
         {
-            VkSemaphore semaphore;
-            VkSemaphoreCreateInfo createInfo {};
-            createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-            createInfo.flags = 0;
-            if ( VK_SUCCESS != vkCreateSemaphore( device->logical(), &createInfo, NULL, &semaphore ) )
-            {
-                for ( auto& s : semaphores)
-                {
-                    vkDestroySemaphore( device->logical(), s, NULL );
-                }
-                LOGC( "VK Failed to create requested semaphores." );
-                return {};
-            }
-            semaphores.emplace_back( semaphore );
+            LOGC( "VK Failed to create requested semaphores." );
+            return {};
         }
         auto semaphoreVk = std::make_shared<SemaphoreVK>();
-        semaphoreVk->m_Semaphores = std::move( semaphores );
+        semaphoreVk->m_Semaphore = semaphore;
         semaphoreVk->m_Device = device;
         return semaphoreVk;
     }
