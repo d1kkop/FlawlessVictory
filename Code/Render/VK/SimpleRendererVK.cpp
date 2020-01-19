@@ -213,7 +213,7 @@ namespace fv
                                                CullModeVK::None, PolygonModeVK::Fill, FrontFaceVK::CCW, 
                                                1, 1 );
                                                
-       return m_SimplePipeline != nullptr;                                       
+       return m_SimplePipeline != nullptr;
     }
 
     bool SimpleRendererVK::createFramebuffers()

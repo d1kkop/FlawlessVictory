@@ -28,6 +28,7 @@ namespace fv
 
         VkBuffer buffer() const { return m_Buffer; }
         VkBuffer vk() const { return buffer(); }
+        u32 size() const { return m_Size; }
 
         const M<AllocatorVK>& allocator() const { return m_Allocator; }
 
@@ -38,5 +39,6 @@ namespace fv
         VmaAllocation  m_Allocation{};
         VmaAllocationInfo m_AllocationInfo{};
         VmaMemoryUsage m_Usage{};
+        u32 m_Size = 0;
     };
 }

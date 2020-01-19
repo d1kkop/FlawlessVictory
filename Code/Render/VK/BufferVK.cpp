@@ -62,6 +62,7 @@ namespace fv
         bufferVK->m_AllocationInfo = allocatedInfo;
         bufferVK->m_Usage  = (VmaMemoryUsage)usage;
         bufferVK->m_Buffer = buffer;
+        bufferVK->m_Size = size;
         return bufferVK;
     }
 
